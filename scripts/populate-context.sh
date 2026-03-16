@@ -81,7 +81,7 @@ REPO_INFO+="## Árbol de archivos\n\`\`\`\n"
 if command -v tree &>/dev/null; then
   REPO_INFO+="$(tree "$REPO_DIR" -L 3 -I 'node_modules|.git|__pycache__|.next|dist|build|vendor|.venv|venv' 2>/dev/null | head -80)\n"
 else
-  REPO_INFO+="$(find "$REPO_DIR" -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/__pycache__/*' -not -path '*/dist/*' -not -path '*/build/*' -not -path '*/vendor/*' -not -path '*/.venv/*' -maxdepth 3 | sed "s|$REPO_DIR/||" | sort | head -80)\n"
+  REPO_INFO+="$(find "$REPO_DIR" -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/__pycache__/*' -not -path '*/dist/*' -not -path '*/build/*' -not -path '*/vendor/*' -not -path '*/.venv/*' | sed "s|$REPO_DIR/||" | sort | head -80)\n"
 fi
 REPO_INFO+="\`\`\`\n\n"
 
@@ -120,7 +120,7 @@ done
 REPO_INFO+="## Archivos de código principales (muestra)\n"
 for ext in ts js py go rs java; do
   main_files=$(find "$REPO_DIR/src" "$REPO_DIR/app" "$REPO_DIR/lib" "$REPO_DIR/cmd" 2>/dev/null \
-    -name "*.${ext}" -not -path '*/node_modules/*' | head -3)
+    -maxdepth 4 -name "*.${ext}" -not -path '*/node_modules/*' | head -3)
   for f in $main_files; do
     rel="${f#$REPO_DIR/}"
     REPO_INFO+="\n### $rel\n\`\`\`\n$(head -60 "$f")\n\`\`\`\n"
@@ -190,17 +190,21 @@ done
 step "5/5 Registrando en context-map.json..."
 
 MAP="$BRAIN_DIR/context-map.json"
+# Convertir ruta a formato nativo del OS (necesario en Windows/Git Bash)
+MAP_NATIVE=$(python3 -c "import os; print(os.path.normpath('$MAP'))" 2>/dev/null || echo "$MAP")
 
 if command -v python3 &>/dev/null; then
   python3 - <<EOF
-import json
+import json, os
 
-with open('$MAP', 'r') as f:
+map_path = os.path.normpath('$MAP')
+
+with open(map_path, 'r') as f:
     data = json.load(f)
 
 data['mappings']['$REPO_BASENAME'] = '$PROJECT_PATH'
 
-with open('$MAP', 'w') as f:
+with open(map_path, 'w') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write('\n')
 
