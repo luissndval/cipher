@@ -65,6 +65,49 @@ if [[ "$PROJECT" == */* ]]; then
 fi
 
 PROJECT_DIR="$BRAIN_CONTEXTS/projects/$PROJECT"
+
+# ── Flujo de primer uso: repo no mapeado ─────────────────────────────────────
+if [[ "$PROJECT" == "_template" || ! -d "$PROJECT_DIR" ]]; then
+  echo "" >&2
+  warn "El repo '$REPO_NAME' no está registrado en context-map.json."
+  echo "" >&2
+  echo -e "${BOLD}  ¿Querés generar el contexto automáticamente?${NC}" >&2
+  echo "" >&2
+  echo -e "  Proporciona la URL git del repo (o Enter para omitir):" >&2
+  read -r GIT_URL_INPUT
+
+  if [[ -n "$GIT_URL_INPUT" ]]; then
+    echo "" >&2
+    echo -e "  Nombre del cliente (opcional, Enter para omitir):" >&2
+    read -r CLIENT_INPUT
+
+    echo "" >&2
+    info "Ejecutando populate-context.sh..."
+    echo "" >&2
+
+    if [[ -n "$CLIENT_INPUT" ]]; then
+      bash "$BRAIN_CONTEXTS/scripts/populate-context.sh" "$GIT_URL_INPUT" "$CLIENT_INPUT" "$REPO_NAME"
+    else
+      bash "$BRAIN_CONTEXTS/scripts/populate-context.sh" "$GIT_URL_INPUT" "" "$REPO_NAME"
+    fi
+
+    # Re-resolver proyecto luego de poblar
+    if command -v python3 &>/dev/null; then
+      PROJECT=$(python3 -c "
+import json, sys
+d = json.loads(sys.stdin.read())
+print(d.get('mappings', {}).get('$REPO_NAME', d.get('default', '_template')))
+" < "$MAP")
+    elif command -v jq &>/dev/null; then
+      PROJECT=$(jq -r --arg r "$REPO_NAME" '.mappings[$r] // .default' "$MAP")
+    fi
+    PROJECT_DIR="$BRAIN_CONTEXTS/projects/$PROJECT"
+  else
+    warn "Usando template vacío. Registra el repo en context-map.json cuando estés listo."
+    PROJECT_DIR="$BRAIN_CONTEXTS/projects/_template"
+  fi
+fi
+
 [[ -d "$PROJECT_DIR" ]] || err "Carpeta de proyecto no encontrada: $PROJECT_DIR"
 
 CLIENT_DIR=""

@@ -29,7 +29,51 @@ brain --help 2>/dev/null || brain
 
 ---
 
-## Setup: nuevo cliente + proyecto
+## Poblar contexto automáticamente
+
+El script `populate-context.sh` clona un repo, lo analiza y genera todos los `.md` de contexto usando Claude.
+
+```bash
+bash brain-contexts/scripts/populate-context.sh <git-url> [client-name] [project-name]
+```
+
+**Ejemplos:**
+
+```bash
+# Con cliente
+bash scripts/populate-context.sh git@github.com:org/backend.git acme-corp backend
+
+# Sin cliente (proyecto standalone)
+bash scripts/populate-context.sh https://github.com/org/app.git
+```
+
+Qué hace automáticamente:
+- Clona el repo en un directorio temporal
+- Extrae README, dependencias, estructura, CI/CD, código fuente
+- Llama a Claude para generar cada `.md` con contenido real
+- Registra el repo en `context-map.json`
+
+> Requiere `claude` CLI instalado (`npm install -g @anthropic-ai/claude-code`).
+
+### Primera vez (repo no registrado)
+
+Si ejecutas `brain` desde un repo que no está en `context-map.json`, el script te preguntará automáticamente:
+
+```
+[brain] El repo 'mi-repo' no está registrado en context-map.json.
+
+  ¿Querés generar el contexto automáticamente?
+
+  Proporciona la URL git del repo (o Enter para omitir):
+  > git@github.com:org/mi-repo.git
+
+  Nombre del cliente (opcional, Enter para omitir):
+  > acme-corp
+```
+
+---
+
+## Setup manual: nuevo cliente + proyecto
 
 ### 1. Crea el cliente
 
