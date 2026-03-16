@@ -1,4 +1,6 @@
 # Contexto generado — no commitear
-output/
+output/ACTIVE_CONTEXT.md
+# Alertas cross-repo SÍ se commitean (canal de comunicación entre repos)
+!output/alerts/
 *.tmp
 .DS_Store

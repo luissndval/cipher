@@ -21,6 +21,16 @@ BRAIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BOLD='\033[1m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 RED='\033[0;31m'; DIM='\033[2m'; CYAN='\033[0;36m'; NC='\033[0m'
 
+# Convierte /c/Users/... → C:/Users/... para que Python pueda abrir el archivo en Windows/Git Bash
+to_win_path() {
+  local p="$1"
+  if [[ "$p" =~ ^/([a-zA-Z])/(.*) ]]; then
+    echo "${BASH_REMATCH[1]^^}:/${BASH_REMATCH[2]}"
+  else
+    echo "$p"
+  fi
+}
+
 err()  { echo -e "${RED}[scan] $*${NC}" >&2; exit 1; }
 warn() { echo -e "${YELLOW}[scan] $*${NC}" >&2; }
 ok()   { echo -e "${GREEN}[scan] $*${NC}" >&2; }
@@ -93,12 +103,15 @@ for repo_path in "${REPOS[@]}"; do
   # Ya registrado?
   ALREADY_MAPPED=false
   if command -v python3 &>/dev/null; then
-    MAPPED=$(python3 -c "
+    MAP_NATIVE=$(to_win_path "$BRAIN_DIR/context-map.json")
+    MAPPED=$(python3 - "$MAP_NATIVE" "$REPO_NAME" <<'PYEOF'
 import json, sys
-with open('$BRAIN_DIR/context-map.json') as f:
+map_path, repo_name = sys.argv[1], sys.argv[2]
+with open(map_path, encoding='utf-8') as f:
     d = json.load(f)
-print(d.get('mappings', {}).get('$REPO_NAME', ''))
-" 2>/dev/null)
+print(d.get('mappings', {}).get(repo_name, ''))
+PYEOF
+    2>/dev/null)
     [[ -n "$MAPPED" ]] && ALREADY_MAPPED=true
   fi
 
@@ -143,9 +156,123 @@ echo -e "  Saltados:   ${YELLOW}$SKIPPED${NC}"
 echo ""
 
 if [[ $PROCESSED -gt 0 ]]; then
+
+  # ── Auto-generar CLIENT_PROFILE.md si hay cliente y sigue siendo el template ──
+  if [[ -n "$CLIENT_NAME" ]]; then
+    CLIENT_DIR="$BRAIN_DIR/clients/$CLIENT_NAME"
+    CLIENT_PROFILE="$CLIENT_DIR/CLIENT_PROFILE.md"
+
+    if [[ -f "$CLIENT_PROFILE" ]] && grep -q "Nombre del Cliente" "$CLIENT_PROFILE" 2>/dev/null; then
+      echo ""
+      step "Generando CLIENT_PROFILE.md para '$CLIENT_NAME'..."
+
+      PROJECTS_INFO=""
+      for repo_path in "${REPOS[@]}"; do
+        rname="$(basename "$repo_path")"
+        br="$BRAIN_DIR/projects/$CLIENT_NAME/$rname/BUSINESS_RULES.md"
+        [[ -f "$br" ]] && PROJECTS_INFO+="### $rname\n$(head -60 "$br")\n\n"
+      done
+
+      PROFILE_PROMPT="Eres un asistente que documenta clientes de software.
+Basándote en los siguientes repositorios del cliente '$CLIENT_NAME', genera un CLIENT_PROFILE.md conciso.
+IMPORTANTE: responde DIRECTAMENTE con el contenido markdown. NO uses code fences de markdown al inicio o final.
+
+Formato:
+# CLIENT_PROFILE — $CLIENT_NAME
+
+## Descripción
+[quiénes son, a qué se dedican, qué problema resuelven]
+
+## Proyectos
+[lista de repos con una línea de descripción cada uno]
+
+## Stack preferido
+[tecnologías identificadas en los repos]
+
+## Restricciones conocidas
+[limitaciones técnicas o de negocio identificadas — si no hay suficiente info, poner <!-- TODO: completar -->]
+
+## Contactos clave
+<!-- TODO: completar -->
+
+## Notas generales
+[cualquier patrón o contexto relevante observado]
+
+---
+Información de los repos:
+$PROJECTS_INFO"
+
+      PROFILE_OUTPUT=$(echo "$PROFILE_PROMPT" | claude -p --output-format text 2>/dev/null)
+
+      if [[ -n "$PROFILE_OUTPUT" ]]; then
+        echo "$PROFILE_OUTPUT" > "$CLIENT_PROFILE"
+        ok "CLIENT_PROFILE.md generado"
+      else
+        warn "No se pudo generar CLIENT_PROFILE.md — edítalo manualmente en clients/$CLIENT_NAME/"
+      fi
+    fi
+
+    # ── Generar INTEGRATION_MAP.md si no existe o sigue siendo el template ──
+    INTEGRATION_MAP="$CLIENT_DIR/INTEGRATION_MAP.md"
+    if [[ ! -f "$INTEGRATION_MAP" ]] || grep -q "client-name" "$INTEGRATION_MAP" 2>/dev/null; then
+      echo ""
+      step "Generando INTEGRATION_MAP.md para '$CLIENT_NAME'..."
+
+      REPOS_SUMMARY=""
+      for repo_path in "${REPOS[@]}"; do
+        rname="$(basename "$repo_path")"
+        proj_dir="$BRAIN_DIR/projects/$CLIENT_NAME/$rname"
+        for ctx_file in BUSINESS_RULES.md DEPENDENCIES.md; do
+          fp="$proj_dir/$ctx_file"
+          [[ -f "$fp" ]] && REPOS_SUMMARY+="### $rname / $ctx_file\n$(head -40 "$fp")\n\n"
+        done
+      done
+
+      MAP_PROMPT="Eres un asistente que documenta contratos de integración entre repositorios.
+Analiza la información de los siguientes repos del cliente '$CLIENT_NAME' e infiere los contratos entre ellos.
+IMPORTANTE: responde DIRECTAMENTE con el markdown. NO uses code fences al inicio o final.
+
+Formato:
+# INTEGRATION_MAP — $CLIENT_NAME
+
+## Contratos HTTP
+| Repo proveedor | Endpoint | Repos consumidores | Notas |
+|----------------|----------|--------------------|-------|
+
+## Eventos / WebSocket
+| Repo emisor | Canal / Evento | Repos receptores |
+|-------------|----------------|------------------|
+
+## Schemas / Tipos compartidos
+| Repo origen | Schema / Tipo | Repos que lo usan |
+|-------------|---------------|-------------------|
+
+## Variables de entorno compartidas
+| Variable | Repos que la usan |
+|----------|-------------------|
+
+Si no puedes inferir un contrato con certeza, usa <!-- TODO: verificar --> en la celda.
+
+---
+Información de repos:
+$REPOS_SUMMARY"
+
+      MAP_OUTPUT=$(echo "$MAP_PROMPT" | claude -p --output-format text 2>/dev/null)
+
+      if [[ -n "$MAP_OUTPUT" ]]; then
+        echo "$MAP_OUTPUT" > "$INTEGRATION_MAP"
+        ok "INTEGRATION_MAP.md generado"
+      else
+        cp "$BRAIN_DIR/clients/_template/INTEGRATION_MAP.md" "$INTEGRATION_MAP"
+        warn "INTEGRATION_MAP.md no pudo generarse — se copió el template en clients/$CLIENT_NAME/"
+      fi
+    fi
+  fi
+
+  echo ""
   echo -e "${BOLD}Próximos pasos:${NC}"
   echo "  1. Revisa los .md generados en projects/"
-  [[ -n "$CLIENT_NAME" ]] && echo "  2. Completa clients/$CLIENT_NAME/CLIENT_PROFILE.md"
+  [[ -n "$CLIENT_NAME" ]] && echo "  2. Revisa clients/$CLIENT_NAME/CLIENT_PROFILE.md"
   echo "  3. Commitea: git add -A && git commit -m 'feat: add context for $CLIENT_NAME'"
   echo "  4. Ve a cada repo y ejecuta: brain claude"
 fi

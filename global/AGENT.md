@@ -75,3 +75,74 @@ Toda propuesta de cambio DEBE usar este formato antes de implementar:
 ```
 
 El usuario puede responder "sí", "procede", "ok", "go", o equivalente para dar luz verde. Cualquier otra respuesta se interpreta como una modificación a la propuesta.
+
+---
+
+## Protocolo de ejecución de tareas (CURRENT_TASK)
+
+### 1. Al iniciar la sesión
+
+1. **Leer `CURRENT_TASK.md`** en la raíz del repo.
+   - Si no existe: indicar al desarrollador que lo cree y no proceder hasta tenerlo.
+   - Si existe pero tiene campos vacíos críticos (Título, Descripción, Alcance declarado): preguntar esos campos antes de continuar. Hacer una pregunta a la vez, empezando por la más bloqueante.
+
+2. **Crear la rama** antes de tocar cualquier archivo:
+   ```
+   git checkout -b <tipo>/<ticket>-<descripcion-breve>
+   ```
+   Formato: `tipo` = feat | fix | hotfix | refactor. `descripcion-breve` en kebab-case, máximo 4 palabras.
+   Ejemplo: `feat/TAKE-123-delivery-zone-id`
+   Confirmar con el desarrollador antes de hacer checkout.
+
+3. **Actualizar estado** en `CURRENT_TASK.md`: `pending` → `in_progress`.
+
+---
+
+### 2. Durante la implementación
+
+- **Ceñirse al alcance declarado**. Si se detecta que se necesita modificar un archivo fuera del Alcance declarado, DETENER y preguntar antes de continuar.
+- **Comentarios en el código**: agregar comentarios inline en cualquier lógica no obvia. Formato sugerido:
+  ```
+  # TASK: <ticket> — <por qué se hace este cambio, no qué hace>
+  ```
+  No comentar código auto-explicativo. Solo comentar decisiones de diseño, workarounds o reglas de negocio incrustadas.
+- **Verificar criterios de aceptación** antes de declarar la tarea como completa.
+
+---
+
+### 3. Al completar la tarea
+
+1. **Actualizar estado** en `CURRENT_TASK.md`: `in_progress` → `completed`.
+
+2. **Análisis de impacto cross-repo** (bajo costo de tokens):
+   - Leer `clients/<client>/INTEGRATION_MAP.md`.
+   - Cruzar los archivos modificados en esta tarea con los contratos listados en el mapa.
+   - Si algún contrato es tocado (endpoint cambiado, schema modificado, evento renombrado, variable removida): registrar alerta.
+
+3. **Registrar alerta de impacto** si corresponde:
+   - Escribir en `brain-contexts/output/alerts/<repo-afectado>.md` (crear si no existe).
+   - Mostrar en pantalla el resumen de impacto al desarrollador.
+
+4. **Formato de alerta de impacto:**
+   ```markdown
+   ## Alerta: <repo-afectado>
+
+   **Generada por repo:** <repo-origen>
+   **Rama:** <rama-actual>
+   **Ticket:** <ticket>
+   **Fecha:** <fecha>
+
+   **Qué cambió:** <descripción del cambio en el contrato>
+   **Archivos modificados:** <lista>
+   **Qué revisar en <repo-afectado>:** <instrucción concreta para el dev>
+
+   ---
+   ```
+
+---
+
+### 4. Resolución de alertas
+
+- Cuando el desarrollador va al repo afectado y corre `brain claude`, el agente detecta que existe `output/alerts/<este-repo>.md` y lo muestra como contexto prioritario.
+- Una vez resuelto el cambio en el repo afectado, el agente **elimina** la entrada correspondiente del archivo de alertas (o el archivo completo si era la única alerta).
+- El agente confirma con el desarrollador antes de eliminar la alerta.

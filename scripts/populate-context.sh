@@ -24,6 +24,16 @@ PROMPT_TEMPLATE="$BRAIN_DIR/schemas/POPULATE_PROMPT.md"
 
 BOLD='\033[1m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
 
+# Convierte /c/Users/... → C:/Users/... para que Python pueda abrir el archivo en Windows/Git Bash
+to_win_path() {
+  local p="$1"
+  if [[ "$p" =~ ^/([a-zA-Z])/(.*) ]]; then
+    echo "${BASH_REMATCH[1]^^}:/${BASH_REMATCH[2]}"
+  else
+    echo "$p"
+  fi
+}
+
 err()  { echo -e "${RED}[populate] $*${NC}" >&2; exit 1; }
 warn() { echo -e "${YELLOW}[populate] $*${NC}" >&2; }
 ok()   { echo -e "${GREEN}[populate] $*${NC}" >&2; }
@@ -148,6 +158,19 @@ else
 fi
 
 mkdir -p "$PROJECT_DIR"
+# Copiar CURRENT_TASK.md desde template al REPO (no a brain-contexts) si no existe
+REPO_TASK="$REPO_DIR/CURRENT_TASK.md"
+if [[ ! -f "$REPO_TASK" ]]; then
+  cp "$BRAIN_DIR/projects/_template/CURRENT_TASK.md" "$REPO_TASK"
+  info "CURRENT_TASK.md copiado en la raíz del repo"
+fi
+# Agregar CURRENT_TASK.md al .gitignore del repo si no está ya
+REPO_GITIGNORE="$REPO_DIR/.gitignore"
+if [[ -f "$REPO_GITIGNORE" ]]; then
+  grep -qxF "CURRENT_TASK.md" "$REPO_GITIGNORE" || echo "CURRENT_TASK.md" >> "$REPO_GITIGNORE"
+else
+  echo "CURRENT_TASK.md" > "$REPO_GITIGNORE"
+fi
 ok "Directorio: $PROJECT_DIR"
 
 # ── 4. Generar archivos con Claude ────────────────────────────────────────────
@@ -170,7 +193,7 @@ for context_file in "${CONTEXT_FILES[@]}"; do
 
   SECTION=$(echo "$context_file" | sed 's/\.md//')
 
-  PROMPT="$(printf '%s\n\n---\n\n# REPO_INFO\n\n%s\n\n---\n\nGenera ÚNICAMENTE el contenido del archivo %s para este proyecto.\nSigue exactamente el formato especificado en las instrucciones para %s.\nResponde solo con el contenido markdown del archivo, sin explicaciones adicionales.' \
+  PROMPT="$(printf '%s\n\n---\n\n# REPO_INFO\n\n%s\n\n---\n\nGenera ÚNICAMENTE el contenido del archivo %s para este proyecto.\nSigue exactamente el formato especificado en las instrucciones para %s.\nIMPORTANTE: responde DIRECTAMENTE con el contenido markdown. NO uses code fences de markdown (no escribas \`\`\`markdown ni \`\`\` al inicio o final). El archivo empieza directamente con el encabezado #.' \
     "$INSTRUCTIONS" "$REPO_INFO" "$context_file" "$SECTION")"
 
   OUTPUT=$(echo "$PROMPT" | claude -p --output-format text 2>/dev/null)
@@ -190,26 +213,21 @@ done
 step "5/5 Registrando en context-map.json..."
 
 MAP="$BRAIN_DIR/context-map.json"
-# Convertir ruta a formato nativo del OS (necesario en Windows/Git Bash)
-MAP_NATIVE=$(python3 -c "import os; print(os.path.normpath('$MAP'))" 2>/dev/null || echo "$MAP")
+MAP_NATIVE=$(to_win_path "$MAP")
 
 if command -v python3 &>/dev/null; then
-  python3 - <<EOF
-import json, os
-
-map_path = os.path.normpath('$MAP')
-
-with open(map_path, 'r') as f:
+  python3 - "$MAP_NATIVE" "$REPO_BASENAME" "$PROJECT_PATH" <<'PYEOF'
+import json, sys
+map_path, repo, project_path = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(map_path, 'r', encoding='utf-8') as f:
     data = json.load(f)
-
-data['mappings']['$REPO_BASENAME'] = '$PROJECT_PATH'
-
-with open(map_path, 'w') as f:
+data['mappings'][repo] = project_path
+with open(map_path, 'w', encoding='utf-8') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write('\n')
-
 print('context-map.json actualizado')
-EOF
+PYEOF
+  ok "context-map.json actualizado"
 elif command -v jq &>/dev/null; then
   tmp=$(mktemp)
   jq --arg repo "$REPO_BASENAME" --arg path "$PROJECT_PATH" \

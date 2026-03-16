@@ -262,6 +262,38 @@ CONTEXT_FILE="$OUTPUT_DIR/ACTIVE_CONTEXT.md"
     [[ -f "$fp" ]] && cat "$fp" && echo ""
   done
 
+  # Tarea actual (busca primero en el repo real, luego en brain-contexts como fallback)
+  echo "---"
+  echo "## TAREA ACTUAL"
+  echo ""
+  TASK_FILE=""
+  [[ -f "$REPO_ROOT/CURRENT_TASK.md" ]] && TASK_FILE="$REPO_ROOT/CURRENT_TASK.md"
+  [[ -z "$TASK_FILE" && -f "$PROJECT_DIR/CURRENT_TASK.md" ]] && TASK_FILE="$PROJECT_DIR/CURRENT_TASK.md"
+
+  if [[ -n "$TASK_FILE" ]]; then
+    cat "$TASK_FILE" && echo ""
+  else
+    echo "_No hay CURRENT_TASK.md. Crea el archivo en la raíz del repo (\`$REPO_ROOT/CURRENT_TASK.md\`) y complétalo antes de iniciar el agente._"
+    echo ""
+  fi
+
+  # Mapa de integración del cliente (para análisis de impacto cross-repo)
+  if [[ -n "$CLIENT_DIR" && -f "$CLIENT_DIR/INTEGRATION_MAP.md" ]]; then
+    echo "---"
+    echo "## INTEGRATION MAP (contratos cross-repo)"
+    echo ""
+    cat "$CLIENT_DIR/INTEGRATION_MAP.md" && echo ""
+  fi
+
+  # Alertas de impacto pendientes para este repo
+  ALERT_FILE="$BRAIN_CONTEXTS/output/alerts/$REPO_NAME.md"
+  if [[ -f "$ALERT_FILE" ]]; then
+    echo "---"
+    echo "## ALERTAS DE IMPACTO PENDIENTES"
+    echo ""
+    cat "$ALERT_FILE" && echo ""
+  fi
+
 } > "$CONTEXT_FILE"
 
 LINES=$(wc -l < "$CONTEXT_FILE")

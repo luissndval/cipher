@@ -54,5 +54,6 @@ Cuando el contexto o los requisitos no son claros, el agente DEBE:
 | 4 — Tarea | `IMPACT_RULES.md` | MEDIA | Evaluación de impacto de cambios concretos. |
 | 5 — Tarea | `TASK_FLOW.md` | MEDIA | Flujo de trabajo paso a paso. |
 | 6 — Tarea | `TEST_STRATEGY.md` | MEDIA | Cobertura mínima requerida antes de dar por terminado. |
+| 7 — Sesión | `CURRENT_TASK.md` | ALTA | Tarea específica del desarrollador en esta sesión. Sobreescribe el foco de las capas anteriores. |
 
 En caso de conflicto entre capas, la capa de mayor prioridad prevalece. El agente debe señalar el conflicto al usuario si detecta uno.

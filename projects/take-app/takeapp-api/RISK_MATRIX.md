@@ -1,0 +1,19 @@
+# RISK_MATRIX — takeapp-api
+
+| Riesgo | Severidad | Probabilidad | Mitigación |
+|--------|-----------|--------------|------------|
+| `bcrypt` fijado a `3.2.2` (desactualizado, versión actual ~4.x) — incompatibilidad intencional con passlib 1.7.4 pero genera deuda de seguridad a largo plazo | Alta | Media | Actualizar passlib a una versión compatible con bcrypt ≥ 4.x cuando esté disponible; monitorear CVEs en bcrypt 3.2.2 |
+| `SECRET_KEY` default `"change-me-in-production"` en config — si no se cambia en deploy, los tokens JWT son predecibles | Alta | Media | Validar en startup que `SECRET_KEY` no sea el valor default en `environment=production`; agregar check en CI |
+| `python-jose[cryptography]==3.3.0` — versión antigua con vulnerabilidades conocidas (CVE-2024-33663, CVE-2024-33664) | Alta | Alta | Migrar a `joserfc` o `PyJWT` que tienen mantenimiento activo |
+| Claves sensibles encriptadas con Fernet (`cabify_api_key`, `mp_access_token`, `google_maps_api_key`) — si se pierde `FERNET_KEY`, los datos en DB son irrecuperables | Alta | Baja | Backup seguro de `FERNET_KEY` en gestor de secretos (Vault, GCP Secret Manager); rotación planificada |
+| `asyncpg==0.30.0` + `psycopg2-binary==2.9.10` — dos drivers de PostgreSQL en el mismo proyecto; psycopg2 solo se usa para Alembic pero genera dependencia binaria innecesaria en producción | Baja | Baja | Reemplazar psycopg2-binary por psycopg2 en entorno de migrations o usar asyncpg para todo |
+| Migraciones de Alembic sin tests de rollback — 020 migraciones acumuladas sin validación de `downgrade()` | Media | Media | Implementar tests de ida/vuelta en CI; al menos smoke-test de `alembic downgrade -1` |
+| Cobertura de tests desconocida — carpeta `tests/` existe pero sin evidencia de cobertura mínima configurada o reportes en CI | Media | Alta | Agregar `pytest-cov` al workflow de CI con umbral mínimo (ej. 70%); priorizar tests de auth y pagos |
+| `mercadopago==2.2.3` — SDK oficial sin actualizaciones frecuentes; webhooks de pago son punto crítico sin retries ni dead-letter queue | Alta | Media | Implementar cola de reintentos para webhooks fallidos; loguear todos los eventos en `email_log` o tabla dedicada |
+| SQL echo activo en `environment=development` — si `ENVIRONMENT` no se configura correctamente en stage/prod, se loguean queries con datos sensibles | Media | Media | Validar explícitamente `ENVIRONMENT != development` antes de activar echo; nunca exponer logs de app directamente |
+| Webhook Cabify siempre devuelve HTTP 200 (diseño intencional) — oculta errores reales de procesamiento ante Cabify | Media | Baja | Loguear todos los casos de error internamente con alertas; monitorear jobs de delivery en estado inconsistente |
+| `--reload` en Dockerfile CMD — flag de desarrollo habilitado en la imagen de producción | Media | Alta | Separar Dockerfile.dev y Dockerfile.prod, o usar variable de entorno para condicionar el flag `--reload` |
+| Ausencia de rate limiting en endpoints de auth (`/login`, `/forgot-password`) — vulnerable a fuerza bruta y enumeración de usuarios | Alta | Media | Implementar rate limiting con Redis (ya disponible en el stack); retornar tiempos de respuesta constantes en auth |
+| `python-multipart==0.0.20` — versión reciente pero `OAuth2PasswordRequestForm` expone credenciales en form data (vs JSON) si no hay HTTPS | Media | Baja | Asegurar que nginx solo acepte HTTPS en producción; documentar requerimiento de TLS |
+| Polling de `delivery_jobs` cada 15s en lifespan — si el backend reinicia frecuentemente, hay ventanas sin tracking | Baja | Baja | Considerar worker dedicado o persistencia del estado de polling en Redis |
+| `.env` no está en git pero `.env.example` no incluye `FERNET_KEY` — desarrolladores nuevos podrían olvidar generarla | Media | Alta | Agregar `FERNET_KEY` a `.env.example` con instrucción de generación; validar presencia en startup |
