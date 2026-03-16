@@ -72,31 +72,53 @@ if [[ "$PROJECT" == "_template" || ! -d "$PROJECT_DIR" ]]; then
   warn "El repo '$REPO_NAME' no está registrado en context-map.json."
   echo "" >&2
 
-  # Detectar si el directorio padre tiene más repos git (carpeta de cliente)
-  PARENT_DIR="$(dirname "$REPO_ROOT")"
-  SIBLING_REPOS=()
-  for sibling in "$PARENT_DIR"/*/; do
-    [[ -d "$sibling/.git" && "$sibling" != "$REPO_ROOT/" ]] && SIBLING_REPOS+=("$sibling")
+  # Detectar sub-repos dentro del repo actual (tiene prioridad)
+  CHILD_REPOS=()
+  for child in "$REPO_ROOT"/*/; do
+    [[ -d "$child/.git" ]] && CHILD_REPOS+=("$child")
   done
 
-  if [[ ${#SIBLING_REPOS[@]} -gt 0 ]]; then
-    PARENT_NAME="$(basename "$PARENT_DIR")"
-    echo -e "${BOLD}  Se detectó que '$(basename "$PARENT_DIR")/' contiene múltiples repos:${NC}" >&2
-    echo -e "  ${DIM}$(basename "$REPO_ROOT")${NC} ← actual" >&2
-    for s in "${SIBLING_REPOS[@]}"; do
+  # Si no hay sub-repos, buscar repos hermanos en el padre
+  SIBLING_REPOS=()
+  if [[ ${#CHILD_REPOS[@]} -eq 0 ]]; then
+    PARENT_DIR="$(dirname "$REPO_ROOT")"
+    for sibling in "$PARENT_DIR"/*/; do
+      [[ -d "$sibling/.git" && "$sibling" != "$REPO_ROOT/" ]] && SIBLING_REPOS+=("$sibling")
+    done
+  fi
+
+  # Decidir qué carpeta escanear
+  SCAN_TARGET=""
+  SCAN_LABEL=""
+  FOUND_REPOS=()
+
+  if [[ ${#CHILD_REPOS[@]} -gt 0 ]]; then
+    SCAN_TARGET="$REPO_ROOT"
+    SCAN_LABEL="$(basename "$REPO_ROOT")"
+    FOUND_REPOS=("${CHILD_REPOS[@]}")
+  elif [[ ${#SIBLING_REPOS[@]} -gt 0 ]]; then
+    SCAN_TARGET="$(dirname "$REPO_ROOT")"
+    SCAN_LABEL="$(basename "$(dirname "$REPO_ROOT")")"
+    FOUND_REPOS=("${SIBLING_REPOS[@]}")
+  fi
+
+  if [[ -n "$SCAN_TARGET" ]]; then
+    echo -e "${BOLD}  Se detectaron repos en '$SCAN_LABEL/':${NC}" >&2
+    [[ ${#CHILD_REPOS[@]} -gt 0 ]] && echo -e "  ${DIM}$(basename "$REPO_ROOT")${NC} ← actual (contiene estos repos)" >&2
+    for s in "${FOUND_REPOS[@]}"; do
       echo -e "  ${DIM}$(basename "$s")${NC}" >&2
     done
     echo "" >&2
-    echo -e "${BOLD}  ¿Escanear toda la carpeta '$PARENT_NAME' de una vez? [s/n]${NC} " >&2
+    echo -e "${BOLD}  ¿Escanear toda la carpeta '$SCAN_LABEL' de una vez? [s/n]${NC} " >&2
     read -r SCAN_CHOICE
 
     if [[ "${SCAN_CHOICE,,}" == "s" || "${SCAN_CHOICE,,}" == "si" || "${SCAN_CHOICE,,}" == "sí" ]]; then
       echo "" >&2
-      echo -e "  Nombre del cliente (Enter para usar '$PARENT_NAME'):" >&2
+      echo -e "  Nombre del cliente (Enter para usar '$SCAN_LABEL'):" >&2
       read -r CLIENT_INPUT
-      [[ -z "$CLIENT_INPUT" ]] && CLIENT_INPUT="$PARENT_NAME"
+      [[ -z "$CLIENT_INPUT" ]] && CLIENT_INPUT="$SCAN_LABEL"
 
-      bash "$BRAIN_CONTEXTS/scripts/scan-folder.sh" "$PARENT_DIR" "$CLIENT_INPUT"
+      bash "$BRAIN_CONTEXTS/scripts/scan-folder.sh" "$SCAN_TARGET" "$CLIENT_INPUT"
 
       # Re-resolver luego del scan
       if command -v python3 &>/dev/null; then
