@@ -1,10 +1,19 @@
 {
-  "version": "1.0",
-  "description": "Mapping de nombres de repositorio a carpetas de contexto en brain-agent",
+  "version": "2.0",
+  "description": "Mapping de repos a contextos. Soporta estructura cliente/proyecto y proyectos standalone.",
   "default": "_template",
   "mappings": {
-    "example-service-a": "example-service-a",
-    "example-service-b": "example-service-b"
+    "example-service-a": "example-client/example-service-a",
+    "example-service-b": "example-client/example-service-b"
   },
-  "_instructions": "Para agregar un nuevo repo: añadir una línea en mappings con 'nombre-del-repo': 'carpeta-en-projects/'. Múltiples repos pueden apuntar a la misma carpeta."
+  "_instructions": {
+    "standalone": "Sin cliente: 'nombre-repo': 'carpeta-en-projects/'",
+    "con-cliente": "Con cliente: 'nombre-repo': 'nombre-cliente/nombre-proyecto'",
+    "compartido":  "Múltiples repos pueden apuntar al mismo contexto",
+    "ejemplos": {
+      "backend-api":  "acme-corp/backend-api",
+      "mobile-app":   "acme-corp/mobile-app",
+      "landing":      "startup-xyz/landing"
+    }
+  }
 }

@@ -50,18 +50,38 @@ else
   err "Necesitas python3 o jq instalado."
 fi
 
+# ── 3. Resolver capa cliente (si el path es cliente/proyecto) ─────────────────
+# PROJECT puede ser:
+#   "acme-corp/backend-api"  → CLIENT=acme-corp, PROJECT_SLUG=backend-api
+#   "_template"              → sin cliente
+#   "standalone-project"     → sin cliente (estructura legacy)
+
+CLIENT=""
+PROJECT_SLUG="$PROJECT"
+
+if [[ "$PROJECT" == */* ]]; then
+  CLIENT="${PROJECT%%/*}"
+  PROJECT_SLUG="${PROJECT#*/}"
+fi
+
 PROJECT_DIR="$BRAIN_CONTEXTS/projects/$PROJECT"
 [[ -d "$PROJECT_DIR" ]] || err "Carpeta de proyecto no encontrada: $PROJECT_DIR"
-info "Proyecto: $PROJECT"
 
-# ── 3. Construir ACTIVE_CONTEXT.md ───────────────────────────────────────────
+CLIENT_DIR=""
+if [[ -n "$CLIENT" ]]; then
+  CLIENT_DIR="$BRAIN_CONTEXTS/clients/$CLIENT"
+  info "Cliente: $CLIENT"
+fi
+info "Proyecto: $PROJECT_SLUG"
+
+# ── 4. Construir ACTIVE_CONTEXT.md ───────────────────────────────────────────
 OUTPUT_DIR="$BRAIN_CONTEXTS/output"
 mkdir -p "$OUTPUT_DIR"
 CONTEXT_FILE="$OUTPUT_DIR/ACTIVE_CONTEXT.md"
 
 {
   echo "<!-- ACTIVE_CONTEXT — generado automáticamente, no editar -->"
-  echo "<!-- Repo: $REPO_NAME | Proyecto: $PROJECT | $(date '+%Y-%m-%d %H:%M') -->"
+  echo "<!-- Repo: $REPO_NAME | Cliente: ${CLIENT:-none} | Proyecto: $PROJECT_SLUG | $(date '+%Y-%m-%d %H:%M') -->"
   echo ""
 
   # Capa global
@@ -73,9 +93,20 @@ CONTEXT_FILE="$OUTPUT_DIR/ACTIVE_CONTEXT.md"
     [[ -f "$fp" ]] && cat "$fp" && echo ""
   done
 
+  # Capa cliente (solo si existe)
+  if [[ -n "$CLIENT_DIR" && -d "$CLIENT_DIR" ]]; then
+    echo "---"
+    echo "## CAPA CLIENTE: $CLIENT"
+    echo ""
+    for f in CLIENT_PROFILE.md BILLING_RULES.md TECH_PREFERENCES.md COMMUNICATION.md; do
+      fp="$CLIENT_DIR/$f"
+      [[ -f "$fp" ]] && cat "$fp" && echo ""
+    done
+  fi
+
   # Capa proyecto
   echo "---"
-  echo "## CAPA PROYECTO: $PROJECT"
+  echo "## CAPA PROYECTO: $PROJECT_SLUG"
   echo ""
   for f in BUSINESS_RULES.md DEPENDENCIES.md RISK_MATRIX.md; do
     fp="$PROJECT_DIR/$f"
@@ -103,7 +134,7 @@ CONTEXT_FILE="$OUTPUT_DIR/ACTIVE_CONTEXT.md"
 LINES=$(wc -l < "$CONTEXT_FILE")
 ok "Contexto listo → $CONTEXT_FILE ($LINES líneas)"
 
-# ── 4. Lanzar agente si se especificó ────────────────────────────────────────
+# ── 5. Lanzar agente si se especificó ────────────────────────────────────────
 if [[ -z "$AGENT" ]]; then
   echo "$CONTEXT_FILE"
   exit 0
