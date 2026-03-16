@@ -74,7 +74,7 @@ REPO_INFO=""
 # Nombre y URL
 REPO_INFO+="## Repo\n"
 REPO_INFO+="- Nombre: $REPO_BASENAME\n"
-REPO_INFO+="- URL: $GIT_URL\n\n"
+REPO_INFO+="- Fuente: $SOURCE\n\n"
 
 # Árbol de archivos (depth 3, excluir node_modules, .git, etc.)
 REPO_INFO+="## Árbol de archivos\n\`\`\`\n"
