@@ -1,0 +1,4 @@
+# Contexto generado — no commitear
+output/
+*.tmp
+.DS_Store

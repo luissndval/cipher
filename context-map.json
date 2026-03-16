@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "description": "Mapping de nombres de repositorio a carpetas de contexto en brain-agent",
+  "default": "_template",
+  "mappings": {
+    "example-service-a": "example-service-a",
+    "example-service-b": "example-service-b"
+  },
+  "_instructions": "Para agregar un nuevo repo: añadir una línea en mappings con 'nombre-del-repo': 'carpeta-en-projects/'. Múltiples repos pueden apuntar a la misma carpeta."
+}
