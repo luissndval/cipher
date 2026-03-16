@@ -73,7 +73,8 @@ if [[ "$PROJECT" == "_template" || ! -d "$PROJECT_DIR" ]]; then
   echo "" >&2
   echo -e "${BOLD}  ¿Querés generar el contexto automáticamente?${NC}" >&2
   echo "" >&2
-  echo -e "  Proporciona la URL git del repo (o Enter para omitir):" >&2
+  echo -e "  URL git o ruta local del repo (Enter para omitir):" >&2
+  echo -e "  ${DIM}Ejemplos: git@github.com:org/repo.git  |  .  |  /ruta/al/repo${NC}" >&2
   read -r GIT_URL_INPUT
 
   if [[ -n "$GIT_URL_INPUT" ]]; then

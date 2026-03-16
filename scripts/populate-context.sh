@@ -2,11 +2,16 @@
 # populate-context.sh — Analiza un repo git y genera contexto automáticamente con IA
 #
 # Uso:
-#   bash scripts/populate-context.sh <git-url> [client-name] [project-name]
+#   bash scripts/populate-context.sh <git-url-o-ruta-local> [client-name] [project-name]
 #
 # Ejemplos:
+#   # URL remota
 #   bash scripts/populate-context.sh git@github.com:org/backend.git acme-corp backend
 #   bash scripts/populate-context.sh https://github.com/org/app.git
+#
+#   # Ruta local (repo ya descargado)
+#   bash scripts/populate-context.sh ~/Projects/take-app/TAKE-APP-BE take-app TAKE-APP-BE
+#   bash scripts/populate-context.sh .   # desde dentro del repo
 #
 # Si no se especifican client-name y project-name, se derivan del nombre del repo.
 # Requiere: git, claude CLI
@@ -26,32 +31,40 @@ info() { echo -e "${DIM}[populate] $*${NC}" >&2; }
 step() { echo -e "${BOLD}[populate] $*${NC}" >&2; }
 
 # ── Argumentos ────────────────────────────────────────────────────────────────
-GIT_URL="${1:-}"
+SOURCE="${1:-}"
 CLIENT_NAME="${2:-}"
 PROJECT_NAME="${3:-}"
 
-[[ -z "$GIT_URL" ]] && err "Uso: bash scripts/populate-context.sh <git-url> [client-name] [project-name]"
-
-# Derivar nombre del repo desde la URL
-REPO_BASENAME=$(basename "$GIT_URL" .git)
-
-# Si no se especifican, usar el nombre del repo
-[[ -z "$PROJECT_NAME" ]] && PROJECT_NAME="$REPO_BASENAME"
+[[ -z "$SOURCE" ]] && err "Uso: bash scripts/populate-context.sh <git-url-o-ruta-local> [client-name] [project-name]"
 
 # Verificar dependencias
 command -v git    &>/dev/null || err "git no está instalado."
 command -v claude &>/dev/null || err "Claude CLI no está instalado. Instálalo con: npm install -g @anthropic-ai/claude-code"
 
-# ── 1. Clonar repo en directorio temporal ─────────────────────────────────────
-step "1/5 Clonando repo..."
+# ── 1. Resolver fuente: URL remota o ruta local ───────────────────────────────
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-git clone --depth=1 "$GIT_URL" "$TMP_DIR/repo" 2>/dev/null \
-  || err "No se pudo clonar el repo: $GIT_URL"
-ok "Repo clonado en $TMP_DIR/repo"
+# Detectar si es ruta local o URL
+if [[ -d "$SOURCE" ]] || [[ "$SOURCE" == "." ]]; then
+  step "1/5 Usando repo local..."
+  REPO_DIR="$(cd "$SOURCE" && pwd)"
+  # Verificar que es un repo git
+  git -C "$REPO_DIR" rev-parse --show-toplevel &>/dev/null \
+    || err "La ruta '$SOURCE' no es un repositorio git."
+  REPO_BASENAME="$(basename "$(git -C "$REPO_DIR" rev-parse --show-toplevel)")"
+  ok "Repo local: $REPO_DIR"
+else
+  step "1/5 Clonando repo remoto..."
+  REPO_BASENAME=$(basename "$SOURCE" .git)
+  git clone --depth=1 "$SOURCE" "$TMP_DIR/repo" 2>/dev/null \
+    || err "No se pudo clonar el repo: $SOURCE"
+  REPO_DIR="$TMP_DIR/repo"
+  ok "Repo clonado: $REPO_DIR"
+fi
 
-REPO_DIR="$TMP_DIR/repo"
+# Derivar nombres si no se especificaron
+[[ -z "$PROJECT_NAME" ]] && PROJECT_NAME="$REPO_BASENAME"
 
 # ── 2. Extraer información del repo ──────────────────────────────────────────
 step "2/5 Extrayendo información del repo..."
