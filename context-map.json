@@ -4,7 +4,10 @@
   "default": "_template",
   "mappings": {
     "example-service-a": "example-client/example-service-a",
-    "example-service-b": "example-client/example-service-b"
+    "example-service-b": "example-client/example-service-b",
+    "TAKE-APP-BE": "take-app/TAKE-APP-BE",
+    "TAKE-APP-FE": "take-app/TAKE-APP-FE",
+    "TAKE-APP":    "take-app/TAKE-APP"
   },
   "_instructions": {
     "standalone": "Sin cliente: 'nombre-repo': 'carpeta-en-projects/'",
