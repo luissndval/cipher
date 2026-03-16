@@ -71,41 +71,108 @@ if [[ "$PROJECT" == "_template" || ! -d "$PROJECT_DIR" ]]; then
   echo "" >&2
   warn "El repo '$REPO_NAME' no está registrado en context-map.json."
   echo "" >&2
-  echo -e "${BOLD}  ¿Querés generar el contexto automáticamente?${NC}" >&2
-  echo "" >&2
-  echo -e "  URL git o ruta local del repo (Enter para omitir):" >&2
-  echo -e "  ${DIM}Ejemplos: git@github.com:org/repo.git  |  .  |  /ruta/al/repo${NC}" >&2
-  read -r GIT_URL_INPUT
 
-  if [[ -n "$GIT_URL_INPUT" ]]; then
+  # Detectar si el directorio padre tiene más repos git (carpeta de cliente)
+  PARENT_DIR="$(dirname "$REPO_ROOT")"
+  SIBLING_REPOS=()
+  for sibling in "$PARENT_DIR"/*/; do
+    [[ -d "$sibling/.git" && "$sibling" != "$REPO_ROOT/" ]] && SIBLING_REPOS+=("$sibling")
+  done
+
+  if [[ ${#SIBLING_REPOS[@]} -gt 0 ]]; then
+    PARENT_NAME="$(basename "$PARENT_DIR")"
+    echo -e "${BOLD}  Se detectó que '$(basename "$PARENT_DIR")/' contiene múltiples repos:${NC}" >&2
+    echo -e "  ${DIM}$(basename "$REPO_ROOT")${NC} ← actual" >&2
+    for s in "${SIBLING_REPOS[@]}"; do
+      echo -e "  ${DIM}$(basename "$s")${NC}" >&2
+    done
     echo "" >&2
-    echo -e "  Nombre del cliente (opcional, Enter para omitir):" >&2
-    read -r CLIENT_INPUT
+    echo -e "${BOLD}  ¿Escanear toda la carpeta '$PARENT_NAME' de una vez? [s/n]${NC} " >&2
+    read -r SCAN_CHOICE
 
-    echo "" >&2
-    info "Ejecutando populate-context.sh..."
-    echo "" >&2
+    if [[ "${SCAN_CHOICE,,}" == "s" || "${SCAN_CHOICE,,}" == "si" || "${SCAN_CHOICE,,}" == "sí" ]]; then
+      echo "" >&2
+      echo -e "  Nombre del cliente (Enter para usar '$PARENT_NAME'):" >&2
+      read -r CLIENT_INPUT
+      [[ -z "$CLIENT_INPUT" ]] && CLIENT_INPUT="$PARENT_NAME"
 
-    if [[ -n "$CLIENT_INPUT" ]]; then
-      bash "$BRAIN_CONTEXTS/scripts/populate-context.sh" "$GIT_URL_INPUT" "$CLIENT_INPUT" "$REPO_NAME"
-    else
-      bash "$BRAIN_CONTEXTS/scripts/populate-context.sh" "$GIT_URL_INPUT" "" "$REPO_NAME"
-    fi
+      bash "$BRAIN_CONTEXTS/scripts/scan-folder.sh" "$PARENT_DIR" "$CLIENT_INPUT"
 
-    # Re-resolver proyecto luego de poblar
-    if command -v python3 &>/dev/null; then
-      PROJECT=$(python3 -c "
+      # Re-resolver luego del scan
+      if command -v python3 &>/dev/null; then
+        PROJECT=$(python3 -c "
 import json, sys
 d = json.loads(sys.stdin.read())
 print(d.get('mappings', {}).get('$REPO_NAME', d.get('default', '_template')))
 " < "$MAP")
-    elif command -v jq &>/dev/null; then
-      PROJECT=$(jq -r --arg r "$REPO_NAME" '.mappings[$r] // .default' "$MAP")
+      elif command -v jq &>/dev/null; then
+        PROJECT=$(jq -r --arg r "$REPO_NAME" '.mappings[$r] // .default' "$MAP")
+      fi
+      PROJECT_DIR="$BRAIN_CONTEXTS/projects/$PROJECT"
+
+    else
+      # Solo este repo
+      echo "" >&2
+      echo -e "${BOLD}  ¿Generar contexto solo para '$REPO_NAME'? [s/n]${NC} " >&2
+      read -r SINGLE_CHOICE
+
+      if [[ "${SINGLE_CHOICE,,}" == "s" || "${SINGLE_CHOICE,,}" == "si" || "${SINGLE_CHOICE,,}" == "sí" ]]; then
+        echo "" >&2
+        echo -e "  Nombre del cliente (opcional, Enter para omitir):" >&2
+        read -r CLIENT_INPUT
+
+        if [[ -n "$CLIENT_INPUT" ]]; then
+          bash "$BRAIN_CONTEXTS/scripts/populate-context.sh" "$REPO_ROOT" "$CLIENT_INPUT" "$REPO_NAME"
+        else
+          bash "$BRAIN_CONTEXTS/scripts/populate-context.sh" "$REPO_ROOT" "" "$REPO_NAME"
+        fi
+
+        if command -v python3 &>/dev/null; then
+          PROJECT=$(python3 -c "
+import json, sys
+d = json.loads(sys.stdin.read())
+print(d.get('mappings', {}).get('$REPO_NAME', d.get('default', '_template')))
+" < "$MAP")
+        elif command -v jq &>/dev/null; then
+          PROJECT=$(jq -r --arg r "$REPO_NAME" '.mappings[$r] // .default' "$MAP")
+        fi
+        PROJECT_DIR="$BRAIN_CONTEXTS/projects/$PROJECT"
+      else
+        warn "Usando template vacío. Registra el repo en context-map.json cuando estés listo."
+        PROJECT_DIR="$BRAIN_CONTEXTS/projects/_template"
+      fi
     fi
-    PROJECT_DIR="$BRAIN_CONTEXTS/projects/$PROJECT"
+
   else
-    warn "Usando template vacío. Registra el repo en context-map.json cuando estés listo."
-    PROJECT_DIR="$BRAIN_CONTEXTS/projects/_template"
+    # Solo un repo, sin hermanos — flujo directo
+    echo -e "${BOLD}  ¿Generar contexto para '$REPO_NAME'? [s/n]${NC} " >&2
+    read -r SINGLE_CHOICE
+
+    if [[ "${SINGLE_CHOICE,,}" == "s" || "${SINGLE_CHOICE,,}" == "si" || "${SINGLE_CHOICE,,}" == "sí" ]]; then
+      echo "" >&2
+      echo -e "  Nombre del cliente (opcional, Enter para omitir):" >&2
+      read -r CLIENT_INPUT
+
+      if [[ -n "$CLIENT_INPUT" ]]; then
+        bash "$BRAIN_CONTEXTS/scripts/populate-context.sh" "$REPO_ROOT" "$CLIENT_INPUT" "$REPO_NAME"
+      else
+        bash "$BRAIN_CONTEXTS/scripts/populate-context.sh" "$REPO_ROOT" "" "$REPO_NAME"
+      fi
+
+      if command -v python3 &>/dev/null; then
+        PROJECT=$(python3 -c "
+import json, sys
+d = json.loads(sys.stdin.read())
+print(d.get('mappings', {}).get('$REPO_NAME', d.get('default', '_template')))
+" < "$MAP")
+      elif command -v jq &>/dev/null; then
+        PROJECT=$(jq -r --arg r "$REPO_NAME" '.mappings[$r] // .default' "$MAP")
+      fi
+      PROJECT_DIR="$BRAIN_CONTEXTS/projects/$PROJECT"
+    else
+      warn "Usando template vacío. Registra el repo en context-map.json cuando estés listo."
+      PROJECT_DIR="$BRAIN_CONTEXTS/projects/_template"
+    fi
   fi
 fi
 
