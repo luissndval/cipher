@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>brain-contexts — Diagrama de flujo</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg:         #0d1117;
+      --surface:    #161b22;
+      --surface-2:  #1f2937;
+      --border:     #30363d;
+      --text:       #e6edf3;
+      --text-dim:   #8b949e;
+      --dev:        #3b82f6;
+      --dev-bg:     #1d3a6e;
+      --agent:      #10b981;
+      --agent-bg:   #0d3d2e;
+      --brain:      #a855f7;
+      --brain-bg:   #2d1b4e;
+      --system:     #f59e0b;
+      --system-bg:  #3d2a00;
+      --decision:   #ef4444;
+      --decision-bg:#3d1515;
+      --file:       #6b7280;
+      --file-bg:    #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #60a5fa, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .header p {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+    }
+
+    /* ── Sections ── */
+    .section {
+      margin-bottom: 60px;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      font-weight: 500;
+      background: var(--surface);
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* ── Context Layers ── */
+    .layers {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .layer {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0;
+      overflow: hidden;
+    }
+    .layer:first-child { border-radius: 12px 12px 0 0; }
+    .layer:last-child  { border-bottom: 1px solid var(--border); border-radius: 0 0 12px 12px; }
+    .layer-priority {
+      width: 6px;
+      flex-shrink: 0;
+    }
+    .layer-content {
+      flex: 1;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .layer-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .layer-files {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .layer-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    /* ── Flow Diagram ── */
+    .diagram-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 24px;
+      overflow-x: auto;
+    }
+
+    /* Mermaid custom theme overrides */
+    .mermaid svg {
+      width: 100% !important;
+      max-width: 100%;
+    }
+
+    /* ── Zones ── */
+    .zones-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .zone-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .zone-header {
+      padding: 12px 16px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .zone-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.1);
+    }
+    .zone-body {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .zone-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 0.83rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+    .zone-step-icon {
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .zone-step strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .zone-step code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      background: var(--surface-2);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #60a5fa;
+    }
+    .arrow-down {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 1.2rem;
+      padding: 4px 0;
+    }
+
+    /* ── Big Flow ── */
+    .flow-swimlane {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .swimlane-row {
+      display: flex;
+      align-items: stretch;
+      min-height: 80px;
+    }
+    .swimlane-label {
+      width: 110px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 16px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border-right: 2px solid var(--border);
+    }
+    .swimlane-content {
+      flex: 1;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .node {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border: 1px solid transparent;
+      line-height: 1.3;
+      text-align: center;
+      max-width: 160px;
+    }
+    .node-dev      { background: var(--dev-bg);      border-color: var(--dev);      color: #93c5fd; }
+    .node-agent    { background: var(--agent-bg);    border-color: var(--agent);    color: #6ee7b7; }
+    .node-brain    { background: var(--brain-bg);    border-color: var(--brain);    color: #d8b4fe; }
+    .node-system   { background: var(--system-bg);   border-color: var(--system);   color: #fcd34d; }
+    .node-decision { background: var(--decision-bg); border-color: var(--decision); color: #fca5a5; border-radius: 0; transform: rotate(0); padding: 8px 10px; }
+    .node-file     { background: var(--file-bg);     border-color: var(--file);     color: #d1d5db; }
+
+    .connector {
+      display: flex;
+      align-items: center;
+      color: var(--text-dim);
+      font-size: 1rem;
+      padding: 0 4px;
+    }
+    .connector-label {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+    footer a { color: var(--dev); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <!-- ──────────────────────────────── HEADER ──────────────────────────────── -->
+  <div class="header">
+    <h1>brain-contexts</h1>
+    <p>Flujo completo · Setup → Sesión → Implementación → Cierre → Impacto cross-repo</p>
+  </div>
+
+  <!-- ──────────────────────────────── LEGEND ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Leyenda</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Dev (acción manual)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Agente IA</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div> brain-contexts</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Sistema / Scripts</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Decisión</div>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────── LAYERS ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Capas de ACTIVE_CONTEXT.md</div>
+    <div class="layers">
+
+      <div class="layer">
+        <div class="layer-priority" style="background:#6b7280"></div>
+        <div class="layer-content">
+          <div>
+            <div class="layer-label">META</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Paths del sistema — el agente los lee para saber dónde escribir</div>
+          </div>
+          <div class="layer-files">
+            <span class="tag">BRAIN_CONTEXTS</span>
+            <span class="tag">PROJECT_DIR</span>
+            <span class="tag">REPO_ROOT</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-priority" style="background:#2C3E50"></div>
+        <div class="layer-content">
+          <div>
+            <div class="layer-label">Global</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Prioridad máxima · nunca sobreescrita</div>
+          </div>
+          <div class="layer-files">
+            <span class="tag">GLOBAL_RULES.md</span>
+            <span class="tag">AGENT.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-priority" style="background:#a855f7"></div>
+        <div class="layer-content">
+          <div>
+            <div class="layer-label">Cliente</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Perfil, billing, preferencias, mapa de integración</div>
+          </div>
+          <div class="layer-files">
+            <span class="tag">CLIENT_PROFILE.md</span>
+            <span class="tag">INTEGRATION_MAP.md</span>
+            <span class="tag">BILLING_RULES.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-priority" style="background:#3b82f6"></div>
+        <div class="layer-content">
+          <div>
+            <div class="layer-label">Proyecto</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Reglas de negocio, dependencias, riesgos, estado técnico</div>
+          </div>
+          <div class="layer-files">
+            <span class="tag">BUSINESS_RULES.md</span>
+            <span class="tag">DEPENDENCIES.md</span>
+            <span class="tag">RISK_MATRIX.md</span>
+            <span class="tag">TECHNICAL_STATE.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-priority" style="background:#10b981"></div>
+        <div class="layer-content">
+          <div>
+            <div class="layer-label">Tarea</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Impacto, flujo de trabajo, estrategia de tests</div>
+          </div>
+          <div class="layer-files">
+            <span class="tag">IMPACT_RULES.md</span>
+            <span class="tag">TASK_FLOW.md</span>
+            <span class="tag">TEST_STRATEGY.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-priority" style="background:#ef4444"></div>
+        <div class="layer-content">
+          <div>
+            <div class="layer-label" style="color:#f87171">Sesión · Alta prioridad</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Tarea activa + alertas de impacto pendientes</div>
+          </div>
+          <div class="layer-files">
+            <span class="tag" style="border-color:#ef4444;color:#f87171">CURRENT_TASK.md</span>
+            <span class="tag" style="border-color:#ef4444;color:#f87171">IMPACT_ALERTS</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────── ZONE CARDS ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Flujo por zonas</div>
+    <div class="zones-grid">
+
+      <!-- Zona 1 -->
+      <div class="zone-card">
+        <div class="zone-header" style="background:rgba(245,158,11,0.1);color:#fcd34d">
+          <div class="zone-num" style="background:#f59e0b22">1</div>
+          Setup inicial
+          <span style="margin-left:auto;font-size:0.68rem;font-weight:400;color:var(--text-dim)">una sola vez</span>
+        </div>
+        <div class="zone-body">
+          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev ejecuta <code>brain claude</code> en el repo</span></div>
+          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span><code>detect-context.sh</code> detecta repos hermanos o hijos</span></div>
+          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span><code>scan-folder.sh</code> o <code>populate-context.sh</code> procesan cada repo</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Claude genera los 7 archivos de contexto por repo</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Claude genera <code>CLIENT_PROFILE.md</code> e <code>INTEGRATION_MAP.md</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Registra en <code>context-map.json</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span>Copia <code>CURRENT_TASK.md</code> al repo + agrega a <code>.gitignore</code></span></div>
+        </div>
+      </div>
+
+      <!-- Zona 2 -->
+      <div class="zone-card">
+        <div class="zone-header" style="background:rgba(59,130,246,0.1);color:#93c5fd">
+          <div class="zone-num" style="background:#3b82f622">2</div>
+          Inicio de sesión
+        </div>
+        <div class="zone-body">
+          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev completa <code>CURRENT_TASK.md</code> en el repo</span></div>
+          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Ejecuta <code>brain claude</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span><code>detect-context.sh</code> ensambla <code>ACTIVE_CONTEXT.md</code> con todas las capas</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agente lee el contexto completo antes de cualquier acción</span></div>
+        </div>
+      </div>
+
+      <!-- Zona 3 -->
+      <div class="zone-card">
+        <div class="zone-header" style="background:rgba(239,68,68,0.1);color:#fca5a5">
+          <div class="zone-num" style="background:#ef444422">3</div>
+          Validación de tarea
+        </div>
+        <div class="zone-body">
+          <div class="zone-step"><span class="zone-step-icon">🔴</span><span><strong>¿CURRENT_TASK completo?</strong> Si faltan campos → pregunta al dev (uno a la vez)</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🔴</span><span><strong>¿Hay alertas de impacto pendientes?</strong> Se muestran como contexto prioritario</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agente propone rama: <code>feat/TAKE-123-descripcion</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev confirma → <code>git checkout -b ...</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🟡</span><span>Estado en CURRENT_TASK: <code>pending → in_progress</code></span></div>
+        </div>
+      </div>
+
+      <!-- Zona 4 -->
+      <div class="zone-card">
+        <div class="zone-header" style="background:rgba(16,185,129,0.1);color:#6ee7b7">
+          <div class="zone-num" style="background:#10b98122">4</div>
+          Implementación
+        </div>
+        <div class="zone-body">
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agente trabaja dentro del <strong>alcance declarado</strong></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🔴</span><span>Si necesita archivo fuera del alcance → <strong>detiene y pide confirmación</strong></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agrega comentarios <code># TASK: TICKET — por qué</code> en lógica no obvia</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🔴</span><span>Verifica criterios de aceptación antes de declarar completado</span></div>
+        </div>
+      </div>
+
+      <!-- Zona 5 -->
+      <div class="zone-card">
+        <div class="zone-header" style="background:rgba(16,185,129,0.1);color:#6ee7b7">
+          <div class="zone-num" style="background:#10b98122">5</div>
+          Protocolo de cierre
+          <span style="margin-left:auto;font-size:0.68rem;font-weight:400;color:var(--text-dim)">agente ejecuta</span>
+        </div>
+        <div class="zone-body">
+          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span>Lee <code>git diff main...HEAD --name-only --stat</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Analiza: ¿deps? ¿endpoints? ¿schemas? ¿arquitectura? ¿deuda técnica?</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Construye propuesta completa de actualizaciones</span></div>
+          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev confirma con una sola respuesta → agente ejecuta todo</span></div>
+        </div>
+      </div>
+
+      <!-- Zona 6 -->
+      <div class="zone-card">
+        <div class="zone-header" style="background:rgba(168,85,247,0.1);color:#d8b4fe">
+          <div class="zone-num" style="background:#a855f722">6</div>
+          Escritura en brain-contexts
+        </div>
+        <div class="zone-body">
+          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Append en <code>CHANGELOG.md</code> — ticket, fecha, archivos, resumen</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Archiva <code>CURRENT_TASK.md</code> → <code>history/TICKET.md</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🟡</span><span>Resetea <code>CURRENT_TASK.md</code> al template limpio</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Actualiza archivos estructurales si aplica</span></div>
+          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span><code>git -C brain-contexts commit</code></span></div>
+        </div>
+      </div>
+
+      <!-- Zona 7 -->
+      <div class="zone-card">
+        <div class="zone-header" style="background:rgba(168,85,247,0.1);color:#d8b4fe">
+          <div class="zone-num" style="background:#a855f722">7</div>
+          Impacto cross-repo
+        </div>
+        <div class="zone-body">
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Cruza archivos modificados con <code>INTEGRATION_MAP.md</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🔴</span><span>Si hay contratos tocados → genera alerta</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Escribe <code>output/alerts/&lt;repo-afectado&gt;.md</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Muestra resumen de impacto en pantalla</span></div>
+          <div class="zone-step"><span class="zone-step-icon" style="color:#6b7280">💡</span><span style="font-size:0.75rem">Solo lee INTEGRATION_MAP (~150 tokens) — sin leer código de otros repos</span></div>
+        </div>
+      </div>
+
+      <!-- Zona 8 -->
+      <div class="zone-card">
+        <div class="zone-header" style="background:rgba(59,130,246,0.1);color:#93c5fd">
+          <div class="zone-num" style="background:#3b82f622">8</div>
+          Resolución de alerta
+        </div>
+        <div class="zone-body">
+          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev va al repo afectado y ejecuta <code>brain claude</code></span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agente ve la alerta como contexto prioritario en ACTIVE_CONTEXT</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Trata la alerta como tarea implícita si no hay CURRENT_TASK activo</span></div>
+          <div class="zone-step"><span class="zone-step-icon">🔴</span><span>Una vez resuelto → agente elimina entrada del archivo de alerta</span></div>
+          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span>Commit en brain-contexts · alerta cerrada</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────── MERMAID DIAGRAM ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Diagrama detallado</div>
+    <div class="diagram-container">
+      <div class="mermaid">
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#1f2937',
+    'primaryTextColor': '#e6edf3',
+    'primaryBorderColor': '#374151',
+    'lineColor': '#6b7280',
+    'secondaryColor': '#1f2937',
+    'tertiaryColor': '#161b22',
+    'background': '#161b22',
+    'mainBkg': '#1f2937',
+    'nodeBorder': '#374151',
+    'clusterBkg': '#161b22',
+    'titleColor': '#e6edf3',
+    'edgeLabelBackground': '#161b22',
+    'attributeBackgroundColorOdd': '#1f2937',
+    'attributeBackgroundColorEven': '#161b22',
+    'fontFamily': 'Inter, sans-serif',
+    'fontSize': '13px'
+  }
+}}%%
+flowchart TD
+    START([" 🚀 Inicio "])
+
+    START --> FIRST_RUN{"Repo en\ncontext-map?"}
+
+    FIRST_RUN -- No --> SCAN[" 👤 brain claude\ndesde el repo "]
+    SCAN --> DETECT[" ⚙️ detect-context.sh\ndetecta repos "]
+    DETECT --> ASK{"¿Escanear\ncarpeta completa?"}
+    ASK -- Sí --> SCAN_ALL[" ⚙️ scan-folder.sh "]
+    ASK -- No --> POP1[" ⚙️ populate-context.sh "]
+    SCAN_ALL --> GEN[" 🤖 Claude genera\n7 archivos de contexto "]
+    POP1 --> GEN
+    GEN --> POST[" 🤖 Claude genera\nCLIENT_PROFILE\nINTEGRATION_MAP "]
+    POST --> MAP[" 🟣 Registra en\ncontext-map.json "]
+    MAP --> COPY[" ⚙️ Copia CURRENT_TASK.md\nal repo "]
+
+    FIRST_RUN -- Sí --> DEV_TASK
+    COPY --> DEV_TASK
+
+    DEV_TASK[" 👤 Dev completa\nCURRENT_TASK.md "]
+    DEV_TASK --> RUN[" 👤 brain claude "]
+    RUN --> BUILD[" ⚙️ Ensambla\nACTIVE_CONTEXT.md "]
+    BUILD --> AGENT[" 🤖 Agente lee\ncontexto completo "]
+
+    AGENT --> CHECK{"¿CURRENT_TASK\ncompleto?"}
+    CHECK -- Campos vacíos --> ASK_DEV[" 🤖 Pregunta al dev\none campo a la vez "]
+    ASK_DEV --> CHECK
+    CHECK -- Completo --> ALERT_CHECK{"¿Alertas de\nimpacto pendientes?"}
+    ALERT_CHECK -- Sí --> SHOW_ALERT[" 🤖 Muestra alerta\ncomo prioridad "]
+    SHOW_ALERT --> BRANCH
+    ALERT_CHECK -- No --> BRANCH
+
+    BRANCH[" 🤖 Propone rama\nfeat/TAKE-123-desc "]
+    BRANCH --> CONFIRM{"Dev\nconfirma?"}
+    CONFIRM -- Ajusta --> BRANCH
+    CONFIRM -- Sí --> GIT_BRANCH[" ⚙️ git checkout -b "]
+    GIT_BRANCH --> INPROGRESS[" 🟡 CURRENT_TASK\nstatus: in_progress "]
+
+    INPROGRESS --> IMPL[" 🤖 Implementa dentro\ndel alcance declarado "]
+    IMPL --> SCOPE{"¿Archivo fuera\ndel alcance?"}
+    SCOPE -- Sí --> ASK_SCOPE[" 🤖 Detiene y pide\nconfirmación "]
+    ASK_SCOPE --> IMPL
+    SCOPE -- No --> COMMENTS[" 🤖 Agrega comentarios\ninline en lógica no obvia "]
+    COMMENTS --> AC{"¿Criterios de\naceptación OK?"}
+    AC -- No --> IMPL
+    AC -- Sí --> DIFF
+
+    DIFF[" ⚙️ git diff main...HEAD\n--name-only --stat "]
+    DIFF --> ANALYZE[" 🤖 Analiza cambios\ndeps · endpoints · schemas\narquitectura · deuda "]
+    ANALYZE --> PROPOSAL[" 🤖 Construye propuesta\nde actualizaciones "]
+    PROPOSAL --> DEV_OK{"Dev confirma\ncon 'sí'?"}
+    DEV_OK -- Ajusta --> PROPOSAL
+    DEV_OK -- Sí --> EXECUTE
+
+    EXECUTE[" 🤖 Ejecuta todo "]
+    EXECUTE --> CL[" 🟣 Append\nCHANGELOG.md "]
+    EXECUTE --> ARCH[" 🟣 Archiva\nCURRENT_TASK → history/ "]
+    EXECUTE --> RESET[" 🟡 Resetea\nCURRENT_TASK.md "]
+    EXECUTE --> STRUCT{"¿Cambios\nestructurales?"}
+
+    STRUCT -- Deps --> DEP_UPD[" 🟣 DEPENDENCIES.md "]
+    STRUCT -- Arquitectura --> TECH_UPD[" 🟣 TECHNICAL_STATE.md "]
+    STRUCT -- Contrato API --> MAP_UPD[" 🟣 INTEGRATION_MAP.md "]
+    STRUCT -- Ninguno --> CROSS
+
+    DEP_UPD --> CROSS
+    TECH_UPD --> CROSS
+    MAP_UPD --> CROSS
+
+    CROSS{"¿Impacto\ncross-repo?"}
+    CROSS -- No --> COMMIT
+    CROSS -- Sí --> WRITE_ALERT[" 🟣 output/alerts/\nrepo-afectado.md "]
+    WRITE_ALERT --> SHOW[" 🤖 Muestra impacto\nen pantalla "]
+    SHOW --> COMMIT
+
+    COMMIT[" ⚙️ git -C brain-contexts\ncommit "]
+    COMMIT --> DONE([" ✅ Tarea completa\nbrain-contexts actualizado "])
+
+    DONE --> NEXT{"¿Alerta en\notro repo?"}
+    NEXT -- Sí --> GOTO[" 👤 Dev va al\nrepo afectado "]
+    GOTO --> RUN
+    NEXT -- No --> NEW[" 👤 Dev actualiza\nCURRENT_TASK.md "]
+    NEW --> RUN
+
+    style START fill:#10b981,color:#fff,stroke:#059669
+    style DONE  fill:#10b981,color:#fff,stroke:#059669
+
+    style DEV_TASK fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
+    style SCAN     fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
+    style RUN      fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
+    style GOTO     fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
+    style NEW      fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
+
+    style GEN      fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style POST     fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style AGENT    fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style ASK_DEV  fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style SHOW_ALERT fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style BRANCH   fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style IMPL     fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style ASK_SCOPE fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style COMMENTS fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style ANALYZE  fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style PROPOSAL fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style EXECUTE  fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+    style SHOW     fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
+
+    style MAP      fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
+    style CL       fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
+    style ARCH     fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
+    style DEP_UPD  fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
+    style TECH_UPD fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
+    style MAP_UPD  fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
+    style WRITE_ALERT fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
+
+    style DETECT   fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
+    style SCAN_ALL fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
+    style POP1     fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
+    style BUILD    fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
+    style GIT_BRANCH fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
+    style DIFF     fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
+    style COMMIT   fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
+    style COPY     fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
+
+    style RESET    fill:#1f2937,color:#d1d5db,stroke:#6b7280
+    style INPROGRESS fill:#1f2937,color:#d1d5db,stroke:#6b7280
+
+    style FIRST_RUN fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style ASK      fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style CHECK    fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style ALERT_CHECK fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style CONFIRM  fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style SCOPE    fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style AC       fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style DEV_OK   fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style STRUCT   fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style CROSS    fill:#3d1515,color:#fca5a5,stroke:#ef4444
+    style NEXT     fill:#3d1515,color:#fca5a5,stroke:#ef4444
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────── FOOTER ──────────────────────────────── -->
+  <footer>
+    <p>brain-contexts · <a href="https://github.com/luissndval/brain-contexts" target="_blank">github.com/luissndval/brain-contexts</a></p>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      themeVariables: {
+        primaryColor: '#1f2937',
+        primaryTextColor: '#e6edf3',
+        primaryBorderColor: '#374151',
+        lineColor: '#6b7280',
+        background: '#161b22',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '13px'
+      },
+      flowchart: {
+        curve: 'basis',
+        padding: 20,
+        nodeSpacing: 40,
+        rankSpacing: 50,
+        useMaxWidth: true
+      }
+    });
+  </script>
+</body>
+</html>
