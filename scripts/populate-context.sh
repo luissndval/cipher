@@ -171,6 +171,10 @@ if [[ -f "$REPO_GITIGNORE" ]]; then
 else
   echo "CURRENT_TASK.md" > "$REPO_GITIGNORE"
 fi
+# Crear CHANGELOG.md y carpeta history/ si no existen
+[[ ! -f "$PROJECT_DIR/CHANGELOG.md" ]] && \
+  cp "$BRAIN_DIR/projects/_template/CHANGELOG.md" "$PROJECT_DIR/CHANGELOG.md"
+mkdir -p "$PROJECT_DIR/history"
 ok "Directorio: $PROJECT_DIR"
 
 # ── 4. Generar archivos con Claude ────────────────────────────────────────────

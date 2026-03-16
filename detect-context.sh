@@ -214,7 +214,20 @@ CONTEXT_FILE="$OUTPUT_DIR/ACTIVE_CONTEXT.md"
 
 {
   echo "<!-- ACTIVE_CONTEXT — generado automáticamente, no editar -->"
-  echo "<!-- Repo: $REPO_NAME | Cliente: ${CLIENT:-none} | Proyecto: $PROJECT_SLUG | $(date '+%Y-%m-%d %H:%M') -->"
+  echo ""
+  echo "## META"
+  echo "<!-- Paths necesarios para que el agente actualice brain-contexts al cerrar una tarea -->"
+  echo ""
+  echo "| Campo | Valor |"
+  echo "|-------|-------|"
+  echo "| BRAIN_CONTEXTS | $BRAIN_CONTEXTS |"
+  echo "| PROJECT_DIR | $PROJECT_DIR |"
+  echo "| CLIENT_DIR | ${CLIENT_DIR:-none} |"
+  echo "| REPO_ROOT | $REPO_ROOT |"
+  echo "| REPO_NAME | $REPO_NAME |"
+  echo "| CLIENT | ${CLIENT:-none} |"
+  echo "| PROJECT | $PROJECT_SLUG |"
+  echo "| GENERATED_AT | $(date '+%Y-%m-%d %H:%M') |"
   echo ""
 
   # Capa global

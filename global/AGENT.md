@@ -110,39 +110,95 @@ El usuario puede responder "sí", "procede", "ok", "go", o equivalente para dar 
 
 ---
 
-### 3. Al completar la tarea
+### 3. Protocolo de cierre (ejecutado por el agente, no por el dev)
 
-1. **Actualizar estado** en `CURRENT_TASK.md`: `in_progress` → `completed`.
+Al verificar que los criterios de aceptación están cumplidos, el agente ejecuta automáticamente los siguientes pasos. Propone todo al dev y espera una sola confirmación antes de escribir.
 
-2. **Análisis de impacto cross-repo** (bajo costo de tokens):
-   - Leer `clients/<client>/INTEGRATION_MAP.md`.
-   - Cruzar los archivos modificados en esta tarea con los contratos listados en el mapa.
-   - Si algún contrato es tocado (endpoint cambiado, schema modificado, evento renombrado, variable removida): registrar alerta.
+#### Paso 1 — Leer el diff real de la rama
+```bash
+git log main..HEAD --oneline
+git diff main...HEAD --name-only
+git diff main...HEAD --stat
+```
+Si la rama base no es `main`, usar `master` o la rama por defecto detectada.
 
-3. **Registrar alerta de impacto** si corresponde:
-   - Escribir en `brain-contexts/output/alerts/<repo-afectado>.md` (crear si no existe).
-   - Mostrar en pantalla el resumen de impacto al desarrollador.
+#### Paso 2 — Inferir qué cambió estructuralmente
 
-4. **Formato de alerta de impacto:**
+Con el diff, determinar:
+
+| ¿Qué buscar en el diff? | ¿Qué actualizar en brain-contexts? |
+|-------------------------|-------------------------------------|
+| Archivo de dependencias modificado (`package.json`, `requirements.txt`, etc.) | `DEPENDENCIES.md` |
+| Endpoint agregado/modificado/eliminado | `INTEGRATION_MAP.md` + alerta si lo consumen otros repos |
+| Schema/tipo compartido modificado | `INTEGRATION_MAP.md` + alerta |
+| Nuevo módulo o cambio de arquitectura | `TECHNICAL_STATE.md` |
+| TODO/FIXME nuevo o deuda técnica introducida | `RISK_MATRIX.md` |
+| Variable de entorno nueva o removida | `INTEGRATION_MAP.md` |
+
+#### Paso 3 — Construir propuesta y confirmar con el dev
+
+Presentar al dev:
+- Entrada de CHANGELOG.md que se va a agregar
+- Lista de archivos de brain-contexts que se van a actualizar y qué cambia en cada uno
+- Alertas cross-repo que se van a crear (si aplica)
+
+Esperar confirmación. Con un "sí" proceder con todos los pasos siguientes.
+
+#### Paso 4 — Ejecutar actualizaciones en brain-contexts
+
+Usar los paths del bloque `## META` del ACTIVE_CONTEXT.
+
+1. **Actualizar `CHANGELOG.md`** — agregar entrada al inicio (debajo del encabezado):
+
+   ```markdown
+   ## [TICKET] YYYY-MM-DD — Título de la tarea
+
+   **Rama:** tipo/TICKET-descripcion
+   **Archivos modificados:** lista separada por comas
+   **Resumen:** qué cambió funcionalmente en 1-2 oraciones
+   **Impacto cross-repo:** nombre-repo (alerta generada) | ninguno
+
+   ---
+   ```
+
+2. **Archivar `CURRENT_TASK.md`** del repo → `PROJECT_DIR/history/TICKET.md`
+
+3. **Resetear `CURRENT_TASK.md`** del repo al template limpio
+   (copiar desde `BRAIN_CONTEXTS/projects/_template/CURRENT_TASK.md`)
+
+4. **Actualizar archivos estructurales** según lo detectado en el Paso 2.
+   Editar solo las secciones relevantes, no reescribir el archivo completo.
+
+5. **Escribir alertas de impacto** si corresponde:
+   `BRAIN_CONTEXTS/output/alerts/<repo-afectado>.md`
+
    ```markdown
    ## Alerta: <repo-afectado>
 
-   **Generada por repo:** <repo-origen>
-   **Rama:** <rama-actual>
+   **Generada por:** <repo-origen> — <rama>
    **Ticket:** <ticket>
    **Fecha:** <fecha>
-
-   **Qué cambió:** <descripción del cambio en el contrato>
-   **Archivos modificados:** <lista>
-   **Qué revisar en <repo-afectado>:** <instrucción concreta para el dev>
+   **Qué cambió:** descripción del contrato modificado
+   **Archivos origen:** lista
+   **Qué revisar:** instrucción concreta de qué ajustar en el repo afectado
 
    ---
+   ```
+
+6. **Commit en brain-contexts:**
+   ```bash
+   git -C <BRAIN_CONTEXTS> add projects/<client>/<repo>/CHANGELOG.md \
+     projects/<client>/<repo>/history/TICKET.md \
+     [otros archivos actualizados] \
+     output/alerts/
+   git -C <BRAIN_CONTEXTS> commit -m "chore(<repo>): update context post <TICKET>"
    ```
 
 ---
 
 ### 4. Resolución de alertas
 
-- Cuando el desarrollador va al repo afectado y corre `brain claude`, el agente detecta que existe `output/alerts/<este-repo>.md` y lo muestra como contexto prioritario.
-- Una vez resuelto el cambio en el repo afectado, el agente **elimina** la entrada correspondiente del archivo de alertas (o el archivo completo si era la única alerta).
-- El agente confirma con el desarrollador antes de eliminar la alerta.
+- Cuando el dev va al repo afectado y corre `brain claude`, el agente ve `output/alerts/<repo>.md` en el contexto (sección `## ALERTAS DE IMPACTO PENDIENTES`).
+- El agente trata la alerta como la tarea implícita de la sesión si no hay `CURRENT_TASK.md` activo.
+- Una vez resuelto el cambio, el agente elimina la entrada del archivo de alertas (o el archivo completo si era la única).
+- El agente confirma con el dev antes de eliminar y hace commit en brain-contexts.
