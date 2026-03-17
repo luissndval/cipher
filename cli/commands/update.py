@@ -164,7 +164,7 @@ Respondés siempre en JSON válido, sin markdown, sin explicaciones fuera del JS
     # 11. Commit en cipher
     answer3 = input(f"\n  ¿Hacer commit en cipher? [S/n]: ").strip().lower()
     if answer3 in ["", "s", "si", "y"]:
-        commit_lore(loader.cipher_dir, loader.repo_name, analysis.get("summary", "update"))
+        commit_cipher(loader.cipher_dir, loader.repo_name, analysis.get("summary", "update"))
 
     print(f"\n{GREEN}✓ Contexto actualizado correctamente.{NC}\n")
 
@@ -240,7 +240,7 @@ def generate_alerts(loader, client: str, cross_impact: list, alert_content: str)
             print(f"  {YELLOW}→ Notificar a: {owner}{NC}")
 
 
-def commit_lore(brain_dir: str, repo_name: str, summary: str):
+def commit_cipher(brain_dir: str, repo_name: str, summary: str):
     """Hace commit automático en cipher."""
     import subprocess
     msg = f"cipher: update context for {repo_name} — {summary[:60]}"

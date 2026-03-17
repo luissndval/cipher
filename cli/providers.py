@@ -1,5 +1,5 @@
 """
-lore — Providers
+cipher — Providers
 
 Dos roles bien separados:
   - AnalysisProvider : analiza repos y genera contexto (Gemini por defecto)
@@ -83,7 +83,7 @@ def save_provider_config(provider: str, updates: dict):
 
 def get_analysis_provider(preferred: str = "gemini"):
     """
-    Retorna el provider para análisis de repos (lore init, lore update).
+    Retorna el provider para análisis de repos (cipher init, cipher update).
     Por defecto: Gemini. Fallback: Claude.
     """
     cfg = load_config()
@@ -98,7 +98,7 @@ def get_analysis_provider(preferred: str = "gemini"):
 
 def get_coding_agent():
     """
-    Retorna el agente de codificación (lore claude).
+    Retorna el agente de codificación (cipher claude).
     Actualmente: Claude Code CLI.
     """
     cfg = load_config()

@@ -5,9 +5,9 @@
 
 ## Protocolo obligatorio antes de actuar
 
-1. Leer `.lore/ACTIVE_CONTEXT.md` completo
-2. Leer `.lore/task-agent.md` si existe
-3. Verificar si hay `.lore/ALERT.md` — si existe, leerlo antes de cualquier otra cosa
+1. Leer `.cipher/ACTIVE_CONTEXT.md` completo
+2. Leer `.cipher/task-agent.md` si existe
+3. Verificar si hay `.cipher/ALERT.md` — si existe, leerlo antes de cualquier otra cosa
 4. Nunca asumir; preguntar si hay ambigüedad
 
 ## Límites de autonomía
@@ -40,7 +40,7 @@
 - Qué se implementó
 - Qué archivos se modificaron
 - Pruebas que se deberían correr
-- Si hay impacto cruzado: recordar ejecutar `lore update`
+- Si hay impacto cruzado: recordar ejecutar `cipher update`
 
 ## Protocolo de gestión de contexto
 

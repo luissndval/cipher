@@ -8,6 +8,7 @@ CLAUDE.md
 .cipher/ACTIVE_CONTEXT.md
 .cipher/task-agent.md
 .cipher/ALERT.md
+.cipher/sessions/
 
 # Python
 __pycache__/

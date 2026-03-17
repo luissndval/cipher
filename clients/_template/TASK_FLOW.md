@@ -4,8 +4,8 @@
 ## Pasos obligatorios
 
 ### Paso 1 — Leer contexto
-Leer `.lore/ACTIVE_CONTEXT.md` y `.lore/task-agent.md` completos.
-Verificar si existe `.lore/ALERT.md`.
+Leer `.cipher/ACTIVE_CONTEXT.md` y `.cipher/task-agent.md` completos.
+Verificar si existe `.cipher/ALERT.md`.
 
 ### Paso 2 — Describir el cambio
 Parafrasear con palabras propias qué cambio se pide y cuál es el objetivo.
@@ -30,7 +30,7 @@ Esperar aprobación antes de ejecutar.
 ### Paso 8 — Implementar y documentar
 Aplicar cambios aprobados.
 Listar pruebas mínimas al finalizar.
-Recordar ejecutar `lore update` si el cambio es significativo.
+Recordar ejecutar `cipher update` si el cambio es significativo.
 
 ## Casos especiales
 - **Cambio trivial (typo, comentario):** Pasos 1, 2, 3 y 8 son suficientes.
