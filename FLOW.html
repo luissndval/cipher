@@ -1,771 +1,1091 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>brain-contexts — Diagrama de flujo</title>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cipher — Flujo Operacional</title>
+<style>
+  :root {
+    --bg:        #0d0f14;
+    --bg2:       #13161e;
+    --bg3:       #1a1e2a;
+    --border:    #252a38;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --accent:    #7c6aff;
+    --accent2:   #a78bfa;
+    --green:     #34d399;
+    --yellow:    #fbbf24;
+    --red:       #f87171;
+    --cyan:      #22d3ee;
+    --pink:      #f472b6;
+    --layer1:    #7c6aff;
+    --layer2:    #22d3ee;
+    --layer3:    #34d399;
+    --radius:    12px;
+    --radius-sm: 6px;
+  }
 
-    :root {
-      --bg:         #0d1117;
-      --surface:    #161b22;
-      --surface-2:  #1f2937;
-      --border:     #30363d;
-      --text:       #e6edf3;
-      --text-dim:   #8b949e;
-      --dev:        #3b82f6;
-      --dev-bg:     #1d3a6e;
-      --agent:      #10b981;
-      --agent-bg:   #0d3d2e;
-      --brain:      #a855f7;
-      --brain-bg:   #2d1b4e;
-      --system:     #f59e0b;
-      --system-bg:  #3d2a00;
-      --decision:   #ef4444;
-      --decision-bg:#3d1515;
-      --file:       #6b7280;
-      --file-bg:    #1f2937;
-    }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      padding: 40px 24px 80px;
-    }
+  /* ─── NAV ─────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(13,15,20,.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-weight: 700; font-size: 1.1rem; color: var(--accent2); letter-spacing: .05em; }
+  .nav-logo span { color: var(--muted); font-weight: 400; }
+  .nav-links { display: flex; gap: 1.5rem; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: .85rem;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text); }
 
-    /* ── Header ── */
-    .header {
-      text-align: center;
-      margin-bottom: 56px;
-    }
-    .header h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #60a5fa, #a855f7);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
-    }
-    .header p {
-      color: var(--text-dim);
-      font-size: 0.95rem;
-    }
+  /* ─── LAYOUT ──────────────────────────────────────── */
+  main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
 
-    /* ── Sections ── */
-    .section {
-      margin-bottom: 60px;
-    }
-    .section-title {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .section-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+  section { padding: 5rem 0 3rem; }
+  section + section { border-top: 1px solid var(--border); }
 
-    /* ── Legend ── */
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 40px;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      font-size: 0.82rem;
-      font-weight: 500;
-      background: var(--surface);
-    }
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
+  h1 { font-size: 3rem; font-weight: 800; line-height: 1.15; }
+  h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 1.5rem; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .6rem; }
+  p  { color: #94a3b8; margin-bottom: .8rem; }
 
-    /* ── Context Layers ── */
-    .layers {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      max-width: 720px;
-      margin: 0 auto;
-    }
-    .layer {
-      display: flex;
-      align-items: stretch;
-      border: 1px solid var(--border);
-      border-bottom: none;
-      border-radius: 0;
-      overflow: hidden;
-    }
-    .layer:first-child { border-radius: 12px 12px 0 0; }
-    .layer:last-child  { border-bottom: 1px solid var(--border); border-radius: 0 0 12px 12px; }
-    .layer-priority {
-      width: 6px;
-      flex-shrink: 0;
-    }
-    .layer-content {
-      flex: 1;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .layer-label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      white-space: nowrap;
-    }
-    .layer-files {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: flex-end;
-    }
-    .tag {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
-      padding: 3px 8px;
-      border-radius: 4px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-    }
-    .layer-badge {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 10px;
-      white-space: nowrap;
-    }
+  .tag {
+    display: inline-block; padding: .2rem .7rem;
+    border-radius: 99px; font-size: .72rem; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+  .tag-accent  { background: #7c6aff22; color: var(--accent2); border: 1px solid #7c6aff44; }
+  .tag-green   { background: #34d39922; color: var(--green);   border: 1px solid #34d39944; }
+  .tag-yellow  { background: #fbbf2422; color: var(--yellow);  border: 1px solid #fbbf2444; }
+  .tag-cyan    { background: #22d3ee22; color: var(--cyan);    border: 1px solid #22d3ee44; }
 
-    /* ── Flow Diagram ── */
-    .diagram-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px 24px;
-      overflow-x: auto;
-    }
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    background: var(--bg3); color: var(--accent2);
+    padding: .1rem .45rem; border-radius: var(--radius-sm);
+    font-size: .85em;
+  }
 
-    /* Mermaid custom theme overrides */
-    .mermaid svg {
-      width: 100% !important;
-      max-width: 100%;
-    }
+  /* ─── HERO ────────────────────────────────────────── */
+  #hero { padding-top: 7rem; text-align: center; }
 
-    /* ── Zones ── */
-    .zones-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-    }
-    .zone-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .zone-header {
-      padding: 12px 16px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .zone-num {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.72rem;
-      font-weight: 700;
-      background: rgba(255,255,255,0.1);
-    }
-    .zone-body {
-      padding: 12px 16px;
-      border-top: 1px solid var(--border);
-    }
-    .zone-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 6px 0;
-      font-size: 0.83rem;
-      color: var(--text-dim);
-      line-height: 1.4;
-    }
-    .zone-step-icon {
-      font-size: 0.9rem;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .zone-step strong {
-      color: var(--text);
-      font-weight: 500;
-    }
-    .zone-step code {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
-      background: var(--surface-2);
-      padding: 1px 5px;
-      border-radius: 3px;
-      color: #60a5fa;
-    }
-    .arrow-down {
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 1.2rem;
-      padding: 4px 0;
-    }
+  .hero-kicker {
+    font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 1.2rem;
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+  }
+  .hero-kicker::before, .hero-kicker::after {
+    content: ''; flex: 1; max-width: 60px;
+    height: 1px; background: var(--accent);
+  }
 
-    /* ── Big Flow ── */
-    .flow-swimlane {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-    .swimlane-row {
-      display: flex;
-      align-items: stretch;
-      min-height: 80px;
-    }
-    .swimlane-label {
-      width: 110px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 16px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      border-right: 2px solid var(--border);
-    }
-    .swimlane-content {
-      flex: 1;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+  #hero h1 { margin-bottom: 1.2rem; }
+  #hero h1 em { font-style: normal; color: var(--accent2); }
+  #hero .subtitle {
+    font-size: 1.05rem; color: var(--muted);
+    max-width: 580px; margin: 0 auto 2.5rem;
+  }
 
-    .node {
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      border: 1px solid transparent;
-      line-height: 1.3;
-      text-align: center;
-      max-width: 160px;
-    }
-    .node-dev      { background: var(--dev-bg);      border-color: var(--dev);      color: #93c5fd; }
-    .node-agent    { background: var(--agent-bg);    border-color: var(--agent);    color: #6ee7b7; }
-    .node-brain    { background: var(--brain-bg);    border-color: var(--brain);    color: #d8b4fe; }
-    .node-system   { background: var(--system-bg);   border-color: var(--system);   color: #fcd34d; }
-    .node-decision { background: var(--decision-bg); border-color: var(--decision); color: #fca5a5; border-radius: 0; transform: rotate(0); padding: 8px 10px; }
-    .node-file     { background: var(--file-bg);     border-color: var(--file);     color: #d1d5db; }
+  .hero-pills { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+  .pill {
+    padding: .4rem 1rem; border-radius: 99px;
+    border: 1px solid var(--border); color: var(--muted);
+    font-size: .82rem;
+  }
 
-    .connector {
-      display: flex;
-      align-items: center;
-      color: var(--text-dim);
-      font-size: 1rem;
-      padding: 0 4px;
-    }
-    .connector-label {
-      font-size: 0.68rem;
-      color: var(--text-dim);
-      white-space: nowrap;
-    }
+  /* ─── PROBLEM / SOLUTION ──────────────────────────── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 
-    /* ── Footer ── */
-    footer {
-      text-align: center;
-      margin-top: 60px;
-      color: var(--text-dim);
-      font-size: 0.8rem;
-    }
-    footer a { color: var(--dev); text-decoration: none; }
-  </style>
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.75rem;
+  }
+  .card-bad  { border-color: #f8717133; }
+  .card-good { border-color: #34d39933; }
+
+  .card-icon { font-size: 1.8rem; margin-bottom: 1rem; }
+  .card h3 { font-size: 1rem; margin-bottom: .75rem; }
+  .card ul { list-style: none; display: flex; flex-direction: column; gap: .45rem; }
+  .card ul li { color: #94a3b8; font-size: .9rem; padding-left: 1.2rem; position: relative; }
+  .card ul li::before { content: attr(data-icon); position: absolute; left: 0; }
+
+  /* ─── LAYERS ──────────────────────────────────────── */
+  .layers-visual {
+    display: flex; flex-direction: column; gap: 0;
+    max-width: 700px; margin: 0 auto;
+  }
+
+  .layer {
+    display: grid; grid-template-columns: 220px 1fr;
+    border-radius: 0; overflow: hidden;
+    border: 1px solid var(--border);
+    transition: transform .2s;
+  }
+  .layer:hover { transform: translateX(6px); z-index: 1; }
+  .layer:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+  .layer:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
+  .layer + .layer { border-top: none; }
+
+  .layer-label {
+    padding: 1.2rem 1.5rem;
+    display: flex; flex-direction: column; justify-content: center;
+    font-weight: 700; font-size: .9rem; letter-spacing: .04em;
+  }
+  .layer-label small { font-weight: 400; font-size: .75rem; margin-top: .2rem; opacity: .7; }
+  .layer-content {
+    padding: 1rem 1.5rem; background: var(--bg2);
+    display: flex; flex-direction: column; justify-content: center; gap: .35rem;
+  }
+
+  .layer-global  .layer-label { background: #7c6aff22; color: var(--layer1); border-right: 1px solid #7c6aff33; }
+  .layer-client  .layer-label { background: #22d3ee22; color: var(--layer2); border-right: 1px solid #22d3ee33; }
+  .layer-project .layer-label { background: #34d39922; color: var(--layer3); border-right: 1px solid #34d39933; }
+
+  .file-chip {
+    display: inline-block; padding: .15rem .5rem;
+    border-radius: var(--radius-sm); font-family: monospace; font-size: .78rem;
+  }
+  .chip-1 { background: #7c6aff15; color: var(--accent2); }
+  .chip-2 { background: #22d3ee15; color: var(--cyan); }
+  .chip-3 { background: #34d39915; color: var(--green); }
+
+  .layer-arrow {
+    text-align: center; color: var(--muted); font-size: 1rem;
+    padding: .3rem 0;
+  }
+
+  .context-result {
+    margin-top: 1.5rem;
+    background: var(--bg2); border: 1px solid #7c6aff33;
+    border-radius: var(--radius); padding: 1.2rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .context-result .icon { font-size: 1.5rem; }
+  .context-result .info { flex: 1; }
+  .context-result .info strong { color: var(--accent2); font-family: monospace; font-size: .9rem; }
+  .context-result .info p { font-size: .82rem; margin: 0; }
+  .token-badge {
+    background: #7c6aff22; color: var(--accent2);
+    border: 1px solid #7c6aff44;
+    padding: .3rem .8rem; border-radius: 99px; font-size: .78rem; white-space: nowrap;
+  }
+
+  /* ─── COMMANDS ────────────────────────────────────── */
+  .cmd-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .cmd-tab {
+    padding: .5rem 1.2rem; border-radius: 99px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); font-size: .85rem; cursor: pointer;
+    transition: all .2s; font-family: inherit;
+  }
+  .cmd-tab:hover { border-color: var(--accent); color: var(--accent2); }
+  .cmd-tab.active {
+    background: #7c6aff22; border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  .cmd-panel { display: none; }
+  .cmd-panel.active { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; }
+
+  .cmd-info h3 { font-size: 1rem; color: var(--text); margin-bottom: .5rem; }
+  .cmd-info .cmd-desc { font-size: .9rem; color: #94a3b8; margin-bottom: 1.2rem; }
+
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex; gap: 1rem; padding: .9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; min-width: 24px;
+    border-radius: 99px; display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 700;
+    background: #7c6aff22; color: var(--accent2); border: 1px solid #7c6aff44;
+  }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; font-size: .88rem; color: var(--text); margin-bottom: .2rem; }
+  .step-body span { font-size: .82rem; color: var(--muted); }
+
+  .cmd-terminal {
+    background: #0a0c10; border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .terminal-header {
+    padding: .7rem 1rem; background: var(--bg3); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 99px; }
+  .dot-r { background: #f87171; }
+  .dot-y { background: #fbbf24; }
+  .dot-g { background: #34d399; }
+  .terminal-title { font-size: .78rem; color: var(--muted); margin-left: .3rem; }
+  .terminal-body { padding: 1.2rem; font-family: monospace; font-size: .82rem; line-height: 1.8; }
+  .t-prompt { color: var(--accent); }
+  .t-cmd    { color: var(--text); }
+  .t-out    { color: var(--muted); }
+  .t-q      { color: var(--yellow); }
+  .t-ans    { color: var(--cyan); }
+  .t-ok     { color: var(--green); }
+  .t-branch { color: var(--pink); }
+
+  /* ─── FLOW ────────────────────────────────────────── */
+  .flow-timeline { position: relative; padding-left: 2rem; }
+  .flow-timeline::before {
+    content: ''; position: absolute; left: .45rem; top: 0; bottom: 0;
+    width: 2px; background: linear-gradient(to bottom, var(--accent), var(--green));
+    border-radius: 2px;
+  }
+
+  .flow-step {
+    position: relative; margin-bottom: 2rem;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem 1.5rem;
+    transition: border-color .2s;
+  }
+  .flow-step:hover { border-color: var(--accent); }
+  .flow-step::before {
+    content: ''; position: absolute;
+    left: -2.45rem; top: 1.5rem;
+    width: 12px; height: 12px; border-radius: 99px;
+    background: var(--accent); border: 2px solid var(--bg);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .flow-step-header {
+    display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem;
+  }
+  .flow-cmd {
+    font-family: monospace; font-size: .88rem;
+    background: #7c6aff22; color: var(--accent2);
+    border: 1px solid #7c6aff33; border-radius: var(--radius-sm);
+    padding: .2rem .6rem;
+  }
+  .flow-step p { font-size: .88rem; margin: 0; }
+
+  .flow-substeps {
+    margin-top: .75rem;
+    display: flex; flex-direction: column; gap: .4rem;
+  }
+  .flow-sub {
+    display: flex; align-items: flex-start; gap: .6rem;
+    font-size: .83rem; color: #94a3b8;
+  }
+  .flow-sub-icon { font-size: .8rem; margin-top: .1rem; opacity: .7; }
+
+  .flow-output {
+    margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .flow-output-label { font-size: .75rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .06em; white-space: nowrap; }
+  .flow-output-files { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+  /* ─── BRANCH FORMAT ───────────────────────────────── */
+  .branch-demo {
+    background: #0a0c10; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 2rem; text-align: center;
+  }
+  .branch-name {
+    font-family: monospace; font-size: 1.4rem; font-weight: 700;
+    letter-spacing: .04em; margin: 1rem 0;
+  }
+  .branch-part { display: inline-block; }
+  .bp-type   { color: var(--pink); }
+  .bp-sep    { color: var(--muted); }
+  .bp-num    { color: var(--yellow); }
+  .bp-title  { color: var(--cyan); }
+
+  .branch-types { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+  .btype {
+    padding: .5rem 1.2rem; border-radius: var(--radius-sm);
+    font-family: monospace; font-size: .85rem; font-weight: 600;
+    border: 1px solid; cursor: default;
+  }
+  .btype-feature { background: #7c6aff15; color: var(--accent2); border-color: #7c6aff33; }
+  .btype-task    { background: #22d3ee15; color: var(--cyan);    border-color: #22d3ee33; }
+  .btype-error   { background: #f8717115; color: var(--red);     border-color: #f8717133; }
+  .btype-hotfix  { background: #fbbf2415; color: var(--yellow);  border-color: #fbbf2433; }
+
+  /* ─── PROVIDERS ───────────────────────────────────── */
+  .providers-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+  .provider-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem;
+    transition: transform .2s, border-color .2s;
+  }
+  .provider-card:hover { transform: translateY(-3px); }
+  .provider-card.p-claude { border-color: #7c6aff44; }
+  .provider-card.p-gemini { border-color: #22d3ee44; }
+  .provider-card.p-openai { border-color: #34d39944; }
+  .provider-card.p-aider  { border-color: #fbbf2444; }
+
+  .provider-icon { font-size: 1.8rem; margin-bottom: .8rem; }
+  .provider-name { font-weight: 700; font-size: .95rem; margin-bottom: .3rem; }
+  .provider-model { font-family: monospace; font-size: .75rem; color: var(--muted); margin-bottom: .8rem; }
+  .provider-ctx { font-size: .78rem; color: var(--muted); }
+  .provider-ctx strong { color: var(--text); }
+
+  /* ─── ISOLATION ───────────────────────────────────── */
+  .isolation-visual { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+  .fs-tree {
+    background: #0a0c10; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem;
+    font-family: monospace; font-size: .83rem; line-height: 1.9;
+  }
+  .fs-title { font-size: .75rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .08em; margin-bottom: 1rem; font-family: inherit; }
+  .fs-dir  { color: var(--accent2); }
+  .fs-file { color: var(--text); }
+  .fs-generated { color: var(--green); }
+  .fs-temp { color: var(--yellow); }
+  .fs-never { color: var(--muted); text-decoration: line-through; }
+  .fs-note { color: var(--muted); font-size: .75rem; }
+
+  .isolation-rules { display: flex; flex-direction: column; gap: .75rem; }
+  .i-rule {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: .9rem 1rem;
+    display: flex; gap: .75rem; align-items: flex-start;
+  }
+  .i-rule-icon { font-size: 1.1rem; }
+  .i-rule-body strong { display: block; font-size: .88rem; margin-bottom: .15rem; }
+  .i-rule-body span { font-size: .82rem; color: var(--muted); }
+
+  /* ─── FOOTER ──────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 1.5rem; text-align: center;
+    color: var(--muted); font-size: .82rem;
+  }
+  footer a { color: var(--accent2); text-decoration: none; }
+
+  /* ─── RESPONSIVE ──────────────────────────────────── */
+  @media (max-width: 768px) {
+    h1 { font-size: 2rem; }
+    .two-col { grid-template-columns: 1fr; }
+    .cmd-panel.active { grid-template-columns: 1fr; }
+    .providers-grid { grid-template-columns: 1fr 1fr; }
+    .isolation-visual { grid-template-columns: 1fr; }
+    .layer { grid-template-columns: 1fr; }
+    .layer-label { padding: .8rem 1rem; }
+    .nav-links { display: none; }
+  }
+</style>
 </head>
 <body>
 
-  <!-- ──────────────────────────────── HEADER ──────────────────────────────── -->
-  <div class="header">
-    <h1>brain-contexts</h1>
-    <p>Flujo completo · Setup → Sesión → Implementación → Cierre → Impacto cross-repo</p>
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">cipher <span>/ docs</span></span>
+  <div class="nav-links">
+    <a href="#problema">Problema</a>
+    <a href="#capas">Capas</a>
+    <a href="#comandos">Comandos</a>
+    <a href="#flujo">Flujo</a>
+    <a href="#branch">Branches</a>
+    <a href="#providers">Providers</a>
+    <a href="#aislamiento">Aislamiento</a>
   </div>
+</nav>
 
-  <!-- ──────────────────────────────── LEGEND ──────────────────────────────── -->
-  <div class="section">
-    <div class="section-title">Leyenda</div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Dev (acción manual)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Agente IA</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div> brain-contexts</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Sistema / Scripts</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Decisión</div>
+<main>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-kicker">sistema de contexto para agentes IA</div>
+    <h1>La <em>memoria</em> que<br>cualquier agente consume.</h1>
+    <p class="subtitle">
+      cipher centraliza el conocimiento de tus proyectos y lo inyecta automáticamente
+      en Claude, Gemini o Codex al iniciar cada sesión.
+    </p>
+    <div class="hero-pills">
+      <span class="pill">✨ Gemini — análisis de repos</span>
+      <span class="pill">🤖 Claude — agente de código</span>
+      <span class="pill">🏢 Multi-cliente</span>
+      <span class="pill">🔒 Aislamiento total</span>
+      <span class="pill">⚡ Branch automation</span>
     </div>
-  </div>
+  </section>
 
-  <!-- ──────────────────────────────── LAYERS ──────────────────────────────── -->
-  <div class="section">
-    <div class="section-title">Capas de ACTIVE_CONTEXT.md</div>
-    <div class="layers">
+  <!-- PROBLEMA -->
+  <section id="problema">
+    <div class="tag tag-accent" style="margin-bottom:1.2rem">El problema</div>
+    <h2>Sin cipher, cada sesión empieza desde cero.</h2>
+    <div class="two-col">
+      <div class="card card-bad">
+        <div class="card-icon">😓</div>
+        <h3 style="color:var(--red)">Sin cipher</h3>
+        <ul>
+          <li data-icon="✗ ">El dev re-explica el proyecto cada vez</li>
+          <li data-icon="✗ ">El agente desconoce reglas de negocio</li>
+          <li data-icon="✗ ">No sabe el stack ni las dependencias</li>
+          <li data-icon="✗ ">Cambiás de herramienta y empezás de cero</li>
+          <li data-icon="✗ ">El conocimiento vive en la cabeza del dev</li>
+        </ul>
+      </div>
+      <div class="card card-good">
+        <div class="card-icon">🚀</div>
+        <h3 style="color:var(--green)">Con cipher</h3>
+        <ul>
+          <li data-icon="✓ ">El contexto se carga automáticamente</li>
+          <li data-icon="✓ ">Todos los devs comparten la misma memoria</li>
+          <li data-icon="✓ ">Funciona con Claude, Gemini, Codex o Aider</li>
+          <li data-icon="✓ ">El agente crea branches y PRs automáticamente</li>
+          <li data-icon="✓ ">El conocimiento vive en el repo, versionado</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-      <div class="layer">
-        <div class="layer-priority" style="background:#6b7280"></div>
+  <!-- CAPAS -->
+  <section id="capas">
+    <div class="tag tag-cyan" style="margin-bottom:1.2rem">Arquitectura de contexto</div>
+    <h2>El contexto se ensambla en tres capas.</h2>
+    <p>Cada sesión combina reglas globales, datos del cliente y detalles del repo en un único archivo <code>ACTIVE_CONTEXT.md</code>.</p>
+
+    <br>
+    <div class="layers-visual">
+
+      <div class="layer layer-global">
+        <div class="layer-label">
+          🌐 GLOBAL
+          <small>Todos los proyectos</small>
+        </div>
         <div class="layer-content">
-          <div>
-            <div class="layer-label">META</div>
-            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Paths del sistema — el agente los lee para saber dónde escribir</div>
-          </div>
-          <div class="layer-files">
-            <span class="tag">BRAIN_CONTEXTS</span>
-            <span class="tag">PROJECT_DIR</span>
-            <span class="tag">REPO_ROOT</span>
-          </div>
+          <span class="file-chip chip-1">CONVENTIONS.md</span>
+          <span class="file-chip chip-1">WORKFLOW.md</span>
+          <span class="file-chip chip-1">AGENT.md</span>
         </div>
       </div>
 
-      <div class="layer">
-        <div class="layer-priority" style="background:#2C3E50"></div>
+      <div class="layer layer-client">
+        <div class="layer-label">
+          🏢 CLIENTE
+          <small>Por empresa / cliente</small>
+        </div>
         <div class="layer-content">
-          <div>
-            <div class="layer-label">Global</div>
-            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Prioridad máxima · nunca sobreescrita</div>
-          </div>
-          <div class="layer-files">
-            <span class="tag">GLOBAL_RULES.md</span>
-            <span class="tag">AGENT.md</span>
-          </div>
+          <span class="file-chip chip-2">BUSINESS_RULES.md</span>
+          <span class="file-chip chip-2">ARCHITECTURE.md</span>
         </div>
       </div>
 
-      <div class="layer">
-        <div class="layer-priority" style="background:#a855f7"></div>
-        <div class="layer-content">
-          <div>
-            <div class="layer-label">Cliente</div>
-            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Perfil, billing, preferencias, mapa de integración</div>
-          </div>
-          <div class="layer-files">
-            <span class="tag">CLIENT_PROFILE.md</span>
-            <span class="tag">INTEGRATION_MAP.md</span>
-            <span class="tag">BILLING_RULES.md</span>
-          </div>
+      <div class="layer layer-project">
+        <div class="layer-label">
+          📦 PROYECTO
+          <small>Por repo específico</small>
         </div>
-      </div>
-
-      <div class="layer">
-        <div class="layer-priority" style="background:#3b82f6"></div>
         <div class="layer-content">
-          <div>
-            <div class="layer-label">Proyecto</div>
-            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Reglas de negocio, dependencias, riesgos, estado técnico</div>
-          </div>
-          <div class="layer-files">
-            <span class="tag">BUSINESS_RULES.md</span>
-            <span class="tag">DEPENDENCIES.md</span>
-            <span class="tag">RISK_MATRIX.md</span>
-            <span class="tag">TECHNICAL_STATE.md</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="layer">
-        <div class="layer-priority" style="background:#10b981"></div>
-        <div class="layer-content">
-          <div>
-            <div class="layer-label">Tarea</div>
-            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Impacto, flujo de trabajo, estrategia de tests</div>
-          </div>
-          <div class="layer-files">
-            <span class="tag">IMPACT_RULES.md</span>
-            <span class="tag">TASK_FLOW.md</span>
-            <span class="tag">TEST_STRATEGY.md</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="layer">
-        <div class="layer-priority" style="background:#ef4444"></div>
-        <div class="layer-content">
-          <div>
-            <div class="layer-label" style="color:#f87171">Sesión · Alta prioridad</div>
-            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px">Tarea activa + alertas de impacto pendientes</div>
-          </div>
-          <div class="layer-files">
-            <span class="tag" style="border-color:#ef4444;color:#f87171">CURRENT_TASK.md</span>
-            <span class="tag" style="border-color:#ef4444;color:#f87171">IMPACT_ALERTS</span>
-          </div>
+          <span class="file-chip chip-3">DEPENDENCIES.md</span>
+          <span class="file-chip chip-3">RISK_MATRIX.md</span>
+          <span class="file-chip chip-3">IMPACT_RULES.md</span>
+          <span class="file-chip chip-3">TASK_FLOW.md</span>
+          <span class="file-chip chip-3">TEST_STRATEGY.md</span>
         </div>
       </div>
 
     </div>
-  </div>
 
-  <!-- ──────────────────────────────── ZONE CARDS ──────────────────────────────── -->
-  <div class="section">
-    <div class="section-title">Flujo por zonas</div>
-    <div class="zones-grid">
+    <div class="context-result">
+      <div class="icon">📄</div>
+      <div class="info">
+        <strong>.cipher/sessions/&lt;cliente&gt;/&lt;repo&gt;/ACTIVE_CONTEXT.md</strong>
+        <p>Contexto ensamblado — solo vive en el repo cipher, nunca en el repo del cliente.</p>
+      </div>
+      <div class="token-badge">~900 tokens (modo summary)</div>
+    </div>
+  </section>
 
-      <!-- Zona 1 -->
-      <div class="zone-card">
-        <div class="zone-header" style="background:rgba(245,158,11,0.1);color:#fcd34d">
-          <div class="zone-num" style="background:#f59e0b22">1</div>
-          Setup inicial
-          <span style="margin-left:auto;font-size:0.68rem;font-weight:400;color:var(--text-dim)">una sola vez</span>
+  <!-- COMANDOS -->
+  <section id="comandos">
+    <div class="tag tag-green" style="margin-bottom:1.2rem">Comandos</div>
+    <h2>Cuatro comandos para el flujo completo.</h2>
+
+    <div class="cmd-tabs">
+      <button class="cmd-tab active" onclick="showCmd('init')">cipher init</button>
+      <button class="cmd-tab" onclick="showCmd('session')">cipher claude / gemini / codex</button>
+      <button class="cmd-tab" onclick="showCmd('update')">cipher update</button>
+      <button class="cmd-tab" onclick="showCmd('status')">cipher status</button>
+    </div>
+
+    <!-- INIT -->
+    <div class="cmd-panel active" id="cmd-init">
+      <div class="cmd-info">
+        <h3>Registrar un cliente nuevo</h3>
+        <p class="cmd-desc">Escanea los repos de una carpeta, analiza el código fuente con IA y genera toda la documentación de contexto automáticamente.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Detectar repos</strong>
+              <span>Escanea subdirectorios con <code>.git</code> en el directorio actual</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Elegir agente de análisis</strong>
+              <span>Claude, Gemini o OpenAI — verifica y configura la API key si es necesario</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Leer código fuente real</strong>
+              <span>Lee archivos .py .ts .js .go .env etc. hasta el límite del provider</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Generar contexto con IA</strong>
+              <span>Un request por repo genera los 4 archivos .md usando delimitadores</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <strong>Guardar y registrar</strong>
+              <span>Guarda en <code>clients/&lt;cliente&gt;/&lt;repo&gt;/</code> y actualiza <code>config.json</code></span>
+            </div>
+          </div>
         </div>
-        <div class="zone-body">
-          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev ejecuta <code>brain claude</code> en el repo</span></div>
-          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span><code>detect-context.sh</code> detecta repos hermanos o hijos</span></div>
-          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span><code>scan-folder.sh</code> o <code>populate-context.sh</code> procesan cada repo</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Claude genera los 7 archivos de contexto por repo</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Claude genera <code>CLIENT_PROFILE.md</code> e <code>INTEGRATION_MAP.md</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Registra en <code>context-map.json</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span>Copia <code>CURRENT_TASK.md</code> al repo + agrega a <code>.gitignore</code></span></div>
+      </div>
+      <div class="cmd-terminal">
+        <div class="terminal-header">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <span class="terminal-title">terminal</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-prompt">$</span> <span class="t-cmd">cd /proyectos/acme-corp</span></div>
+          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher init</span></div>
+          <br>
+          <div class="t-out">  Repos encontrados:</div>
+          <div class="t-out">    1. acme-api   (.git ✓)</div>
+          <div class="t-out">    2. acme-web   (.git ✓)</div>
+          <div class="t-out">    3. acme-admin (.git ✓)</div>
+          <br>
+          <div class="t-q">  ¿Registrar todos? [S/n]:</div>
+          <div><span class="t-ans">  S</span></div>
+          <br>
+          <div class="t-q">  Agente de análisis [1=Claude 2=Gemini 3=OpenAI]:</div>
+          <div><span class="t-ans">  2</span></div>
+          <br>
+          <div class="t-out">  Analizando acme-api...</div>
+          <div class="t-ok">  ✓ ARCHITECTURE.md generado</div>
+          <div class="t-ok">  ✓ BUSINESS_RULES.md generado</div>
+          <div class="t-ok">  ✓ DEPENDENCIES.md generado</div>
+          <div class="t-ok">  ✓ RISK_MATRIX.md generado</div>
+          <br>
+          <div class="t-ok">  ✓ Cliente registrado en config.json</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SESSION -->
+    <div class="cmd-panel" id="cmd-session">
+      <div class="cmd-info">
+        <h3>Abrir una sesión de desarrollo</h3>
+        <p class="cmd-desc">Carga el contexto, crea el ticket, genera el nombre de branch y lanza el agente con todo inyectado.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Resolver cliente</strong>
+              <span>Detecta el repo actual via <code>git rev-parse</code> y busca en <code>config.json</code></span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Seleccionar repo de trabajo</strong>
+              <span>Muestra todos los repos del cliente y permite elegir en cuál trabajar</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Cargar contexto</strong>
+              <span>Usa <code>ACTIVE_CONTEXT.md</code> existente o lo genera ensamblando las 3 capas</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Crear ticket</strong>
+              <span>Tipo (FEATURE/TASK/ERROR/HOTFIX), número, título y descripción</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <strong>Lanzar agente</strong>
+              <span>Inyecta contexto + ticket y arranca el agente en el repo seleccionado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cmd-terminal">
+        <div class="terminal-header">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <span class="terminal-title">terminal</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher claude</span></div>
+          <br>
+          <div class="t-out">  Cliente: acme-corp</div>
+          <br>
+          <div class="t-q">  ▸ Repos disponibles:</div>
+          <div class="t-out">    1. acme-api   (C:\...\acme-api)</div>
+          <div class="t-out">    2. acme-web   (C:\...\acme-web)</div>
+          <div class="t-q">  Seleccioná el repo [1-2]:</div>
+          <div><span class="t-ans">  1</span></div>
+          <br>
+          <div class="t-q">  ▸ Tipo de work item:</div>
+          <div class="t-out">    1. FEATURE  2. TASK  3. ERROR  4. HOTFIX</div>
+          <div class="t-q">  Seleccioná [1-4]:</div>
+          <div><span class="t-ans">  1</span></div>
+          <br>
+          <div class="t-q">  Número de ticket:</div>
+          <div><span class="t-ans">  142</span></div>
+          <div class="t-q">  Título breve:</div>
+          <div><span class="t-ans">  agregar login con google</span></div>
+          <br>
+          <div class="t-ok">  ✓ Task creada</div>
+          <div class="t-branch">  ✓ Branch: FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</div>
+          <div class="t-ok">  ✓ Contexto inyectado (CLAUDE.md temporal)</div>
+          <br>
+          <div class="t-out">  Iniciando Claude Code...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATE -->
+    <div class="cmd-panel" id="cmd-update">
+      <div class="cmd-info">
+        <h3>Actualizar contexto post-tarea</h3>
+        <p class="cmd-desc">Analiza el git diff, detecta cambios arquitecturales y propone actualizaciones a los archivos de contexto.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Obtener git diff</strong>
+              <span>Lee <code>git diff HEAD</code> (staged + unstaged)</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Analizar con IA</strong>
+              <span>Envía diff + task al agente, pide: summary, impact_level, affected_files</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Confirmar y aplicar</strong>
+              <span>Muestra propuesta al dev y actualiza los archivos .md confirmados</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Impacto cruzado</strong>
+              <span>Si afecta otros repos, genera <code>ALERT.md</code> automáticamente</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cmd-terminal">
+        <div class="terminal-header">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <span class="terminal-title">terminal</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher update</span></div>
+          <br>
+          <div class="t-out">  Analizando git diff...</div>
+          <div class="t-out">  → 3 archivos modificados</div>
+          <br>
+          <div class="t-out">  Impacto: <span style="color:var(--yellow)">MEDIO</span></div>
+          <div class="t-out">  Resumen: Se agregó OAuth2 via Google.</div>
+          <div class="t-out">  Nuevo endpoint: POST /auth/google</div>
+          <br>
+          <div class="t-q">  Actualizar ARCHITECTURE.md? [S/n]:</div>
+          <div><span class="t-ans">  S</span></div>
+          <div class="t-ok">  ✓ ARCHITECTURE.md actualizado</div>
+          <br>
+          <div class="t-q">  ¿Generar ALERT en acme-web? [S/n]:</div>
+          <div><span class="t-ans">  S</span></div>
+          <div class="t-ok">  ✓ ALERT.md generado en acme-web</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="cmd-panel" id="cmd-status">
+      <div class="cmd-info">
+        <h3>Ver estado del proyecto</h3>
+        <p class="cmd-desc">Muestra un snapshot del contexto activo, archivos de cipher y alertas pendientes del cliente.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Resolver contexto</strong>
+              <span>Cliente, repo y última fecha de actualización del contexto</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Estado de archivos</strong>
+              <span>Lista qué archivos .md existen y si están desactualizados</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Alertas pendientes</strong>
+              <span>Muestra ALERT.md de otros repos del mismo cliente si existen</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cmd-terminal">
+        <div class="terminal-header">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <span class="terminal-title">terminal</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher status</span></div>
+          <br>
+          <div class="t-out">  ── Proyecto ──────────────────</div>
+          <div class="t-out">  Cliente  : acme-corp</div>
+          <div class="t-out">  Repo     : acme-api</div>
+          <div class="t-out">  Contexto : <span class="t-ok">✓ activo</span> (hace 2 días)</div>
+          <br>
+          <div class="t-out">  ── Archivos de contexto ──────</div>
+          <div class="t-ok">  ✓ ARCHITECTURE.md</div>
+          <div class="t-ok">  ✓ BUSINESS_RULES.md</div>
+          <div class="t-ok">  ✓ DEPENDENCIES.md</div>
+          <div class="t-ok">  ✓ RISK_MATRIX.md</div>
+          <br>
+          <div class="t-out">  ── Alertas ───────────────────</div>
+          <div style="color:var(--yellow)">  ⚠ acme-web: ALERT.md pendiente</div>
+          <div class="t-out">    → Cambio en /auth/google</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLUJO COMPLETO -->
+  <section id="flujo">
+    <div class="tag tag-yellow" style="margin-bottom:1.2rem">Flujo operacional</div>
+    <h2>El ciclo completo de una tarea.</h2>
+    <p>Desde registrar el proyecto hasta mergear el PR, cipher acompaña cada paso.</p>
+    <br>
+
+    <div class="flow-timeline">
+
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <span class="flow-cmd">cipher init</span>
+          <span class="tag tag-accent">Una vez por cliente</span>
+        </div>
+        <p>El dev escanea la carpeta del cliente. cipher detecta los repos, analiza el código fuente con IA y genera toda la documentación base.</p>
+        <div class="flow-substeps">
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Lee estructura de directorios (4 niveles) y archivos fuente</div>
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Un solo request al agente por repo (no 4 llamadas separadas)</div>
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Parsea la respuesta con delimitadores <code>&lt;&lt;&lt;FILE:nombre&gt;&gt;&gt;</code></div>
+        </div>
+        <div class="flow-output">
+          <span class="flow-output-label">Genera →</span>
+          <div class="flow-output-files">
+            <span class="file-chip chip-3">clients/&lt;c&gt;/&lt;r&gt;/ARCHITECTURE.md</span>
+            <span class="file-chip chip-3">BUSINESS_RULES.md</span>
+            <span class="file-chip chip-3">DEPENDENCIES.md</span>
+            <span class="file-chip chip-3">RISK_MATRIX.md</span>
+          </div>
         </div>
       </div>
 
-      <!-- Zona 2 -->
-      <div class="zone-card">
-        <div class="zone-header" style="background:rgba(59,130,246,0.1);color:#93c5fd">
-          <div class="zone-num" style="background:#3b82f622">2</div>
-          Inicio de sesión
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <span class="flow-cmd">cipher claude</span>
+          <span class="tag tag-green">Inicio de tarea</span>
         </div>
-        <div class="zone-body">
-          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev completa <code>CURRENT_TASK.md</code> en el repo</span></div>
-          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Ejecuta <code>brain claude</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span><code>detect-context.sh</code> ensambla <code>ACTIVE_CONTEXT.md</code> con todas las capas</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agente lee el contexto completo antes de cualquier acción</span></div>
+        <p>El dev abre sesión. cipher pregunta en qué repo trabajar, qué tipo de ticket es, y lanza el agente con el contexto y el ticket ya cargados.</p>
+        <div class="flow-substeps">
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> El dev selecciona repo: <code>acme-api</code></div>
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Tipo: <code>FEATURE</code> · Número: <code>142</code> · Título: <code>agregar login con google</code></div>
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Branch generada: <code style="color:var(--pink)">FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</code></div>
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Se escribe <code>CLAUDE.md</code> temporal en el repo del cliente</div>
         </div>
-      </div>
-
-      <!-- Zona 3 -->
-      <div class="zone-card">
-        <div class="zone-header" style="background:rgba(239,68,68,0.1);color:#fca5a5">
-          <div class="zone-num" style="background:#ef444422">3</div>
-          Validación de tarea
-        </div>
-        <div class="zone-body">
-          <div class="zone-step"><span class="zone-step-icon">🔴</span><span><strong>¿CURRENT_TASK completo?</strong> Si faltan campos → pregunta al dev (uno a la vez)</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🔴</span><span><strong>¿Hay alertas de impacto pendientes?</strong> Se muestran como contexto prioritario</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agente propone rama: <code>feat/TAKE-123-descripcion</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev confirma → <code>git checkout -b ...</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🟡</span><span>Estado en CURRENT_TASK: <code>pending → in_progress</code></span></div>
+        <div class="flow-output">
+          <span class="flow-output-label">Genera →</span>
+          <div class="flow-output-files">
+            <span class="file-chip chip-2">sessions/&lt;c&gt;/&lt;r&gt;/ACTIVE_CONTEXT.md</span>
+            <span class="file-chip chip-2">sessions/&lt;c&gt;/&lt;r&gt;/task-agent.md</span>
+            <span class="file-chip" style="background:#fbbf2415;color:var(--yellow)">&lt;repo&gt;/CLAUDE.md ⏱ temporal</span>
+          </div>
         </div>
       </div>
 
-      <!-- Zona 4 -->
-      <div class="zone-card">
-        <div class="zone-header" style="background:rgba(16,185,129,0.1);color:#6ee7b7">
-          <div class="zone-num" style="background:#10b98122">4</div>
-          Implementación
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <span class="flow-cmd">Agente IA trabaja</span>
+          <span class="tag tag-cyan">Automático</span>
         </div>
-        <div class="zone-body">
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agente trabaja dentro del <strong>alcance declarado</strong></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🔴</span><span>Si necesita archivo fuera del alcance → <strong>detiene y pide confirmación</strong></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agrega comentarios <code># TASK: TICKET — por qué</code> en lógica no obvia</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🔴</span><span>Verifica criterios de aceptación antes de declarar completado</span></div>
-        </div>
-      </div>
-
-      <!-- Zona 5 -->
-      <div class="zone-card">
-        <div class="zone-header" style="background:rgba(16,185,129,0.1);color:#6ee7b7">
-          <div class="zone-num" style="background:#10b98122">5</div>
-          Protocolo de cierre
-          <span style="margin-left:auto;font-size:0.68rem;font-weight:400;color:var(--text-dim)">agente ejecuta</span>
-        </div>
-        <div class="zone-body">
-          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span>Lee <code>git diff main...HEAD --name-only --stat</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Analiza: ¿deps? ¿endpoints? ¿schemas? ¿arquitectura? ¿deuda técnica?</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Construye propuesta completa de actualizaciones</span></div>
-          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev confirma con una sola respuesta → agente ejecuta todo</span></div>
+        <p>El agente recibe instrucciones en el <code>task-agent.md</code> y ejecuta el workflow completo sin intervención manual.</p>
+        <div class="flow-substeps">
+          <div class="flow-sub"><span class="flow-sub-icon">1.</span> <code>git checkout -b FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</code></div>
+          <div class="flow-sub"><span class="flow-sub-icon">2.</span> Implementa la tarea según el contexto del proyecto</div>
+          <div class="flow-sub"><span class="flow-sub-icon">3.</span> <code>git add -p</code> · <code>git commit -m "FEATURE-142: ..."</code> · <code>git push -u origin &lt;branch&gt;</code></div>
+          <div class="flow-sub"><span class="flow-sub-icon">4.</span> <code>gh pr create --title "[FEATURE-142] ..." --base main</code></div>
         </div>
       </div>
 
-      <!-- Zona 6 -->
-      <div class="zone-card">
-        <div class="zone-header" style="background:rgba(168,85,247,0.1);color:#d8b4fe">
-          <div class="zone-num" style="background:#a855f722">6</div>
-          Escritura en brain-contexts
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <span class="flow-cmd">Sesión finalizada</span>
+          <span class="tag tag-accent">Limpieza automática</span>
         </div>
-        <div class="zone-body">
-          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Append en <code>CHANGELOG.md</code> — ticket, fecha, archivos, resumen</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Archiva <code>CURRENT_TASK.md</code> → <code>history/TICKET.md</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🟡</span><span>Resetea <code>CURRENT_TASK.md</code> al template limpio</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Actualiza archivos estructurales si aplica</span></div>
-          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span><code>git -C brain-contexts commit</code></span></div>
+        <p>Al salir del agente (con éxito o con error), el bloque <code>finally</code> elimina <code>CLAUDE.md</code> del repo del cliente.</p>
+        <div class="flow-substeps">
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si <code>CLAUDE.md</code> no existía antes: se elimina</div>
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si ya existía: se restaura el contenido original</div>
         </div>
       </div>
 
-      <!-- Zona 7 -->
-      <div class="zone-card">
-        <div class="zone-header" style="background:rgba(168,85,247,0.1);color:#d8b4fe">
-          <div class="zone-num" style="background:#a855f722">7</div>
-          Impacto cross-repo
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <span class="flow-cmd">cipher update</span>
+          <span class="tag tag-green">Cerrar sesión</span>
         </div>
-        <div class="zone-body">
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Cruza archivos modificados con <code>INTEGRATION_MAP.md</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🔴</span><span>Si hay contratos tocados → genera alerta</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🟣</span><span>Escribe <code>output/alerts/&lt;repo-afectado&gt;.md</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Muestra resumen de impacto en pantalla</span></div>
-          <div class="zone-step"><span class="zone-step-icon" style="color:#6b7280">💡</span><span style="font-size:0.75rem">Solo lee INTEGRATION_MAP (~150 tokens) — sin leer código de otros repos</span></div>
+        <p>El dev ejecuta <code>cipher update</code> para que cipher analice qué cambió y actualice la documentación de contexto.</p>
+        <div class="flow-substeps">
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si el cambio rompe una interfaz pública: genera <code>ALERT.md</code> en repos que la consumen</div>
+          <div class="flow-sub"><span class="flow-sub-icon">→</span> Los devs de esos repos verán la alerta al abrir su próxima sesión</div>
         </div>
-      </div>
-
-      <!-- Zona 8 -->
-      <div class="zone-card">
-        <div class="zone-header" style="background:rgba(59,130,246,0.1);color:#93c5fd">
-          <div class="zone-num" style="background:#3b82f622">8</div>
-          Resolución de alerta
-        </div>
-        <div class="zone-body">
-          <div class="zone-step"><span class="zone-step-icon">👤</span><span>Dev va al repo afectado y ejecuta <code>brain claude</code></span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Agente ve la alerta como contexto prioritario en ACTIVE_CONTEXT</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🤖</span><span>Trata la alerta como tarea implícita si no hay CURRENT_TASK activo</span></div>
-          <div class="zone-step"><span class="zone-step-icon">🔴</span><span>Una vez resuelto → agente elimina entrada del archivo de alerta</span></div>
-          <div class="zone-step"><span class="zone-step-icon">⚙️</span><span>Commit en brain-contexts · alerta cerrada</span></div>
+        <div class="flow-output">
+          <span class="flow-output-label">Actualiza →</span>
+          <div class="flow-output-files">
+            <span class="file-chip chip-3">clients/&lt;c&gt;/&lt;r&gt;/*.md</span>
+            <span class="file-chip" style="background:#f8717115;color:var(--red)">&lt;repo-afectado&gt;/.cipher/ALERT.md</span>
+          </div>
         </div>
       </div>
 
     </div>
-  </div>
+  </section>
 
-  <!-- ──────────────────────────────── MERMAID DIAGRAM ──────────────────────────────── -->
-  <div class="section">
-    <div class="section-title">Diagrama detallado</div>
-    <div class="diagram-container">
-      <div class="mermaid">
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#1f2937',
-    'primaryTextColor': '#e6edf3',
-    'primaryBorderColor': '#374151',
-    'lineColor': '#6b7280',
-    'secondaryColor': '#1f2937',
-    'tertiaryColor': '#161b22',
-    'background': '#161b22',
-    'mainBkg': '#1f2937',
-    'nodeBorder': '#374151',
-    'clusterBkg': '#161b22',
-    'titleColor': '#e6edf3',
-    'edgeLabelBackground': '#161b22',
-    'attributeBackgroundColorOdd': '#1f2937',
-    'attributeBackgroundColorEven': '#161b22',
-    'fontFamily': 'Inter, sans-serif',
-    'fontSize': '13px'
+  <!-- BRANCH FORMAT -->
+  <section id="branch">
+    <div class="tag tag-accent" style="margin-bottom:1.2rem">Branches</div>
+    <h2>Naming convention automático.</h2>
+    <p>El nombre de branch se genera a partir del tipo, número y título del ticket — sin que el dev tenga que pensarlo.</p>
+    <br>
+
+    <div class="branch-demo">
+      <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem">Ejemplo de branch generada</div>
+      <div class="branch-name">
+        <span class="branch-part bp-type">FEATURE</span>
+        <span class="branch-part bp-sep">-</span>
+        <span class="branch-part bp-num">142</span>
+        <span class="branch-part bp-sep">-</span>
+        <span class="branch-part bp-title">AGREGAR-LOGIN-CON-GOOGLE</span>
+      </div>
+      <div style="color:var(--muted);font-size:.82rem;">
+        <span style="color:var(--pink)">TIPO</span> ·
+        <span style="color:var(--yellow)">NÚMERO</span> ·
+        <span style="color:var(--cyan)">TÍTULO SLUGIFICADO EN MAYÚSCULAS</span>
+      </div>
+      <div class="branch-types">
+        <div class="btype btype-feature">FEATURE</div>
+        <div class="btype btype-task">TASK</div>
+        <div class="btype btype-error">ERROR</div>
+        <div class="btype btype-hotfix">HOTFIX</div>
+      </div>
+    </div>
+
+    <br>
+    <div class="card" style="border-color:var(--border)">
+      <h3>Regla de formato</h3>
+      <p style="font-family:monospace;color:var(--text);font-size:.9rem;margin-top:.5rem">
+        {TIPO}-{NUMERO}-{TITULO-SLUGIFICADO-EN-MAYUSCULAS}
+      </p>
+      <ul style="margin-top:.75rem;list-style:none;display:flex;flex-direction:column;gap:.35rem">
+        <li style="color:#94a3b8;font-size:.88rem">✓ Solo letras, números y guiones</li>
+        <li style="color:#94a3b8;font-size:.88rem">✓ Sin espacios ni caracteres especiales</li>
+        <li style="color:#94a3b8;font-size:.88rem">✓ Todo en mayúsculas</li>
+        <li style="color:#94a3b8;font-size:.88rem">✓ Generado automáticamente — no hay que escribirlo a mano</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PROVIDERS -->
+  <section id="providers">
+    <div class="tag tag-green" style="margin-bottom:1.2rem">Providers</div>
+    <h2>Dos IAs, dos roles bien definidos.</h2>
+    <p>Gemini analiza y genera contexto. Claude ejecuta el desarrollo. Cada una donde rinde más.</p>
+    <br>
+    <div class="providers-grid" style="grid-template-columns:1fr 1fr">
+
+      <div class="provider-card p-gemini" style="border-width:2px">
+        <div class="provider-icon">✨</div>
+        <div class="provider-name">Gemini <span style="color:var(--muted);font-weight:400;font-size:.8rem">— análisis</span></div>
+        <div class="provider-model">gemini-2.5-flash</div>
+        <div class="provider-ctx"><strong>~400k</strong> chars de contexto</div>
+        <div class="provider-ctx" style="margin-top:.4rem;font-size:.75rem;color:var(--muted)">Lee el código fuente completo del repo y genera los 4 archivos de contexto en una sola llamada. Úsalo en <code>cipher init</code> y <code>cipher update</code>.</div>
+      </div>
+
+      <div class="provider-card p-claude" style="border-width:2px">
+        <div class="provider-icon">🤖</div>
+        <div class="provider-name">Claude <span style="color:var(--muted);font-weight:400;font-size:.8rem">— codificación</span></div>
+        <div class="provider-model">claude-sonnet-4-6</div>
+        <div class="provider-ctx"><strong>CLI agéntico</strong> real</div>
+        <div class="provider-ctx" style="margin-top:.4rem;font-size:.75rem;color:var(--muted)">Recibe el contexto vía CLAUDE.md temporal, crea la branch, implementa, hace commit y abre el PR. Úsalo con <code>cipher claude</code>.</div>
+      </div>
+
+    </div>
+
+    <br>
+    <div class="card" style="border-color:#7c6aff33">
+      <h3 style="margin-bottom:.5rem">¿Querés integrar otro provider?</h3>
+      <p style="font-size:.88rem;margin-bottom:.75rem">La arquitectura está diseñada para ser extensible. Para agregar un nuevo provider de análisis o un nuevo agente de codificación:</p>
+      <pre style="background:var(--bg3);padding:1rem;border-radius:var(--radius-sm);font-size:.82rem;overflow-x:auto;color:#94a3b8"><code style="background:transparent;color:inherit;padding:0"><span style="color:var(--muted)"># 1. Crear la clase en providers.py</span>
+<span style="color:var(--accent2)">class</span> <span style="color:var(--cyan)">MiProvider</span>:
+    <span style="color:var(--accent2)">def</span> <span style="color:var(--green)">analyze_repo</span>(self, prompt): ...
+    <span style="color:var(--accent2)">def</span> <span style="color:var(--green)">analyze_diff</span>(self, ...): ...
+
+<span style="color:var(--muted)"># 2. Registrarlo en get_analysis_provider()</span>
+<span style="color:var(--accent2)">elif</span> preferred == <span style="color:var(--green)">"mi-provider"</span>:
+    <span style="color:var(--accent2)">return</span> MiProvider(...)</code></pre>
+    </div>
+
+    <br>
+    <div class="card">
+      <h3>Configuración en <code>.cipher/config.local.json</code></h3>
+      <pre style="margin-top:.75rem;background:var(--bg3);padding:1rem;border-radius:var(--radius-sm);font-size:.82rem;overflow-x:auto;color:#94a3b8"><code style="background:transparent;color:inherit;padding:0">{
+  <span style="color:var(--accent2)">"anthropic"</span>: { <span style="color:var(--cyan)">"api_key"</span>: <span style="color:var(--green)">"sk-ant-..."</span>, <span style="color:var(--cyan)">"model"</span>: <span style="color:var(--green)">"claude-sonnet-4-6"</span> },
+  <span style="color:var(--accent2)">"google"</span>:    { <span style="color:var(--cyan)">"api_key"</span>: <span style="color:var(--green)">"AIza..."</span>,    <span style="color:var(--cyan)">"model"</span>: <span style="color:var(--green)">"gemini-2.5-flash"</span>  }
+}</code></pre>
+    </div>
+  </section>
+
+  <!-- AISLAMIENTO -->
+  <section id="aislamiento">
+    <div class="tag tag-yellow" style="margin-bottom:1.2rem">Aislamiento</div>
+    <h2>Nada permanente en repos de clientes.</h2>
+    <p>Todo el estado de cipher vive dentro del repo <code>cipher/</code>. Los repos clientes solo reciben archivos temporales durante la sesión.</p>
+    <br>
+    <div class="isolation-visual">
+
+      <div>
+        <div class="fs-tree">
+          <div class="fs-title">cipher/ — todo vive acá</div>
+          <div><span class="fs-dir">cipher/</span></div>
+          <div>&nbsp;&nbsp;<span class="fs-dir">.cipher/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">config.json</span> <span class="fs-note">← registro de clientes</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">config.local.json</span> <span class="fs-note">← API keys (gitignored)</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">sessions/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-corp/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-api/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-generated">ACTIVE_CONTEXT.md</span> <span class="fs-note">← generado</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-generated">task-agent.md</span> <span class="fs-note">← generado</span></div>
+          <div>&nbsp;&nbsp;<span class="fs-dir">clients/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-corp/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-api/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">ARCHITECTURE.md</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">BUSINESS_RULES.md</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">...</span></div>
+        </div>
+        <br>
+        <div class="fs-tree">
+          <div class="fs-title">acme-api/ — solo archivos temporales</div>
+          <div><span class="fs-dir">acme-api/</span></div>
+          <div>&nbsp;&nbsp;<span class="fs-temp">CLAUDE.md</span> <span class="fs-note">← existe SOLO durante sesión</span></div>
+          <div>&nbsp;&nbsp;<span class="fs-note">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;se borra en finally block</span></div>
+          <div>&nbsp;&nbsp;<span class="fs-never">ACTIVE_CONTEXT.md</span> <span class="fs-note">← nunca</span></div>
+          <div>&nbsp;&nbsp;<span class="fs-never">task-agent.md</span> <span class="fs-note">← nunca</span></div>
+          <div>&nbsp;&nbsp;<span class="fs-file">src/</span></div>
+          <div>&nbsp;&nbsp;<span class="fs-file">...</span></div>
+        </div>
+      </div>
+
+      <div class="isolation-rules">
+        <div class="i-rule">
+          <div class="i-rule-icon">🔒</div>
+          <div class="i-rule-body">
+            <strong>Sesiones en cipher, no en el cliente</strong>
+            <span>ACTIVE_CONTEXT.md y task-agent.md se guardan en <code>.cipher/sessions/</code> dentro del repo cipher, no en el repo del cliente.</span>
+          </div>
+        </div>
+        <div class="i-rule">
+          <div class="i-rule-icon">⏱</div>
+          <div class="i-rule-body">
+            <strong>CLAUDE.md es temporal</strong>
+            <span>Se crea justo antes de lanzar el agente y se elimina en el bloque <code>finally</code> al salir, sin importar si hubo error.</span>
+          </div>
+        </div>
+        <div class="i-rule">
+          <div class="i-rule-icon">♻️</div>
+          <div class="i-rule-body">
+            <strong>Restauración si ya existía</strong>
+            <span>Si el repo ya tenía <code>CLAUDE.md</code>, cipher guarda el contenido original y lo restaura al terminar la sesión.</span>
+          </div>
+        </div>
+        <div class="i-rule">
+          <div class="i-rule-icon">🚫</div>
+          <div class="i-rule-body">
+            <strong>API keys nunca al repo</strong>
+            <span><code>config.local.json</code> está en <code>.gitignore</code>. Las keys solo viven en local o en variables de entorno.</span>
+          </div>
+        </div>
+        <div class="i-rule">
+          <div class="i-rule-icon">📡</div>
+          <div class="i-rule-body">
+            <strong>Alertas cruzadas controladas</strong>
+            <span><code>ALERT.md</code> se escribe en <code>.cipher/</code> del repo afectado — carpeta ignorada por git del cliente, solo leída por cipher.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>cipher — sistema de contexto persistente para agentes IA</p>
+  <p style="margin-top:.4rem">MIT License · <a href="https://github.com/tu-org/cipher">github.com/tu-org/cipher</a></p>
+</footer>
+
+<script>
+  function showCmd(id) {
+    document.querySelectorAll('.cmd-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.cmd-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('cmd-' + id).classList.add('active');
+    event.target.classList.add('active');
   }
-}}%%
-flowchart TD
-    START([" 🚀 Inicio "])
-
-    START --> FIRST_RUN{"Repo en\ncontext-map?"}
-
-    FIRST_RUN -- No --> SCAN[" 👤 brain claude\ndesde el repo "]
-    SCAN --> DETECT[" ⚙️ detect-context.sh\ndetecta repos "]
-    DETECT --> ASK{"¿Escanear\ncarpeta completa?"}
-    ASK -- Sí --> SCAN_ALL[" ⚙️ scan-folder.sh "]
-    ASK -- No --> POP1[" ⚙️ populate-context.sh "]
-    SCAN_ALL --> GEN[" 🤖 Claude genera\n7 archivos de contexto "]
-    POP1 --> GEN
-    GEN --> POST[" 🤖 Claude genera\nCLIENT_PROFILE\nINTEGRATION_MAP "]
-    POST --> MAP[" 🟣 Registra en\ncontext-map.json "]
-    MAP --> COPY[" ⚙️ Copia CURRENT_TASK.md\nal repo "]
-
-    FIRST_RUN -- Sí --> DEV_TASK
-    COPY --> DEV_TASK
-
-    DEV_TASK[" 👤 Dev completa\nCURRENT_TASK.md "]
-    DEV_TASK --> RUN[" 👤 brain claude "]
-    RUN --> BUILD[" ⚙️ Ensambla\nACTIVE_CONTEXT.md "]
-    BUILD --> AGENT[" 🤖 Agente lee\ncontexto completo "]
-
-    AGENT --> CHECK{"¿CURRENT_TASK\ncompleto?"}
-    CHECK -- Campos vacíos --> ASK_DEV[" 🤖 Pregunta al dev\none campo a la vez "]
-    ASK_DEV --> CHECK
-    CHECK -- Completo --> ALERT_CHECK{"¿Alertas de\nimpacto pendientes?"}
-    ALERT_CHECK -- Sí --> SHOW_ALERT[" 🤖 Muestra alerta\ncomo prioridad "]
-    SHOW_ALERT --> BRANCH
-    ALERT_CHECK -- No --> BRANCH
-
-    BRANCH[" 🤖 Propone rama\nfeat/TAKE-123-desc "]
-    BRANCH --> CONFIRM{"Dev\nconfirma?"}
-    CONFIRM -- Ajusta --> BRANCH
-    CONFIRM -- Sí --> GIT_BRANCH[" ⚙️ git checkout -b "]
-    GIT_BRANCH --> INPROGRESS[" 🟡 CURRENT_TASK\nstatus: in_progress "]
-
-    INPROGRESS --> IMPL[" 🤖 Implementa dentro\ndel alcance declarado "]
-    IMPL --> SCOPE{"¿Archivo fuera\ndel alcance?"}
-    SCOPE -- Sí --> ASK_SCOPE[" 🤖 Detiene y pide\nconfirmación "]
-    ASK_SCOPE --> IMPL
-    SCOPE -- No --> COMMENTS[" 🤖 Agrega comentarios\ninline en lógica no obvia "]
-    COMMENTS --> AC{"¿Criterios de\naceptación OK?"}
-    AC -- No --> IMPL
-    AC -- Sí --> DIFF
-
-    DIFF[" ⚙️ git diff main...HEAD\n--name-only --stat "]
-    DIFF --> ANALYZE[" 🤖 Analiza cambios\ndeps · endpoints · schemas\narquitectura · deuda "]
-    ANALYZE --> PROPOSAL[" 🤖 Construye propuesta\nde actualizaciones "]
-    PROPOSAL --> DEV_OK{"Dev confirma\ncon 'sí'?"}
-    DEV_OK -- Ajusta --> PROPOSAL
-    DEV_OK -- Sí --> EXECUTE
-
-    EXECUTE[" 🤖 Ejecuta todo "]
-    EXECUTE --> CL[" 🟣 Append\nCHANGELOG.md "]
-    EXECUTE --> ARCH[" 🟣 Archiva\nCURRENT_TASK → history/ "]
-    EXECUTE --> RESET[" 🟡 Resetea\nCURRENT_TASK.md "]
-    EXECUTE --> STRUCT{"¿Cambios\nestructurales?"}
-
-    STRUCT -- Deps --> DEP_UPD[" 🟣 DEPENDENCIES.md "]
-    STRUCT -- Arquitectura --> TECH_UPD[" 🟣 TECHNICAL_STATE.md "]
-    STRUCT -- Contrato API --> MAP_UPD[" 🟣 INTEGRATION_MAP.md "]
-    STRUCT -- Ninguno --> CROSS
-
-    DEP_UPD --> CROSS
-    TECH_UPD --> CROSS
-    MAP_UPD --> CROSS
-
-    CROSS{"¿Impacto\ncross-repo?"}
-    CROSS -- No --> COMMIT
-    CROSS -- Sí --> WRITE_ALERT[" 🟣 output/alerts/\nrepo-afectado.md "]
-    WRITE_ALERT --> SHOW[" 🤖 Muestra impacto\nen pantalla "]
-    SHOW --> COMMIT
-
-    COMMIT[" ⚙️ git -C brain-contexts\ncommit "]
-    COMMIT --> DONE([" ✅ Tarea completa\nbrain-contexts actualizado "])
-
-    DONE --> NEXT{"¿Alerta en\notro repo?"}
-    NEXT -- Sí --> GOTO[" 👤 Dev va al\nrepo afectado "]
-    GOTO --> RUN
-    NEXT -- No --> NEW[" 👤 Dev actualiza\nCURRENT_TASK.md "]
-    NEW --> RUN
-
-    style START fill:#10b981,color:#fff,stroke:#059669
-    style DONE  fill:#10b981,color:#fff,stroke:#059669
-
-    style DEV_TASK fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
-    style SCAN     fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
-    style RUN      fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
-    style GOTO     fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
-    style NEW      fill:#1d3a6e,color:#93c5fd,stroke:#3b82f6
-
-    style GEN      fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style POST     fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style AGENT    fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style ASK_DEV  fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style SHOW_ALERT fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style BRANCH   fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style IMPL     fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style ASK_SCOPE fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style COMMENTS fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style ANALYZE  fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style PROPOSAL fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style EXECUTE  fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-    style SHOW     fill:#0d3d2e,color:#6ee7b7,stroke:#10b981
-
-    style MAP      fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
-    style CL       fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
-    style ARCH     fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
-    style DEP_UPD  fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
-    style TECH_UPD fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
-    style MAP_UPD  fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
-    style WRITE_ALERT fill:#2d1b4e,color:#d8b4fe,stroke:#a855f7
-
-    style DETECT   fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
-    style SCAN_ALL fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
-    style POP1     fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
-    style BUILD    fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
-    style GIT_BRANCH fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
-    style DIFF     fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
-    style COMMIT   fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
-    style COPY     fill:#3d2a00,color:#fcd34d,stroke:#f59e0b
-
-    style RESET    fill:#1f2937,color:#d1d5db,stroke:#6b7280
-    style INPROGRESS fill:#1f2937,color:#d1d5db,stroke:#6b7280
-
-    style FIRST_RUN fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style ASK      fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style CHECK    fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style ALERT_CHECK fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style CONFIRM  fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style SCOPE    fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style AC       fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style DEV_OK   fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style STRUCT   fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style CROSS    fill:#3d1515,color:#fca5a5,stroke:#ef4444
-    style NEXT     fill:#3d1515,color:#fca5a5,stroke:#ef4444
-      </div>
-    </div>
-  </div>
-
-  <!-- ──────────────────────────────── FOOTER ──────────────────────────────── -->
-  <footer>
-    <p>brain-contexts · <a href="https://github.com/luissndval/brain-contexts" target="_blank">github.com/luissndval/brain-contexts</a></p>
-  </footer>
-
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'base',
-      themeVariables: {
-        primaryColor: '#1f2937',
-        primaryTextColor: '#e6edf3',
-        primaryBorderColor: '#374151',
-        lineColor: '#6b7280',
-        background: '#161b22',
-        fontFamily: 'Inter, sans-serif',
-        fontSize: '13px'
-      },
-      flowchart: {
-        curve: 'basis',
-        padding: 20,
-        nodeSpacing: 40,
-        rankSpacing: 50,
-        useMaxWidth: true
-      }
-    });
-  </script>
+</script>
 </body>
 </html>

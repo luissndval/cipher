@@ -1,0 +1,14 @@
+{
+  "anthropic": {
+    "api_key": "",
+    "model":   "claude-sonnet-4-6"
+  },
+  "google": {
+    "api_key": "",
+    "model":   "gemini-2.5-flash"
+  },
+  "openai": {
+    "api_key": "",
+    "model":   "gpt-4o"
+  }
+}
