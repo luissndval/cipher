@@ -1,199 +1,304 @@
-# brain-contexts — Diagrama de flujo
+# cipher — Flujo Operacional
 
-## Flujo completo
+> Qué hace cada comando, en qué orden, y dónde vive cada archivo.
 
-```mermaid
-flowchart TD
-    classDef dev fill:#4A90D9,stroke:#2C5F8A,color:#fff,rx:6
-    classDef agent fill:#27AE60,stroke:#1A7A42,color:#fff,rx:6
-    classDef brain fill:#8E44AD,stroke:#5E2D7A,color:#fff,rx:6
-    classDef file fill:#F39C12,stroke:#B7770D,color:#fff,rx:6
-    classDef decision fill:#E74C3C,stroke:#A93226,color:#fff,rx:6
-    classDef system fill:#2C3E50,stroke:#1A252F,color:#fff,rx:6
+---
 
-    %% ─────────────────────────────────────────
-    %% ZONA 1 — SETUP INICIAL (una sola vez)
-    %% ─────────────────────────────────────────
+## Visión general
 
-    START([Inicio]):::system
-
-    START --> FIRST_RUN{¿Repo registrado\nen context-map?}:::decision
-
-    FIRST_RUN -- No --> SCAN[Dev ejecuta\nbrain claude\ndesde el repo]:::dev
-    SCAN --> DETECT[detect-context.sh\ndetecta repos hermanos]:::system
-    DETECT --> ASK_SCAN{¿Escanear\ntoda la carpeta?}:::decision
-
-    ASK_SCAN -- Sí --> SCAN_ALL[scan-folder.sh\nprocesa cada repo]:::system
-    ASK_SCAN -- No --> POPULATE_ONE[populate-context.sh\npara este repo]:::system
-
-    SCAN_ALL --> POPULATE_EACH[populate-context.sh\npor cada repo]:::system
-    POPULATE_EACH --> GENERATE[Claude genera\nBUSINESS_RULES\nDEPENDENCIES\nTECHNICAL_STATE\nRISK_MATRIX\nIMPACT_RULES\nTASK_FLOW\nTEST_STRATEGY]:::agent
-
-    POPULATE_ONE --> GENERATE
-
-    GENERATE --> POST_SCAN[scan-folder genera\nCLIENT_PROFILE.md\nINTEGRATION_MAP.md]:::agent
-
-    POST_SCAN --> CONTEXT_MAP[Registra en\ncontext-map.json]:::brain
-    CONTEXT_MAP --> COPY_TASK[Copia CURRENT_TASK.md\nal repo +\nagrega a .gitignore]:::system
-
-    %% ─────────────────────────────────────────
-    %% ZONA 2 — SESIÓN DE TRABAJO (cada tarea)
-    %% ─────────────────────────────────────────
-
-    FIRST_RUN -- Sí --> DEV_TASK
-    COPY_TASK --> DEV_TASK
-
-    DEV_TASK[Dev completa\nCURRENT_TASK.md\ntítulo · ticket · tipo\ndescripción · alcance\ncriterios de aceptación]:::dev
-
-    DEV_TASK --> RUN_BRAIN[brain claude]:::dev
-
-    RUN_BRAIN --> BUILD_CTX[detect-context.sh\nconstruye ACTIVE_CONTEXT.md]:::system
-
-    BUILD_CTX --> CTX_LAYERS["ACTIVE_CONTEXT incluye:\n── META (paths)\n── GLOBAL_RULES + AGENT\n── CLIENT_PROFILE\n── BUSINESS_RULES · DEPENDENCIES · RISK_MATRIX\n── TECHNICAL_STATE\n── IMPACT_RULES · TASK_FLOW · TEST_STRATEGY\n── CURRENT_TASK ← tarea activa\n── INTEGRATION_MAP ← contratos cross-repo\n── IMPACT_ALERTS (si hay pendientes)"]:::brain
-
-    CTX_LAYERS --> AGENT_START[Agente lee\nACTIVE_CONTEXT completo]:::agent
-
-    %% ─────────────────────────────────────────
-    %% ZONA 3 — VALIDACIÓN DE TAREA
-    %% ─────────────────────────────────────────
-
-    AGENT_START --> CHECK_TASK{¿CURRENT_TASK\ncompleto?}:::decision
-
-    CHECK_TASK -- "Campos vacíos" --> ASK_DEV[Agente pregunta\nal dev\none campo a la vez]:::agent
-    ASK_DEV --> CHECK_TASK
-
-    CHECK_TASK -- Completo --> ALERTS_CHECK{¿Hay alertas\nde impacto\npendientes?}:::decision
-
-    ALERTS_CHECK -- Sí --> SHOW_ALERT[Agente muestra\nalerta como\ncontexto prioritario]:::agent
-    SHOW_ALERT --> PROPOSE_BRANCH
-
-    ALERTS_CHECK -- No --> PROPOSE_BRANCH
-
-    PROPOSE_BRANCH[Agente propone rama\nfeat/TAKE-123-descripcion\ny pide confirmación]:::agent
-
-    PROPOSE_BRANCH --> DEV_CONFIRM_BRANCH{Dev\nconfirma?}:::decision
-
-    DEV_CONFIRM_BRANCH -- No / Ajusta --> PROPOSE_BRANCH
-    DEV_CONFIRM_BRANCH -- Sí --> CREATE_BRANCH[git checkout -b\ntipo/TICKET-descripcion]:::system
-
-    CREATE_BRANCH --> STATUS_INPROGRESS[CURRENT_TASK.md\nstatus: in_progress]:::file
-
-    %% ─────────────────────────────────────────
-    %% ZONA 4 — IMPLEMENTACIÓN
-    %% ─────────────────────────────────────────
-
-    STATUS_INPROGRESS --> IMPLEMENT[Agente implementa\ndentro del alcance declarado]:::agent
-
-    IMPLEMENT --> SCOPE_CHECK{¿Necesita archivo\nfuera del alcance?}:::decision
-
-    SCOPE_CHECK -- Sí --> ASK_SCOPE[Agente detiene\ny pide confirmación\npara ampliar alcance]:::agent
-    ASK_SCOPE --> IMPLEMENT
-
-    SCOPE_CHECK -- No --> ADD_COMMENTS[Agrega comentarios inline\nen lógica no obvia\n#TASK: TICKET — por qué]:::agent
-
-    ADD_COMMENTS --> VERIFY_AC{¿Criterios de\naceptación\ncumplidos?}:::decision
-
-    VERIFY_AC -- No --> IMPLEMENT
-    VERIFY_AC -- Sí --> CLOSURE
-
-    %% ─────────────────────────────────────────
-    %% ZONA 5 — PROTOCOLO DE CIERRE
-    %% ─────────────────────────────────────────
-
-    CLOSURE[Agente inicia\nprotocolo de cierre]:::agent
-
-    CLOSURE --> READ_DIFF["git diff main...HEAD\n--name-only + --stat\ngit log main..HEAD --oneline"]:::system
-
-    READ_DIFF --> ANALYZE[Agente analiza diff:\n¿deps cambiaron?\n¿endpoints modificados?\n¿schemas compartidos?\n¿arquitectura nueva?\n¿deuda técnica?]:::agent
-
-    ANALYZE --> BUILD_PROPOSAL["Construye propuesta:\n• Entrada CHANGELOG.md\n• Archivos brain-contexts a actualizar\n• Alertas cross-repo (si aplica)"]:::agent
-
-    BUILD_PROPOSAL --> DEV_CONFIRM_CLOSE{Dev confirma\ncon 'sí'}:::decision
-
-    DEV_CONFIRM_CLOSE -- No / Ajusta --> BUILD_PROPOSAL
-    DEV_CONFIRM_CLOSE -- Sí --> EXECUTE_CLOSE
-
-    %% ─────────────────────────────────────────
-    %% ZONA 6 — ESCRITURA EN BRAIN-CONTEXTS
-    %% ─────────────────────────────────────────
-
-    EXECUTE_CLOSE[Agente ejecuta actualizaciones\nen brain-contexts]:::agent
-
-    EXECUTE_CLOSE --> UPDATE_CHANGELOG[Append CHANGELOG.md\nticket · fecha · archivos\nresumen · impacto]:::brain
-
-    EXECUTE_CLOSE --> ARCHIVE_TASK[Archiva CURRENT_TASK.md\n→ history/TICKET.md]:::brain
-
-    EXECUTE_CLOSE --> RESET_TASK[Resetea CURRENT_TASK.md\nal template limpio]:::file
-
-    EXECUTE_CLOSE --> STRUCTURAL{¿Cambios\nestructurales\ndetectados?}:::decision
-
-    STRUCTURAL -- "Deps nuevas" --> UPDATE_DEPS[Actualiza\nDEPENDENCIES.md]:::brain
-    STRUCTURAL -- "Arch / deuda" --> UPDATE_TECH[Actualiza\nTECHNICAL_STATE.md\no RISK_MATRIX.md]:::brain
-    STRUCTURAL -- "Contrato API\nmodificado" --> UPDATE_MAP[Actualiza\nINTEGRATION_MAP.md]:::brain
-    STRUCTURAL -- Sin cambios --> CROSS_REPO_CHECK
-
-    UPDATE_DEPS --> CROSS_REPO_CHECK
-    UPDATE_TECH --> CROSS_REPO_CHECK
-    UPDATE_MAP --> CROSS_REPO_CHECK
-
-    %% ─────────────────────────────────────────
-    %% ZONA 7 — IMPACTO CROSS-REPO
-    %% ─────────────────────────────────────────
-
-    CROSS_REPO_CHECK{¿Impacto\nen otros repos?\nINTEGRATION_MAP}:::decision
-
-    CROSS_REPO_CHECK -- No --> BRAIN_COMMIT
-    CROSS_REPO_CHECK -- Sí --> WRITE_ALERT["Escribe\noutput/alerts/<repo-afectado>.md\nqué cambió · qué revisar"]:::brain
-
-    WRITE_ALERT --> SHOW_IMPACT[Muestra impacto\nen pantalla al dev]:::agent
-
-    SHOW_IMPACT --> BRAIN_COMMIT
-
-    BRAIN_COMMIT["git -C brain-contexts commit\nchore(repo): update context post TICKET"]:::system
-
-    BRAIN_COMMIT --> TASK_DONE([Tarea completa ✓\nCURRENT_TASK limpio\nbrain-contexts actualizado]):::system
-
-    %% ─────────────────────────────────────────
-    %% ZONA 8 — RESOLUCIÓN DE ALERTA
-    %% ─────────────────────────────────────────
-
-    TASK_DONE --> NEXT{¿Hay alerta\npendiente\npara otro repo?}:::decision
-
-    NEXT -- Sí --> DEV_GOTO[Dev va al\nrepo afectado]:::dev
-    DEV_GOTO --> RUN_BRAIN
-
-    NEXT -- No --> NEW_TASK[Dev actualiza\nCURRENT_TASK.md\ncon próxima tarea]:::dev
-    NEW_TASK --> RUN_BRAIN
+```
+Developer                    cipher CLI                     Agente IA
+    │                            │                             │
+    │── cipher init ──────────────>│                             │
+    │                            │── escanea repos             │
+    │                            │── lee código fuente         │
+    │                            │── llama a la IA ───────────>│
+    │                            │<── genera contexto ─────────│
+    │                            │── guarda en clients/        │
+    │<── confirma registros ─────│                             │
+    │                            │                             │
+    │── cipher claude ────────────>│                             │
+    │                            │── resuelve cliente          │
+    │                            │── muestra repos             │
+    │<── seleccioná repo ────────│                             │
+    │── elige repo ─────────────>│                             │
+    │<── tipo de work item? ─────│                             │
+    │── FEATURE / nro / título ->│                             │
+    │                            │── genera branch name        │
+    │                            │── crea task-agent.md        │
+    │                            │── escribe CLAUDE.md temp    │
+    │                            │── lanza agente ────────────>│
+    │                            │                      trabaja │
+    │                            │               crea branch   │
+    │                            │              implementa...  │
+    │                            │               commit+push   │
+    │                            │               crea PR       │
+    │<── sesión finalizada ──────│<────────────────────────────│
+    │                            │── elimina CLAUDE.md         │
+    │                            │                             │
+    │── cipher update ────────────>│                             │
+    │                            │── lee git diff              │
+    │                            │── analiza con IA ──────────>│
+    │                            │<── propone cambios ─────────│
+    │<── confirmar cambios? ─────│                             │
+    │── confirma ───────────────>│                             │
+    │                            │── actualiza archivos .md    │
+    │                            │── genera ALERT.md si aplica │
 ```
 
 ---
 
-## Resumen de capas de ACTIVE_CONTEXT
+## Comando: `cipher init`
 
-```mermaid
-flowchart LR
-    A["🌐 GLOBAL\nGLOBAL_RULES\nAGENT"] --> B
-    B["🏢 CLIENTE\nCLIENT_PROFILE\nBILLING_RULES\nTECH_PREFERENCES\nCOMMUNICATION\nINTEGRATION_MAP"] --> C
-    C["📦 PROYECTO\nBUSINESS_RULES\nDEPENDENCIES\nRISK_MATRIX\nTECHNICAL_STATE"] --> D
-    D["⚙️ TAREA\nIMPACT_RULES\nTASK_FLOW\nTEST_STRATEGY"] --> E
-    E["🎯 SESIÓN\nCURRENT_TASK\nIMPACT_ALERTS"]
+**Propósito:** registrar un cliente nuevo y generar su contexto con IA.
 
-    style A fill:#2C3E50,color:#fff,stroke:#1A252F
-    style B fill:#8E44AD,color:#fff,stroke:#5E2D7A
-    style C fill:#2980B9,color:#fff,stroke:#1A5276
-    style D fill:#27AE60,color:#fff,stroke:#1A7A42
-    style E fill:#E74C3C,color:#fff,stroke:#A93226
+```
+cipher init
+    │
+    ├─ 1. Escanear directorio actual
+    │      └─ busca subdirectorios con .git
+    │         muestra lista y pregunta cuáles registrar
+    │
+    ├─ 2. Elegir agente de análisis
+    │      └─ Claude / Gemini / OpenAI
+    │         verifica que el provider esté configurado
+    │         si no, pide API key y la guarda en config.local.json
+    │
+    ├─ 3. Nombrar el cliente
+    │      └─ nombre del cliente/empresa (ej: "acme-corp")
+    │
+    ├─ 4. Analizar cada repo con IA
+    │      └─ lee estructura de directorios (4 niveles)
+    │         lee archivos de código fuente relevantes
+    │         envía todo al agente en un único request
+    │         parsea respuesta con delimitadores <<<FILE:nombre>>>
+    │
+    ├─ 5. Guardar archivos de contexto
+    │      └─ clients/<cliente>/<repo>/
+    │             ARCHITECTURE.md
+    │             BUSINESS_RULES.md
+    │             DEPENDENCIES.md
+    │             RISK_MATRIX.md
+    │
+    └─ 6. Actualizar config
+           └─ .cipher/config.json  ← agrega cliente y repos con paths
+```
+
+**Archivos tocados:**
+| Archivo | Acción |
+|---------|--------|
+| `clients/<cliente>/<repo>/*.md` | Creados por IA |
+| `.cipher/config.json` | Actualizado con el nuevo cliente |
+| `.cipher/config.local.json` | Actualizado con API key (si se configura) |
+
+---
+
+## Comando: `cipher claude` / `cipher gemini` / `cipher codex`
+
+**Propósito:** abrir una sesión de desarrollo con contexto completo y ticket activo.
+
+```
+cipher claude
+    │
+    ├─ 1. Resolver cliente
+    │      └─ detecta repo actual via git rev-parse
+    │         busca match en .cipher/config.json
+    │         si no encuentra: ofrece cipher init
+    │
+    ├─ 2. Seleccionar repo de trabajo
+    │      └─ muestra todos los repos del cliente
+    │         desarrollador elige en cuál trabajar
+    │         (si hay solo uno, lo usa directamente)
+    │
+    ├─ 3. Cargar contexto
+    │      └─ si existe .cipher/sessions/<cliente>/<repo>/ACTIVE_CONTEXT.md
+    │             lo usa directamente
+    │         si no existe
+    │             ensambla desde capas (global + cliente + proyecto)
+    │             guarda en sessions/
+    │
+    ├─ 4. Crear ticket
+    │      └─ pregunta tipo: FEATURE / TASK / ERROR / HOTFIX
+    │         pide número, título y descripción
+    │         genera nombre de branch: TIPO-NUMERO-TITULO-EN-MAYUSCULAS
+    │         crea task-agent.md con instrucciones paso a paso
+    │
+    ├─ 5. Inyectar contexto
+    │      └─ [Claude]  escribe CLAUDE.md temporal en el repo
+    │         [Gemini]  carga contexto como system prompt en memoria
+    │         [Codex]   escribe codex-context.md temporal
+    │         [Aider]   escribe CONVENTIONS.md temporal
+    │
+    ├─ 6. Lanzar agente
+    │      └─ abre el CLI/sesión del agente elegido
+    │         pasa prompt inicial: "empezá por crear la branch..."
+    │
+    └─ 7. Al salir (finally)
+           └─ elimina CLAUDE.md del repo cliente
+              (o restaura contenido anterior si ya existía)
+```
+
+**Instrucciones que recibe el agente:**
+1. Crear la branch `TIPO-NUMERO-TITULO`
+2. Implementar la tarea
+3. `git add -p` → `git commit` → `git push -u origin <branch>`
+4. `gh pr create` con título y descripción pre-armados
+5. `cipher update` para cerrar la sesión
+
+**Archivos tocados:**
+| Archivo | Acción |
+|---------|--------|
+| `.cipher/sessions/<cliente>/<repo>/ACTIVE_CONTEXT.md` | Creado/leído |
+| `.cipher/sessions/<cliente>/<repo>/task-agent.md` | Creado |
+| `<repo>/CLAUDE.md` | Creado temporalmente, eliminado al salir |
+
+---
+
+## Ensamblado de contexto (capas)
+
+```
+ACTIVE_CONTEXT.md
+│
+├─ CAPA GLOBAL  ──────────────────────────────────────── aplica a todos
+│   ├─ global/CONVENTIONS.md    (estándares de código)
+│   ├─ global/WORKFLOW.md       (GitFlow, proceso de PRs)
+│   └─ global/AGENT.md          (comportamiento del agente)
+│
+├─ CAPA CLIENTE  ─────────────────────────────────────── aplica al cliente
+│   ├─ clients/<cliente>/BUSINESS_RULES.md
+│   └─ clients/<cliente>/ARCHITECTURE.md
+│
+└─ CAPA PROYECTO  ────────────────────────────────────── específico del repo
+    ├─ clients/<cliente>/<repo>/BUSINESS_RULES.md
+    ├─ clients/<cliente>/<repo>/DEPENDENCIES.md
+    ├─ clients/<cliente>/<repo>/RISK_MATRIX.md
+    ├─ clients/<cliente>/<repo>/IMPACT_RULES.md
+    ├─ clients/<cliente>/<repo>/TASK_FLOW.md
+    └─ clients/<cliente>/<repo>/TEST_STRATEGY.md
+```
+
+Modo `summary`: primeras 30 líneas de cada archivo (~900 tokens total).
+Los paths completos se incluyen como referencias; el agente los carga on-demand.
+
+---
+
+## Formato de branch
+
+El nombre se genera a partir del tipo, número y título del ticket:
+
+```
+FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE
+TASK-89-REFACTORIZAR-MODULO-PAGOS
+ERROR-301-FIX-NULL-POINTER-EN-CHECKOUT
+HOTFIX-7-PARCHE-CRITICO-SESION-EXPIRADA
+```
+
+Regla: `{TIPO}-{NUMERO}-{TITULO-SLUGIFICADO-EN-MAYUSCULAS}`
+- Solo letras, números y guiones
+- Sin caracteres especiales ni espacios
+- Todo en mayúsculas
+
+---
+
+## Comando: `cipher update`
+
+**Propósito:** actualizar el contexto después de terminar trabajo.
+
+```
+cipher update
+    │
+    ├─ 1. Obtener git diff del repo actual
+    │      └─ git diff HEAD (staged + unstaged)
+    │
+    ├─ 2. Leer task activo
+    │      └─ .cipher/sessions/<cliente>/<repo>/task-agent.md
+    │
+    ├─ 3. Analizar con IA
+    │      └─ envía diff + task al agente
+    │         pide: summary, impact_level, affected_files,
+    │               cross_repo_impact, context_updates
+    │
+    ├─ 4. Aplicar cambios sugeridos
+    │      └─ muestra propuesta al desarrollador
+    │         confirma antes de sobrescribir
+    │         actualiza archivos .md correspondientes
+    │
+    └─ 5. Impacto cruzado
+           └─ si hay repos afectados
+                 "¿Genero ALERT.md en <repo>? [S/n]"
+                 escribe .cipher/ALERT.md en el repo afectado
 ```
 
 ---
 
-## Leyenda de colores (diagrama principal)
+## Comando: `cipher status`
 
-| Color | Quién actúa |
-|-------|-------------|
-| 🔵 Azul | Dev (acción manual) |
-| 🟢 Verde | Agente IA |
-| 🟣 Morado | brain-contexts (archivos persistentes) |
-| 🟡 Amarillo | Archivo en el repo |
-| 🔴 Rojo | Decisión / bifurcación |
-| ⚫ Negro | Sistema / scripts |
+**Propósito:** ver el estado actual del proyecto en cipher.
+
+```
+cipher status
+    │
+    ├─ muestra: cliente, proyecto, repo detectado
+    ├─ indica si existe ACTIVE_CONTEXT.md y su fecha
+    ├─ lista archivos de contexto y si están desactualizados
+    └─ muestra alertas pendientes en repos del cliente
+```
+
+---
+
+## Aislamiento de archivos
+
+cipher nunca deja archivos permanentes en los repos de los clientes.
+
+```
+cipher/                              ← TODO vive acá
+  .cipher/
+    config.json                    ← registro de clientes
+    config.local.json              ← API keys (gitignored)
+    sessions/
+      <cliente>/
+        <repo>/
+          ACTIVE_CONTEXT.md        ← contexto generado
+          task-agent.md            ← ticket activo
+
+<repo-cliente>/                    ← solo archivos temporales
+  CLAUDE.md                        ← existe SOLO durante la sesión
+                                      se elimina en el finally block
+```
+
+---
+
+## Providers y modelos
+
+| Agente | Provider | Modelo por defecto | Contexto máx. |
+|--------|----------|--------------------|---------------|
+| `cipher claude` | Anthropic | `claude-sonnet-4-6` | ~60k chars |
+| `cipher gemini` | Google | `gemini-2.5-flash` | ~400k chars |
+| `cipher codex` | OpenAI | `gpt-4o` | ~60k chars |
+| `cipher aider` | Ext. (aider CLI) | según keys disponibles | — |
+
+Los modelos se pueden sobreescribir en `.cipher/config.local.json`:
+```json
+{ "anthropic": { "model": "claude-opus-4-6" } }
+```
+
+---
+
+## Diagrama de archivos por operación
+
+```
+Operación          Archivos leídos                  Archivos escritos
+─────────────────────────────────────────────────────────────────────
+cipher init          <repos>/**/*.{py,ts,js,...}       clients/<c>/<r>/*.md
+                                                     .cipher/config.json
+
+cipher claude        .cipher/config.json                 sessions/<c>/<r>/ACTIVE_CONTEXT.md
+                   global/*.md                       sessions/<c>/<r>/task-agent.md
+                   clients/<c>/<r>/*.md              <repo>/CLAUDE.md  (temporal)
+
+cipher update        sessions/<c>/<r>/task-agent.md    clients/<c>/<r>/*.md
+                   git diff HEAD                     <repo-afectado>/.cipher/ALERT.md
+
+cipher status        sessions/<c>/<r>/ACTIVE_CONTEXT.md  —
+                   .cipher/config.json
+```

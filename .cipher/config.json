@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "consultora": "Mi Consultora",
+  "agentes_disponibles": [
+    "claude",
+    "gemini",
+    "codex",
+    "aider"
+  ],
+  "clients": {
+  }
+}

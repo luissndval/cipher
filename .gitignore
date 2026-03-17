@@ -1,6 +1,36 @@
-# Contexto generado — no commitear
-output/ACTIVE_CONTEXT.md
-# Alertas cross-repo SÍ se commitean (canal de comunicación entre repos)
-!output/alerts/
-*.tmp
+# cipher — .gitignore
+
+# API keys personales — NUNCA al repo
+.cipher/config.local.json
+
+# Contexto generado automáticamente
+CLAUDE.md
+.cipher/ACTIVE_CONTEXT.md
+.cipher/task-agent.md
+.cipher/ALERT.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log
+
+# OS
 .DS_Store
+Thumbs.db
+*.log
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo

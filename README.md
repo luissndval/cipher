@@ -1,215 +1,292 @@
-# brain-contexts
+# cipher
 
-Sistema de contexto estructurado para agentes IA. En lugar de explicarle tu proyecto al agente cada vez, lo documentas aquí una sola vez y se inyecta automáticamente como system prompt.
+> Memoria persistente y portable para agentes IA.
+> Un sistema de contexto centralizado para consultoras y equipos de desarrollo.
 
-Soporta **Claude Code**, **Gemini CLI** y **Aider**. Diseñado para consultoras con múltiples clientes y proyectos.
+**cipher no es un agente. Es la memoria que cualquier agente consume.**
+El agente cambia (Claude, Gemini, Codex). La memoria siempre es la misma.
+
+---
+
+## El problema que resuelve
+
+Sin cipher, cada sesión con un agente IA empieza desde cero. El dev explica el proyecto, las reglas de negocio, el stack, las dependencias — cada vez, en cada herramienta.
+
+Con cipher, el contexto vive en un repositorio central. Todos los devs del equipo comparten la misma memoria. Todos los agentes la consumen automáticamente.
 
 ---
 
 ## Instalación
 
 ```bash
-git clone git@github.com:luissndval/brain-contexts.git
-bash brain-contexts/scripts/install.sh
+git clone https://github.com/tu-org/cipher.git
+cd cipher
+bash install.sh
 ```
 
-Luego recarga tu terminal:
+`install.sh` hace todo:
+- Instala dependencias Python (`anthropic`, `google-genai`, `openai`)
+- Registra `cipher` como comando global en tu sistema
+- Crea `.cipher/config.local.json` a partir del ejemplo
 
-```bash
-source ~/.bashrc   # bash
-source ~/.zshrc    # zsh
-# Windows: abre una nueva terminal
-```
-
-Verifica que funciona:
-
-```bash
-brain --help 2>/dev/null || brain
-```
+Reiniciá tu terminal al finalizar.
 
 ---
 
-## Poblar contexto automáticamente
+## Configuración de API keys
 
-El script `populate-context.sh` clona un repo, lo analiza y genera todos los `.md` de contexto usando Claude.
-
-```bash
-bash brain-contexts/scripts/populate-context.sh <git-url> [client-name] [project-name]
-```
-
-**Ejemplos:**
-
-```bash
-# Con cliente
-bash scripts/populate-context.sh git@github.com:org/backend.git acme-corp backend
-
-# Sin cliente (proyecto standalone)
-bash scripts/populate-context.sh https://github.com/org/app.git
-```
-
-Qué hace automáticamente:
-- Clona el repo en un directorio temporal
-- Extrae README, dependencias, estructura, CI/CD, código fuente
-- Llama a Claude para generar cada `.md` con contenido real
-- Registra el repo en `context-map.json`
-
-> Requiere `claude` CLI instalado (`npm install -g @anthropic-ai/claude-code`).
-
-### Primera vez (repo no registrado)
-
-Si ejecutas `brain` desde un repo que no está en `context-map.json`, el script te preguntará automáticamente:
-
-```
-[brain] El repo 'mi-repo' no está registrado en context-map.json.
-
-  ¿Querés generar el contexto automáticamente?
-
-  Proporciona la URL git del repo (o Enter para omitir):
-  > git@github.com:org/mi-repo.git
-
-  Nombre del cliente (opcional, Enter para omitir):
-  > acme-corp
-```
-
----
-
-## Setup manual: nuevo cliente + proyecto
-
-### 1. Crea el cliente
-
-```bash
-cp -r clients/_template clients/nombre-cliente
-# edita los .md con la info del cliente
-```
-
-| Archivo | Qué documenta |
-|---|---|
-| `CLIENT_PROFILE.md` | Quiénes son, stack preferido, contactos |
-| `TECH_PREFERENCES.md` | Tecnologías aprobadas, infraestructura, estándares |
-| `BILLING_RULES.md` | Modelo de facturación, horas, SLAs |
-| `COMMUNICATION.md` | Canales, frecuencia de reportes, tono |
-
-### 2. Crea el proyecto
-
-```bash
-cp -r projects/_template projects/nombre-cliente/nombre-proyecto
-# edita los .md con el contexto del proyecto
-```
-
-| Archivo | Qué documenta |
-|---|---|
-| `BUSINESS_RULES.md` | Reglas de negocio, restricciones del dominio |
-| `DEPENDENCIES.md` | Dependencias clave, versiones, integraciones |
-| `TECHNICAL_STATE.md` | Estado técnico actual, deuda técnica |
-| `RISK_MATRIX.md` | Riesgos conocidos y mitigaciones |
-| `TASK_FLOW.md` | Cómo se trabajan las tareas |
-| `TEST_STRATEGY.md` | Estrategia de testing |
-| `IMPACT_RULES.md` | Zonas de alto impacto, qué no tocar sin revisión |
-
-> No necesitas llenar todos. El agente usa lo que encuentre.
-
-### 3. Registra el repo en `context-map.json`
+Editá `.cipher/config.local.json` (nunca va al repo):
 
 ```json
 {
-  "mappings": {
-    "nombre-del-repo": "nombre-cliente/nombre-proyecto"
-  }
+  "anthropic": { "api_key": "sk-ant-...", "model": "claude-sonnet-4-6" },
+  "google":    { "api_key": "AIza...",    "model": "gemini-2.5-flash"  },
+  "openai":    { "api_key": "sk-...",     "model": "gpt-4o"            }
 }
 ```
 
-> El nombre del repo es el que devuelve `basename $(git rev-parse --show-toplevel)`.
-> Múltiples repos pueden apuntar al mismo contexto.
-
----
-
-## Setup: proyecto standalone (sin cliente)
-
-Para proyectos internos o sin cliente asociado:
+O exportá las variables de entorno (tienen prioridad máxima):
 
 ```bash
-cp -r projects/_template projects/nombre-proyecto
-```
-
-```json
-{
-  "mappings": {
-    "nombre-del-repo": "nombre-proyecto"
-  }
-}
+export ANTHROPIC_API_KEY=sk-ant-...
+export GOOGLE_API_KEY=AIza...
+export OPENAI_API_KEY=sk-...
 ```
 
 ---
 
-## Uso diario
+## Dos IAs, dos roles
+
+| IA | Rol | Cuándo |
+|----|-----|--------|
+| **Gemini** | Análisis y generación de contexto | `cipher init`, `cipher update` |
+| **Claude** | Agente de codificación | `cipher claude` |
+
+Gemini aprovecha su ventana de 400k tokens para leer el código fuente completo de cada repo y generar el contexto. Claude recibe ese contexto inyectado y ejecuta el desarrollo.
+
+> ¿Querés integrar otro provider? Implementá `analyze_repo()` en `providers.py` y registralo en `get_analysis_provider()`.
+
+---
+
+## Uso
+
+### 1. Registrar un cliente y sus repos
 
 ```bash
-cd ~/Projects/mi-repo
-
-brain              # genera ACTIVE_CONTEXT.md (imprime la ruta)
-brain claude       # genera contexto + lanza Claude Code
-brain gemini       # genera contexto + lanza Gemini CLI
-brain aider        # genera contexto + lanza Aider
+cd /proyectos/cliente-xyz      # carpeta con uno o varios repos
+cipher init
 ```
 
-### Capas que se inyectan al agente
+`cipher init` (usa Gemini por defecto):
+1. Detecta todos los subdirectorios con `.git`
+2. Pregunta cuáles registrar
+3. Lee el código fuente real de cada repo (hasta 400k chars con Gemini)
+4. Genera los 4 archivos de contexto por repo en una sola llamada:
+   - `ARCHITECTURE.md` — stack, patrones, estructura
+   - `BUSINESS_RULES.md` — reglas y flujos de negocio
+   - `DEPENDENCIES.md` — dependencias y servicios externos
+   - `RISK_MATRIX.md` — áreas críticas y riesgos
+5. Los guarda en `clients/<cliente>/<repo>/`
+6. Registra el cliente en `.cipher/config.json`
 
+### 2. Iniciar una sesión de desarrollo
+
+```bash
+cipher claude
 ```
-CAPA GLOBAL      → global/                              (aplica a todos)
-CAPA CLIENTE     → clients/nombre-cliente/              (si existe)
-CAPA PROYECTO    → projects/nombre-cliente/nombre-proj/
-CAPA TÉCNICA     → TECHNICAL_STATE.md del proyecto
-CAPA TAREA       → IMPACT_RULES, TASK_FLOW, TEST_STRATEGY
+
+Al ejecutar este comando, cipher:
+
+1. Resuelve el cliente desde `.cipher/config.json`
+2. Muestra los repos registrados y pregunta en cuál trabajar:
+   ```
+   ▸ Repos disponibles:
+     1. takeapp-api   (C:\...\takeapp-api)
+     2. takeapp-web   (C:\...\takeapp-web)
+   Seleccioná el repo [1-2]:
+   ```
+3. Carga o genera `ACTIVE_CONTEXT.md` (contexto ensamblado en capas)
+4. Pregunta el tipo de work item:
+   ```
+   ▸ Tipo de work item:
+     1. FEATURE
+     2. TASK
+     3. ERROR
+     4. HOTFIX
+   ```
+5. Pide número de ticket, título y descripción
+6. Genera el nombre de branch: `FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE`
+7. Crea `task-agent.md` con instrucciones paso a paso para el agente
+8. Lanza el agente con el contexto inyectado
+
+El agente recibe instrucciones para:
+- Crear la branch con el nombre generado
+- Implementar la tarea
+- Hacer commit, push y crear el PR al finalizar
+
+### 3. Actualizar contexto después de un cambio
+
+```bash
+cipher update
 ```
+
+Analiza el `git diff` con Gemini, detecta cambios arquitecturales y propone actualizar los archivos de contexto. Si el cambio afecta a otros repos del cliente, genera `ALERT.md` automáticamente.
+
+### 4. Ver estado del proyecto
+
+```bash
+cipher status
+```
+
+Muestra: contexto cargado, alertas pendientes, estado de archivos de contexto.
 
 ---
 
-## Estructura del repo
+## Flujo operacional completo
+
+Ver [FLOW.html](./FLOW.html) para el diagrama visual interactivo.
+
+---
+
+## Estructura del repositorio
 
 ```
-brain-contexts/
-├── detect-context.sh          # script principal
-├── context-map.json           # mapeo repo → cliente/proyecto
-├── global/                    # reglas para todos los proyectos
-│   ├── GLOBAL_RULES.md
-│   ├── AGENT.md
-│   └── FALLBACK_CONTEXT.md
+cipher/
+├── install.sh                       ← instalación global
+├── bin/cipher                         ← wrapper del comando global
+├── .cipher/
+│   ├── config.json                  ← clientes y repos registrados (va al repo)
+│   ├── config.local.json            ← API keys (NO va al repo, en .gitignore)
+│   ├── config.local.example.json    ← plantilla para nuevos usuarios
+│   └── sessions/
+│       └── <cliente>/<repo>/
+│           ├── ACTIVE_CONTEXT.md    ← contexto ensamblado (generado)
+│           └── task-agent.md        ← ticket activo (generado)
+├── global/
+│   ├── CONVENTIONS.md               ← estándares de código de la consultora
+│   ├── WORKFLOW.md                  ← GitFlow, PRs, proceso estándar
+│   └── AGENT.md                     ← comportamiento base del agente
 ├── clients/
-│   ├── _template/             # plantilla de cliente
-│   └── nombre-cliente/        # contexto del cliente
-│       ├── CLIENT_PROFILE.md
-│       ├── TECH_PREFERENCES.md
-│       ├── BILLING_RULES.md
-│       └── COMMUNICATION.md
-├── projects/
-│   ├── _template/             # plantilla de proyecto
-│   └── nombre-cliente/
-│       └── nombre-proyecto/   # contexto del proyecto
-├── schemas/                   # esquemas de referencia para los .md
-├── scripts/
-│   └── install.sh             # instalador cross-platform (Mac/Linux/Windows)
-└── output/                    # generado automáticamente (gitignored)
-    └── ACTIVE_CONTEXT.md
+│   ├── _template/                   ← plantilla para nuevos proyectos
+│   └── <cliente>/
+│       └── <repo>/
+│           ├── ARCHITECTURE.md
+│           ├── BUSINESS_RULES.md
+│           ├── DEPENDENCIES.md
+│           ├── RISK_MATRIX.md
+│           ├── IMPACT_RULES.md
+│           ├── TASK_FLOW.md
+│           └── TEST_STRATEGY.md
+└── cli/
+    ├── main.py                      ← punto de entrada del CLI
+    ├── context_loader.py            ← ensambla ACTIVE_CONTEXT.md
+    ├── providers.py                 ← abstracción Claude / Gemini / OpenAI
+    ├── requirements.txt
+    └── commands/
+        ├── init.py                  ← cipher init
+        ├── session.py               ← cipher claude / gemini / codex
+        ├── update.py                ← cipher update
+        ├── status.py                ← cipher status
+        └── export.py                ← cipher export
 ```
 
 ---
 
-## Variables de entorno
+## Cómo funciona el contexto
 
-| Variable | Default | Descripción |
-|---|---|---|
-| `BRAIN_CONTEXTS` | directorio del script | Ruta al repo brain-contexts |
+Cuando ejecutás `cipher claude`, el contexto se ensambla en tres capas:
+
+```
+CAPA GLOBAL     →  CONVENTIONS.md + WORKFLOW.md + AGENT.md
+                   (reglas de la consultora, aplica a todos los proyectos)
+
+CAPA CLIENTE    →  BUSINESS_RULES.md + ARCHITECTURE.md
+                   (reglas y arquitectura del cliente específico)
+
+CAPA PROYECTO   →  DEPENDENCIES.md + RISK_MATRIX.md + IMPACT_RULES.md
+                   + TASK_FLOW.md + TEST_STRATEGY.md
+                   (detalles del repo en el que se trabaja)
+```
+
+El resultado se guarda en `.cipher/sessions/<cliente>/<repo>/ACTIVE_CONTEXT.md` — nunca en el repo del cliente.
+
+El modo por defecto es `summary` (~30 líneas por archivo). Los archivos completos se referencian como paths y el agente los carga on-demand.
+
+---
+
+## Agregar un cliente manualmente
+
+Si preferís no usar `cipher init`:
 
 ```bash
-export BRAIN_CONTEXTS=/ruta/a/brain-contexts
+# 1. Copiar template
+cp -r clients/_template clients/mi-cliente/mi-repo
+
+# 2. Llenar los archivos .md con contenido real
+
+# 3. Registrar en .cipher/config.json
+```
+
+```json
+{
+  "clients": {
+    "mi-cliente": {
+      "repos": {
+        "mi-repo": {
+          "name": "mi-repo",
+          "path": "/ruta/absoluta/al/repo",
+          "owner": "dev@consultora.com",
+          "depends_on": [],
+          "consumed_by": []
+        }
+      }
+    }
+  }
+}
 ```
 
 ---
 
-## Repo no mapeado
+## Troubleshooting
 
-Si ejecutas `brain` desde un repo no registrado, usa `_template` como fallback. Para registrarlo:
+**`cipher: command not found`**
+Reiniciá tu terminal o ejecutá `source ~/.zshrc` / `source ~/.bashrc`.
 
-1. Agrega la entrada en `context-map.json`
-2. Crea la carpeta del cliente (si aplica) y del proyecto
-3. Commitea los cambios en brain-contexts
+**`No se encontró cipher`**
+cipher debe estar en el directorio padre del repo, o configurá:
+```bash
+export CIPHER_PATH=/ruta/a/cipher
+```
+
+**`API key no configurada`**
+Editá `.cipher/config.local.json` o exportá la variable de entorno correspondiente.
+
+**`cipher init` no detecta mis repos**
+Verificá que los directorios tengan `.git` inicializado:
+```bash
+ls /tu/carpeta/*/.git
+```
+
+**`ModuleNotFoundError`**
+Activá el virtualenv o instalá dependencias:
+```bash
+pip install -r cli/requirements.txt
+```
+
+**`ALERT.md` en mi repo**
+Otro repo del mismo cliente tuvo un cambio que te afecta. Leé el archivo antes de continuar.
+
+---
+
+## Contribuir
+
+1. Fork del repo
+2. Branch: `FEATURE-<numero>-<descripcion>` desde `main`
+3. PR con descripción del cambio
+4. Los cambios al CLI deben incluir prueba manual documentada
+
+---
+
+## Licencia
+
+MIT — Libre para uso comercial y personal.
