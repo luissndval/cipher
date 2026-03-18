@@ -16,6 +16,10 @@ from cipher.commands.update import cmd_update
 from cipher.commands.status import cmd_status
 from cipher.commands.session import cmd_session
 from cipher.commands.index import cmd_index
+from cipher.commands.impact import cmd_impact
+from cipher.commands.pack import cmd_pack
+from cipher.commands.task import cmd_task
+from cipher.commands.audit import cmd_audit
 
 BANNER = f"""
 \033[34m╔══════════════════════════════════════════╗
@@ -31,6 +35,10 @@ Comandos:
   cipher update     Actualiza contexto después de un cambio
   cipher status     Muestra estado del contexto actual
   cipher index      Genera índice estructural del repo (sin LLM)
+  cipher impact     Muestra qué archivos se ven afectados por un cambio
+  cipher pack       Genera el context pack mínimo para una tarea
+  cipher task       Crea una task, genera intent y lanza el agente
+  cipher audit      Historial de auditoría de sesiones IA
 
 Ejemplos:
   cd /proyectos/cliente-xyz
@@ -70,6 +78,14 @@ def main():
         cmd_status(args=extra_args)
     elif command == "index":
         cmd_index(args=extra_args)
+    elif command == "impact":
+        cmd_impact(args=extra_args)
+    elif command == "pack":
+        cmd_pack(args=extra_args)
+    elif command == "task":
+        cmd_task(args=extra_args)
+    elif command == "audit":
+        cmd_audit(args=extra_args)
     else:
         print(f"\033[31m✗ Comando desconocido: {command}\033[0m")
         print("  Comandos disponibles: init, claude, update, status")

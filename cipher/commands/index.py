@@ -69,4 +69,16 @@ def cmd_index(args: list):
     if lang_str:
         print(f"  {ok_label} Lenguajes: {lang_str}")
     print(f"  {ok_label} Duración  : {s.duration_seconds}s")
-    print(f"\n  Índice guardado: {index_path}\n")
+    print(f"\n  Índice guardado: {index_path}")
+
+    # F2: Construir grafo de dependencias
+    print(f"\n  {YELLOW}▸ Construyendo grafo de dependencias...{NC}")
+    try:
+        from cipher.graph.builder import GraphBuilder
+        graph = GraphBuilder(repo_index).build()
+        graph_path = GraphBuilder.save(graph, output_dir)
+        print(f"  {ok_label} Grafo: {graph.node_count} nodos, {graph.edge_count} aristas")
+        print(f"  {ok_label} Externos: {len(graph.external_imports)} módulos")
+        print(f"  {ok_label} Guardado: {graph_path}\n")
+    except Exception as e:
+        print(f"  {warn_label} Grafo falló (no bloqueante): {e}\n")
