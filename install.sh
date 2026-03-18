@@ -17,7 +17,7 @@ NC='\033[0m'
 
 echo ""
 echo -e "${BLUE}╔══════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║         cipher — Instalación             ║${NC}"
+echo -e "${BLUE}║       cipheria — Instalación             ║${NC}"
 echo -e "${BLUE}║   Memoria persistente para agentes IA    ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════╝${NC}"
 echo ""
@@ -72,19 +72,31 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 4. Registrar comando global cipher
+# 4. Registrar comando global cipheria
 # -----------------------------------------------------------------------------
 echo ""
-echo -e "${YELLOW}▸ Registrando comando global cipher...${NC}"
+echo -e "${YELLOW}▸ Registrando comando global cipheria...${NC}"
 
 mkdir -p "$CIPHER_DIR/bin"
-cat > "$CIPHER_DIR/bin/cipher" << EOF
+
+# Bash script (Git Bash / Linux / macOS)
+cat > "$CIPHER_DIR/bin/cipheria" << EOF
 #!/usr/bin/env bash
 export CIPHER_PATH="$CIPHER_DIR"
 python3 "$CIPHER_DIR/cipher/main.py" "\$@"
 EOF
-chmod +x "$CIPHER_DIR/bin/cipher"
+chmod +x "$CIPHER_DIR/bin/cipheria"
 
+# CMD/PowerShell wrapper (Windows)
+CIPHER_WIN_DIR="$(cygpath -w "$CIPHER_DIR" 2>/dev/null || echo "$CIPHER_DIR")"
+cat > "$CIPHER_DIR/bin/cipheria.cmd" << EOF
+@echo off
+set CIPHER_PATH=$CIPHER_WIN_DIR
+python "$CIPHER_WIN_DIR\\cipher\\main.py" %*
+EOF
+echo -e "${GREEN}  ✓ cipheria (bash) y cipheria.cmd (PowerShell/CMD) creados${NC}"
+
+# Agregar bin/ al PATH del shell actual
 SHELL_RC=""
 if [ -f "$HOME/.zshrc" ]; then
   SHELL_RC="$HOME/.zshrc"
@@ -96,9 +108,9 @@ fi
 
 EXPORT_LINE="export PATH=\"$CIPHER_DIR/bin:\$PATH\""
 if [ -n "$SHELL_RC" ]; then
-  if ! grep -q "cipher/bin" "$SHELL_RC"; then
+  if ! grep -q "cipheria" "$SHELL_RC" && ! grep -q "cipher/bin" "$SHELL_RC"; then
     echo "" >> "$SHELL_RC"
-    echo "# cipher CLI" >> "$SHELL_RC"
+    echo "# cipheria CLI" >> "$SHELL_RC"
     echo "$EXPORT_LINE" >> "$SHELL_RC"
     echo -e "${GREEN}  ✓ PATH actualizado en $SHELL_RC${NC}"
   else
@@ -107,6 +119,11 @@ if [ -n "$SHELL_RC" ]; then
 fi
 
 export PATH="$CIPHER_DIR/bin:$PATH"
+
+# Instrucciones para PowerShell
+CIPHER_BIN_WIN="$(cygpath -w "$CIPHER_DIR/bin" 2>/dev/null || echo "$CIPHER_DIR/bin")"
+echo -e "  ${YELLOW}Para PowerShell, agregá al PATH manualmente:${NC}"
+echo -e "  [Environment]::SetEnvironmentVariable(\"PATH\", \$env:PATH + \";$CIPHER_BIN_WIN\", \"User\")"
 
 # -----------------------------------------------------------------------------
 # 5. Crear config.local.json si no existe
@@ -132,10 +149,10 @@ echo -e "  Reiniciá tu terminal o ejecutá:"
 echo -e "  ${YELLOW}source $SHELL_RC${NC}"
 echo ""
 echo -e "  Luego posicionante en la carpeta de tu proyecto:"
-echo -e "  ${YELLOW}cipher init${NC}       — registra el proyecto y genera contexto con Gemini"
-echo -e "  ${YELLOW}cipher claude${NC}     — abre sesión de desarrollo con Claude Code"
-echo -e "  ${YELLOW}cipher update${NC}     — actualiza contexto tras un cambio"
-echo -e "  ${YELLOW}cipher status${NC}     — estado del contexto actual"
+echo -e "  ${YELLOW}cipheria init${NC}       — registra el proyecto y genera contexto con Gemini"
+echo -e "  ${YELLOW}cipheria claude${NC}     — abre sesión de desarrollo con Claude Code"
+echo -e "  ${YELLOW}cipheria update${NC}     — actualiza contexto tras un cambio"
+echo -e "  ${YELLOW}cipheria status${NC}     — estado del contexto actual"
 echo ""
 echo -e "  ${BLUE}ℹ Configurá tus API keys en .cipher/config.local.json${NC}"
 echo ""
