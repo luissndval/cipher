@@ -69,8 +69,8 @@ def cmd_impact(args: list):
     # Normalizar target_file como rel_path
     rel_target = _normalize_target(target_file, graph)
     if rel_target is None:
-        print(f"{RED}✗ '{target_file}' no está en el índice del repo '{repo_name}'.{NC}")
-        _suggest_similar(target_file, graph)
+        rel_target = _fuzzy_pick(target_file, graph, repo_name)
+    if rel_target is None:
         return
 
     impact = graph.impact_set(rel_target, max_depth=max_depth)
@@ -127,10 +127,47 @@ def _normalize_target(target: str, graph: DependencyGraph) -> str | None:
     return None
 
 
-def _suggest_similar(target: str, graph: DependencyGraph):
-    basename = os.path.basename(target)
-    matches = [p for p in graph.nodes if os.path.basename(p) == basename]
-    if matches:
-        print(f"  {YELLOW}¿Quisiste decir?{NC}")
-        for m in matches[:5]:
-            print(f"    {m}")
+def _fuzzy_pick(query: str, graph: DependencyGraph, repo_name: str) -> str | None:
+    """
+    Busca archivos que contengan `query` como substring (case-insensitive).
+    Si hay un único match, lo usa directamente.
+    Si hay varios, muestra lista numerada para que el usuario elija.
+    """
+    q = query.lower().replace("\\", "/")
+    matches = [p for p in sorted(graph.nodes) if q in p.lower()]
+
+    if not matches:
+        print(f"{RED}✗ No se encontró ningún archivo que contenga '{query}' en '{repo_name}'.{NC}")
+        return None
+
+    if len(matches) == 1:
+        print(f"  {YELLOW}→ Usando:{NC} {CYAN}{matches[0]}{NC}\n")
+        return matches[0]
+
+    print(f"\n  {YELLOW}'{query}' matchea {len(matches)} archivo(s) en '{repo_name}':{NC}\n")
+    # Paginar si hay muchos
+    page_size = 20
+    shown = matches[:page_size]
+    for i, path in enumerate(shown, 1):
+        print(f"  {YELLOW}{i:>3}{NC}. {CYAN}{path}{NC}")
+    if len(matches) > page_size:
+        print(f"\n  {YELLOW}... y {len(matches) - page_size} más. Afinás la búsqueda con más texto.{NC}")
+
+    print()
+    try:
+        raw = input(f"  Elegí un número (Enter para cancelar): ").strip()
+    except (KeyboardInterrupt, EOFError):
+        print()
+        return None
+
+    if not raw:
+        return None
+    try:
+        idx = int(raw) - 1
+        if 0 <= idx < len(shown):
+            return shown[idx]
+        print(f"{RED}✗ Número fuera de rango.{NC}")
+        return None
+    except ValueError:
+        print(f"{RED}✗ Ingresá un número.{NC}")
+        return None
