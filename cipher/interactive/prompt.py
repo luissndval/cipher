@@ -82,27 +82,30 @@ class InteractiveSession:
                 continue
 
             # Procesar @menciones en el input
-            mentions = _AT_PATTERN.findall(raw)
-            if mentions:
-                clean_text = _AT_PATTERN.sub("", raw).strip()
-                if clean_text:
-                    self.intention = (self.intention + " " + clean_text).strip()
+            try:
+                mentions = _AT_PATTERN.findall(raw)
+                if mentions:
+                    clean_text = _AT_PATTERN.sub("", raw).strip()
+                    if clean_text:
+                        self.intention = (self.intention + " " + clean_text).strip()
 
-                for mention in mentions:
-                    self._handle_mention(mention)
-            else:
-                # Texto libre sin @ → guardar como intención
-                self.intention = (self.intention + " " + raw).strip()
-                # Intentar búsqueda implícita con las palabras clave
-                words = [w for w in re.split(r'\W+', raw) if len(w) > 3]
-                if words and not self.selected:
-                    results = self.searcher.search_multi(words, limit=8)
-                    if results:
-                        print(f"\n  {DIM}Archivos relacionados con tu input:{NC}")
-                        self._show_results(results)
-                        self._pick_from(results, optional=True)
+                    for mention in mentions:
+                        self._handle_mention(mention)
+                else:
+                    # Texto libre sin @ → guardar como intención
+                    self.intention = (self.intention + " " + raw).strip()
+                    # Intentar búsqueda implícita con las palabras clave
+                    words = [w for w in re.split(r'\W+', raw) if len(w) > 3]
+                    if words and not self.selected:
+                        results = self.searcher.search_multi(words, limit=8)
+                        if results:
+                            print(f"\n  {DIM}Archivos relacionados con tu input:{NC}")
+                            self._show_results(results)
+                            self._pick_from(results, optional=True)
 
-            self._show_selected()
+                self._show_selected()
+            except Exception as e:
+                print(f"\n  [!] Error: {e}")
 
         # Confirmar y ejecutar
         return self._execute()
@@ -112,14 +115,14 @@ class InteractiveSession:
     def _handle_mention(self, query: str):
         results = self.searcher.search(query, limit=15)
         if not results:
-            print(f"\n  {RED}✗ No se encontró nada para '@{query}'{NC}")
+            print(f"\n  {RED}! No se encontró nada para '@{query}'{NC}")
             return
 
         if len(results) == 1:
             path = results[0].path
             if path not in self.selected:
                 self.selected.append(path)
-                print(f"\n  {GREEN}✓{NC} {CYAN}{path}{NC}")
+                print(f"\n  {GREEN}+{NC} {CYAN}{path}{NC}")
             return
 
         print(f"\n  {YELLOW}Resultados para '@{query}':{NC}\n")
@@ -169,7 +172,7 @@ class InteractiveSession:
             return
         print(f"\n  {BLUE}Contexto seleccionado:{NC}")
         for path in self.selected:
-            print(f"    {GREEN}✓{NC} {path}")
+            print(f"    {GREEN}+{NC} {path}")
         if self.intention:
             print(f"  {BLUE}Intención:{NC} {DIM}{self.intention}{NC}")
 

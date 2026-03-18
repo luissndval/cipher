@@ -69,12 +69,12 @@ def cmd_impact(args: list):
             return
 
     if not repo_name:
-        print(f"{RED}✗ No se pudo detectar el repo. Usá --repo <nombre>.{NC}")
+        print(f"{RED}! No se pudo detectar el repo. Usá --repo <nombre>.{NC}")
         return
 
     graph_path = os.path.join(loader.cipher_dir, ".cipher", "index", repo_name, "graph.json")
     if not os.path.exists(graph_path):
-        print(f"{RED}✗ No se encontró grafo para '{repo_name}'. Ejecutá: cipher index{NC}")
+        print(f"{RED}! No se encontró grafo para '{repo_name}'. Ejecutá: cipher index{NC}")
         return
 
     graph: DependencyGraph = GraphBuilder.load(graph_path)
@@ -153,17 +153,17 @@ def _interactive_mode(args: list):
     graph_path = os.path.join(loader.cipher_dir, ".cipher", "index", repo_name, "graph.json")
 
     if not os.path.exists(graph_path):
-        print(f"{RED}✗ No se encontró grafo para '{repo_name}'. Ejecutá: cipher index{NC}")
+        print(f"{RED}! No se encontró grafo para '{repo_name}'. Ejecutá: cipher index{NC}")
         return
     if not os.path.exists(index_path):
-        print(f"{RED}✗ No se encontró índice para '{repo_name}'. Ejecutá: cipher index{NC}")
+        print(f"{RED}! No se encontró índice para '{repo_name}'. Ejecutá: cipher index{NC}")
         return
 
     repo_index = RepoIndexer.load(index_path)
     graph = GraphBuilder.load(graph_path)
 
     if graph.node_count == 0:
-        print(f"{RED}✗ El índice de '{repo_name}' está vacío (0 archivos).{NC}")
+        print(f"{RED}! El índice de '{repo_name}' está vacío (0 archivos).{NC}")
         print(f"  Ejecutá {YELLOW}cipher index{NC} dentro del repo para indexarlo.")
         return
 
@@ -213,7 +213,7 @@ def _fuzzy_pick(query: str, graph: DependencyGraph, repo_name: str) -> str | Non
     matches = [p for p in sorted(graph.nodes) if q in p.lower()]
 
     if not matches:
-        print(f"{RED}✗ No se encontró ningún archivo que contenga '{query}' en '{repo_name}'.{NC}")
+        print(f"{RED}! No se encontró ningún archivo que contenga '{query}' en '{repo_name}'.{NC}")
         return None
 
     if len(matches) == 1:
@@ -242,10 +242,10 @@ def _fuzzy_pick(query: str, graph: DependencyGraph, repo_name: str) -> str | Non
         idx = int(raw) - 1
         if 0 <= idx < len(shown):
             return shown[idx]
-        print(f"{RED}✗ Número fuera de rango.{NC}")
+        print(f"{RED}! Número fuera de rango.{NC}")
         return None
     except ValueError:
-        print(f"{RED}✗ Ingresá un número.{NC}")
+        print(f"{RED}! Ingresá un número.{NC}")
         return None
 
 
@@ -262,7 +262,7 @@ def _pick_repo(loader: ContextLoader) -> str | None:
                 repos.append(name)
 
     if not repos:
-        print(f"{RED}✗ No hay repos indexados. Ejecutá: cipher index{NC}")
+        print(f"{RED}! No hay repos indexados. Ejecutá: cipher index{NC}")
         return None
 
     if len(repos) == 1:
@@ -296,7 +296,7 @@ def _pick_repo(loader: ContextLoader) -> str | None:
         if name.lower() == raw.lower():
             return name
 
-    print(f"{RED}✗ Repo no encontrado: '{raw}'{NC}")
+    print(f"{RED}! Repo no encontrado: '{raw}'{NC}")
     return None
 
 
