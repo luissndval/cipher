@@ -35,11 +35,21 @@ except ImportError:
 _PT_STYLE = None
 if _PT:
     _PT_STYLE = Style.from_dict({
-        "completion-menu.completion":         "bg:#1e3a5f #aaccff",
-        "completion-menu.completion.current": "bg:#2255aa #ffffff bold",
-        "completion-menu.meta.completion":    "bg:#142840 #667799",
+        "completion-menu.completion":              "bg:#1e3a5f #aaccff",
+        "completion-menu.completion.current":      "bg:#2255aa #ffffff bold",
+        "completion-menu.meta.completion":         "bg:#142840 #667799",
         "completion-menu.meta.completion.current": "bg:#1a3d7a #99bbdd",
     })
+
+
+def _make_pt_session(completer) -> "PromptSession":
+    """Crea PromptSession con autocompletado de @menciones."""
+    return PromptSession(
+        completer=completer,
+        complete_style=CompleteStyle.MULTI_COLUMN,
+        style=_PT_STYLE,
+        complete_while_typing=True,
+    )
 
 GREEN  = '\033[0;32m'
 YELLOW = '\033[1;33m'
@@ -79,12 +89,10 @@ class InteractiveSession:
         # PromptSession con autocompletado de @menciones
         session = None
         if _PT:
-            session = PromptSession(
-                completer=AtMentionCompleter(self.searcher),
-                complete_style=CompleteStyle.MULTI_COLUMN,
-                style=_PT_STYLE,
-                complete_while_typing=True,
-            )
+            try:
+                session = _make_pt_session(AtMentionCompleter(self.searcher))
+            except Exception:
+                session = None  # fallback a input() si el terminal no lo soporta
 
         while True:
             try:
