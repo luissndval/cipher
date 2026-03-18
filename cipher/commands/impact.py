@@ -59,6 +59,15 @@ def cmd_impact(args: list):
     # Resolver repo_name
     if not repo_name:
         repo_name = _detect_repo_name(loader)
+
+    # Si target_file parece un nombre de repo (sin extensión ni separadores)
+    # y no pudimos detectar repo desde CWD, intentarlo como repo → modo interactivo
+    if not repo_name and _looks_like_repo_name(target_file):
+        candidate = _resolve_repo_name(target_file, loader)
+        if candidate:
+            _interactive_mode(["--repo", candidate, "--depth", str(max_depth)])
+            return
+
     if not repo_name:
         print(f"{RED}✗ No se pudo detectar el repo. Usá --repo <nombre>.{NC}")
         return
@@ -232,3 +241,24 @@ def _fuzzy_pick(query: str, graph: DependencyGraph, repo_name: str) -> str | Non
     except ValueError:
         print(f"{RED}✗ Ingresá un número.{NC}")
         return None
+
+
+def _looks_like_repo_name(s: str) -> bool:
+    """True si el string no tiene extensión ni separadores de path — parece un nombre de repo."""
+    return "/" not in s and "\\" not in s and "." not in s
+
+
+def _resolve_repo_name(candidate: str, loader: ContextLoader) -> str | None:
+    """
+    Busca en la config un repo cuyo nombre coincida (case-insensitive) con candidate.
+    Retorna el nombre exacto si lo encuentra.
+    """
+    c = candidate.lower()
+    config = loader.config
+    for client_data in config.get("clients", {}).values():
+        if not isinstance(client_data, dict):
+            continue
+        for repo_name in client_data.get("repos", {}):
+            if repo_name.lower() == c:
+                return repo_name
+    return None
