@@ -1,5 +1,7 @@
 """
 cipher impact — Muestra el impact set de un archivo en el grafo de dependencias.
+
+Sin argumentos → lanza modo interactivo (InteractiveSession).
 """
 
 import os
@@ -7,6 +9,7 @@ import os
 from cipher.graph.builder import GraphBuilder
 from cipher.graph.schema import DependencyGraph
 from cipher.core.loader import ContextLoader
+from cipher.index.indexer import RepoIndexer
 
 GREEN  = '\033[0;32m'
 YELLOW = '\033[1;33m'
@@ -17,8 +20,9 @@ NC     = '\033[0m'
 
 
 def cmd_impact(args: list):
-    if not args or args[0].startswith("--"):
-        print(f"{RED}Uso: cipher impact <archivo> [--repo <nombre>] [--depth <n>]{NC}")
+    # Sin argumentos (o solo flags) → modo interactivo
+    if not args or (len(args) == 1 and args[0].startswith("--")) or all(a.startswith("--") for a in args):
+        _interactive_mode(args)
         return
 
     target_file = args[0].replace("\\", "/")
@@ -93,6 +97,63 @@ def cmd_impact(args: list):
         via_str = f"  via {' → '.join(entry.via)}" if entry.via else ""
         print(f"    {GREEN}{entry.file_path}{NC}{via_str}")
     print()
+
+
+# ─── Modo interactivo ─────────────────────────────────────────────────────────
+
+def _interactive_mode(args: list):
+    """Lanza InteractiveSession cuando no se especifica archivo directo."""
+    repo_name = None
+    max_depth = 10
+
+    i = 0
+    while i < len(args):
+        if args[i] == "--repo" and i + 1 < len(args):
+            repo_name = args[i + 1]; i += 2
+        elif args[i].startswith("--repo="):
+            repo_name = args[i].split("=", 1)[1]; i += 1
+        elif args[i] == "--depth" and i + 1 < len(args):
+            try:
+                max_depth = int(args[i + 1])
+            except ValueError:
+                pass
+            i += 2
+        elif args[i].startswith("--depth="):
+            try:
+                max_depth = int(args[i].split("=", 1)[1])
+            except ValueError:
+                pass
+            i += 1
+        else:
+            i += 1
+
+    try:
+        loader = ContextLoader()
+    except FileNotFoundError as e:
+        print(str(e))
+        return
+
+    if not repo_name:
+        repo_name = _detect_repo_name(loader)
+    if not repo_name:
+        print(f"{RED}✗ No se pudo detectar el repo. Usá --repo <nombre>.{NC}")
+        return
+
+    index_path = os.path.join(loader.cipher_dir, ".cipher", "index", repo_name, "index.json")
+    graph_path = os.path.join(loader.cipher_dir, ".cipher", "index", repo_name, "graph.json")
+
+    if not os.path.exists(graph_path):
+        print(f"{RED}✗ No se encontró grafo para '{repo_name}'. Ejecutá: cipher index{NC}")
+        return
+    if not os.path.exists(index_path):
+        print(f"{RED}✗ No se encontró índice para '{repo_name}'. Ejecutá: cipher index{NC}")
+        return
+
+    repo_index = RepoIndexer.load(index_path)
+    graph = GraphBuilder.load(graph_path)
+
+    from cipher.interactive.prompt import InteractiveSession
+    InteractiveSession(repo_index, graph, repo_name, max_depth).run()
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
