@@ -1,3 +1,3 @@
 @echo off
 set CIPHER_PATH=C:\Users\LuisSandoval\PycharmProjects\lore
-python "%CIPHER_PATH%\cipher\main.py" %*
+"C:\Python312\python.exe" "C:\Users\LuisSandoval\PycharmProjects\lore\cipher\main.py" %*
