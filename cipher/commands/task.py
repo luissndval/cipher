@@ -12,6 +12,7 @@ Uso:
 """
 
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 
@@ -96,15 +97,17 @@ def cmd_task(args: list):
 
     raw = _fetch_ticket(from_gh, from_linear, description)
     if raw is None:
-        print(f"{RED}Uso: cipher task <descripción> | --from-gh <ref> | --from-linear <id>{NC}")
-        return
+        # Sin args → prompt interactivo igual que cipheria claude
+        raw = _prompt_interactive()
+        if raw is None:
+            return
 
     print(f"  Título  : {raw.title}")
     if raw.description:
         snippet = raw.description[:80].replace("\n", " ")
         print(f"  Desc    : {snippet}{'...' if len(raw.description) > 80 else ''}")
     if raw.source_ref:
-        print(f"  Origen  : {raw.source_ref}")
+        print(f"  Link    : {CYAN}{raw.source_ref}{NC}")
     print()
 
     # ── Resolver repo ───────────────────────────────────────────────────────
@@ -251,6 +254,8 @@ def cmd_task(args: list):
     print(f"\n  {BLUE}RESUMEN{NC}\n")
     print(f"  Task ID : {task_id}")
     print(f"  Tipo    : {task_type}")
+    if raw.source_ref:
+        print(f"  Link    : {CYAN}{raw.source_ref}{NC}")
     print(f"  Pack    : {md_path}")
     print(f"  Intent  : {intent_path}")
 
@@ -309,6 +314,59 @@ def _print_pr_preview(manifest):
     from cipher.audit.pr_comment import generate_pr_comment
     print(f"\n  --- PR Comment Preview ---")
     print(generate_pr_comment(manifest))
+
+
+_WORK_ITEM_TYPES = {
+    "1": "FEATURE",
+    "2": "BUG",
+    "3": "HOTFIX",
+    "4": "TASK",
+}
+
+
+def _prompt_interactive():
+    """Prompt interactivo idéntico al de cipheria claude."""
+    from cipher.tasks.sources.base import RawTicket
+
+    print(f"\n  {YELLOW}▸ Tipo de work item:{NC}")
+    for key, label in _WORK_ITEM_TYPES.items():
+        print(f"    {key}. {label}")
+    while True:
+        choice = input(f"  Seleccioná [1-{len(_WORK_ITEM_TYPES)}]: ").strip()
+        if choice in _WORK_ITEM_TYPES:
+            work_type = _WORK_ITEM_TYPES[choice]
+            break
+        print(f"  {RED}Opción inválida.{NC}")
+
+    number = input("  Número de ticket (ej: 142 — Enter para saltar): ").strip()
+    if not number:
+        number = datetime.now(timezone.utc).strftime("%Y%m%d%H%M")
+
+    title = input("  Título breve: ").strip()
+    if not title:
+        print(f"  {RED}✗ El título es obligatorio.{NC}")
+        return None
+
+    description = input("  Descripción detallada (Enter para saltar): ").strip()
+    link = input("  Link del ticket (ej: https://linear.app/... — Enter para saltar): ").strip()
+
+    slug = re.sub(r"[^a-zA-Z0-9\s]", "", title)
+    slug = re.sub(r"\s+", "-", slug.strip()).upper()
+    branch = f"{work_type}-{number}-{slug}"
+    print(f"\n  {GREEN}✓{NC} Branch sugerida: {CYAN}{branch}{NC}")
+
+    full_description = description
+    if link:
+        full_description = f"{description}\n\nLink: {link}".strip()
+
+    return RawTicket(
+        title=f"[{work_type}-{number}] {title}",
+        description=full_description,
+        source="manual",
+        source_ref=link,
+        labels=[work_type.lower()],
+        extra={"work_type": work_type, "number": number, "branch": branch},
+    )
 
 
 def _fetch_ticket(from_gh, from_linear, description):

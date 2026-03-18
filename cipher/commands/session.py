@@ -193,8 +193,12 @@ def _create_task(session_dir: str, client: str, project: str,
     if not description:
         description = "—"
 
+    link = input("  Link del ticket (ej: https://linear.app/... — Enter para saltar): ").strip()
+
     branch_name = _make_branch_name(work_type, number, title)
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    link_line = f"\n**Link:** {link}" if link else ""
 
     content = f"""# [{work_type}-{number}] {title}
 > Generado por cipher | {now}
@@ -203,7 +207,7 @@ def _create_task(session_dir: str, client: str, project: str,
 {work_type}
 
 ## Descripción
-{description}
+{description}{link_line}
 
 ## Contexto del proyecto
 - **Repo:** {repo_name}
