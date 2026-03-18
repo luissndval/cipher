@@ -1,7 +1,4 @@
-"""
-cipher export — Eliminado del scope.
-Este comando fue removido. El contexto se inyecta automáticamente al ejecutar cipher claude.
-"""
+"""cipher export — Eliminado del scope."""
 
 
 def cmd_export(args: list):

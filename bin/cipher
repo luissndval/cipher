@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-python3 "/c/Users/LuisSandoval/PycharmProjects/lore/cli/main.py" "$@"
+export CIPHER_PATH="/c/Users/LuisSandoval/PycharmProjects/lore"
+python3 "/c/Users/LuisSandoval/PycharmProjects/lore/cipher/main.py" "$@"

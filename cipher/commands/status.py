@@ -3,22 +3,20 @@ cipher status — Muestra el estado del contexto del repo actual.
 """
 
 import os
-import sys
-import json
 from datetime import datetime
 
-GREEN = '\033[0;32m'
+from cipher.core.loader import ContextLoader
+from cipher.memory.session import SessionStore
+
+GREEN  = '\033[0;32m'
 YELLOW = '\033[1;33m'
-RED = '\033[0;31m'
-BLUE = '\033[0;34m'
-CYAN = '\033[0;36m'
-NC = '\033[0m'
+RED    = '\033[0;31m'
+BLUE   = '\033[0;34m'
+CYAN   = '\033[0;36m'
+NC     = '\033[0m'
 
 
 def cmd_status(args: list):
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from context_loader import ContextLoader
-
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
     print(f"║          cipher status                    ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
@@ -31,7 +29,6 @@ def cmd_status(args: list):
 
     client, project = loader.resolve_project()
 
-    # Estado del repo actual
     print(f"  {YELLOW}Repo actual{NC}")
     print(f"  {'─' * 40}")
     print(f"  Nombre   : {CYAN}{loader.repo_name}{NC}")
@@ -43,35 +40,15 @@ def cmd_status(args: list):
     else:
         print(f"  Cliente  : {RED}No registrado — ejecutá cipher init{NC}")
 
-    # Estado del contexto
-    brain_local = os.path.join(loader.repo_path, ".cipher")
-    context_path = os.path.join(brain_local, "ACTIVE_CONTEXT.md")
-    task_path = os.path.join(brain_local, "task-agent.md")
-    alert_path = os.path.join(brain_local, "ALERT.md")
-
-    print(f"\n  {YELLOW}Archivos .cipher/{NC}")
-    print(f"  {'─' * 40}")
-    _status_file(context_path, "ACTIVE_CONTEXT.md")
-    _status_file(task_path, "task-agent.md")
-
-    if os.path.exists(alert_path):
-        print(f"  {RED}⚠ ALERT.md — Hay un alerta de impacto pendiente{NC}")
-        print(f"    Leé: {alert_path}")
-    else:
-        _status_file(alert_path, "ALERT.md", optional=True)
-
-    # Archivos de contexto en cipher
+    # Contexto en cipher
     if client and project:
         print(f"\n  {YELLOW}Contexto en cipher{NC}")
         print(f"  {'─' * 40}")
         client_dir = os.path.join(loader.cipher_dir, "clients", client, project)
-        required = ["BUSINESS_RULES.md", "ARCHITECTURE.md", "DEPENDENCIES.md",
-                   "RISK_MATRIX.md"]
-        for fname in required:
+        for fname in ["BUSINESS_RULES.md", "ARCHITECTURE.md", "DEPENDENCIES.md", "RISK_MATRIX.md"]:
             fpath = os.path.join(client_dir, fname)
             if os.path.exists(fpath):
-                mtime = os.path.getmtime(fpath)
-                age = _file_age(mtime)
+                age = _file_age(os.path.getmtime(fpath))
                 print(f"  {GREEN}✓{NC} {fname:<30} {CYAN}{age}{NC}")
             else:
                 print(f"  {YELLOW}○{NC} {fname:<30} {YELLOW}no generado{NC}")
@@ -90,28 +67,27 @@ def cmd_status(args: list):
             marker = "→" if repo_name == project else " "
             print(f"  {marker} {repo_name:<30} {indicator}")
 
+    # Última sesión
+    if client and project:
+        store = SessionStore(loader.cipher_dir)
+        last = store.load_latest_manifest(client, project)
+        if last:
+            print(f"\n  {YELLOW}Última sesión{NC}")
+            print(f"  {'─' * 40}")
+            print(f"  ID      : {CYAN}{last.get('session_id', '—')[:8]}...{NC}")
+            print(f"  Agente  : {last.get('agent', '—')}")
+            print(f"  Estado  : {last.get('status', '—')}")
+            print(f"  Fecha   : {last.get('timestamp', '—')[:19].replace('T', ' ')}")
+
     print()
 
 
-def _status_file(path: str, label: str, optional: bool = False):
-    if os.path.exists(path):
-        mtime = os.path.getmtime(path)
-        age = _file_age(mtime)
-        print(f"  {GREEN}✓{NC} {label:<30} {CYAN}{age}{NC}")
-    elif not optional:
-        print(f"  {RED}✗{NC} {label:<30} {RED}no encontrado{NC}")
-
-
 def _file_age(mtime: float) -> str:
-    """Retorna la antigüedad de un archivo en formato legible."""
-    now = datetime.now().timestamp()
-    diff = int(now - mtime)
-
+    diff = int(datetime.now().timestamp() - mtime)
     if diff < 60:
         return "hace unos segundos"
-    elif diff < 3600:
+    if diff < 3600:
         return f"hace {diff // 60}m"
-    elif diff < 86400:
+    if diff < 86400:
         return f"hace {diff // 3600}h"
-    else:
-        return f"hace {diff // 86400}d"
+    return f"hace {diff // 86400}d"

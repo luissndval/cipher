@@ -51,7 +51,7 @@ echo -e "${GREEN}  ✓ git: $(git --version)${NC}"
 # -----------------------------------------------------------------------------
 echo ""
 echo -e "${YELLOW}▸ Instalando dependencias Python...${NC}"
-$PIP install -q -r "$CIPHER_DIR/cli/requirements.txt"
+$PIP install -q -r "$CIPHER_DIR/requirements.txt"
 echo -e "${GREEN}  ✓ Dependencias instaladas${NC}"
 
 # -----------------------------------------------------------------------------
@@ -80,7 +80,8 @@ echo -e "${YELLOW}▸ Registrando comando global cipher...${NC}"
 mkdir -p "$CIPHER_DIR/bin"
 cat > "$CIPHER_DIR/bin/cipher" << EOF
 #!/usr/bin/env bash
-python3 "$CIPHER_DIR/cli/main.py" "\$@"
+export CIPHER_PATH="$CIPHER_DIR"
+python3 "$CIPHER_DIR/cipher/main.py" "\$@"
 EOF
 chmod +x "$CIPHER_DIR/bin/cipher"
 

@@ -1,15 +1,22 @@
 """
-brain session — Abre una sesión con el agente elegido, con contexto cargado.
-Maneja: claude, gemini, codex, aider
+cipher session — Abre sesión con el agente elegido, con contexto y manifest.
 """
 
 import os
 import re
 import sys
-import json
-import subprocess
-from pathlib import Path
 from datetime import datetime
+
+from cipher.core.loader import ContextLoader
+from cipher.memory.session import SessionStore
+from cipher.agents.launcher import launch_agent
+
+GREEN  = '\033[0;32m'
+YELLOW = '\033[1;33m'
+RED    = '\033[0;31m'
+BLUE   = '\033[0;34m'
+CYAN   = '\033[0;36m'
+NC     = '\033[0m'
 
 WORK_ITEM_TYPES = {
     "1": "FEATURE",
@@ -18,59 +25,42 @@ WORK_ITEM_TYPES = {
     "4": "HOTFIX",
 }
 
-GREEN = '\033[0;32m'
-YELLOW = '\033[1;33m'
-RED = '\033[0;31m'
-BLUE = '\033[0;34m'
-CYAN = '\033[0;36m'
-NC = '\033[0m'
-
 
 def cmd_session(agent: str, args: list):
-    """Punto de entrada para cipher claude / cipher gemini / cipher codex."""
-
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from context_loader import ContextLoader
-    from providers import get_analysis_provider
+    """Punto de entrada para cipher claude."""
 
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
     print(f"║     cipher {agent:<10} — Iniciando sesión  ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
 
-    # 1. Cargar context loader
     try:
         loader = ContextLoader()
     except FileNotFoundError as e:
         print(str(e))
         return
 
-    # 2. Resolver cliente/proyecto
+    # Resolver cliente/proyecto: auto-detección o selección manual
     client, project = loader.resolve_project()
-
     if not client:
-        print(f"{YELLOW}⚠ No encontré este repo en cipher.{NC}")
-        answer = input(f"  ¿Querés registrarlo ahora con 'cipher init'? [S/n]: ").strip().lower()
-        if answer in ["", "s", "si", "y"]:
-            from commands.init import cmd_init
-            cmd_init(args=[])
-            loader = ContextLoader()
-            client, project = loader.resolve_project()
-            if not client:
-                print(f"{RED}✗ No se pudo resolver el proyecto.{NC}")
-                return
-        else:
+        client, project = _select_client_project(loader)
+        if not client:
             return
 
     print(f"  Cliente : {CYAN}{client}{NC}")
 
-    # 3. Seleccionar repo de trabajo
+    # Seleccionar repo de trabajo
     repos = loader.config.get("clients", {}).get(client, {}).get("repos", {})
     repo_path, repo_name = _select_repo(repos, loader.repo_path, loader.repo_name)
 
     print(f"  Repo    : {CYAN}{repo_name}{NC}")
     print(f"  Path    : {CYAN}{repo_path}{NC}")
 
-    # 4. Verificar/generar contexto (guardado en cipher project, no en repo cliente)
+    # Inicializar sesión
+    store = SessionStore(loader.cipher_dir)
+    session = store.new_session(client, project, agent, repo_path)
+    print(f"  Sesión  : {CYAN}{session['session_id'][:8]}...{NC}")
+
+    # Verificar/generar contexto
     session_dir = loader.session_dir(client, project)
     context_path = os.path.join(session_dir, "ACTIVE_CONTEXT.md")
 
@@ -82,21 +72,73 @@ def cmd_session(agent: str, args: list):
     else:
         print(f"  {GREEN}✓ Contexto cargado: {context_path}{NC}")
 
-    # 5. Crear task-agent.md en el cipher project (no en el repo cliente)
-    os.makedirs(session_dir, exist_ok=True)
-    task_path = create_task(session_dir, client, project, repo_name, repo_path)
+    store.attach_context(session, context_path)
 
-    # 6. Lanzar el agente
+    # Crear task-agent.md
+    os.makedirs(session_dir, exist_ok=True)
+    task_path = _create_task(session_dir, client, project, repo_name, repo_path)
+    store.attach_task(session, task_path)
+
+    # Guardar manifest antes de lanzar el agente
+    manifest_path = store.save_manifest(session, client, project)
+    print(f"  {GREEN}✓ Manifest: {manifest_path}{NC}")
+
+    # Lanzar agente
     print(f"\n  {YELLOW}Lanzando {agent}...{NC}\n")
     launch_agent(agent, context_path, task_path, repo_path)
 
+    # Cerrar sesión y actualizar manifest
+    store.close_session(session)
+    store.save_manifest(session, client, project)
+
+
+# ─── Selección ────────────────────────────────────────────────────────────────
+
+def _select_client_project(loader: ContextLoader) -> tuple:
+    """Cuando no se detecta el repo por CWD, permite elegir manualmente."""
+    clients = loader.config.get("clients", {})
+
+    if not clients:
+        print(f"{YELLOW}⚠ No hay clientes registrados en cipher.{NC}")
+        answer = input("  ¿Registrar un proyecto ahora con 'cipher init'? [S/n]: ").strip().lower()
+        if answer in ["", "s", "si", "y"]:
+            from cipher.commands.init import cmd_init
+            cmd_init(args=[])
+            loader.config = loader._load_config()
+            return loader.resolve_project()
+        return None, None
+
+    options = []
+    for client_name, client_data in clients.items():
+        repos = client_data.get("repos", {}) if isinstance(client_data, dict) else {}
+        for repo_key, repo_data in repos.items():
+            options.append((client_name, repo_key, repo_data))
+
+    if not options:
+        print(f"{RED}✗ No hay repos registrados. Ejecutá 'cipher init' primero.{NC}")
+        return None, None
+
+    print(f"\n  {YELLOW}▸ Repos registrados:{NC}")
+    for i, (client_name, repo_key, repo_data) in enumerate(options, 1):
+        path = repo_data.get("path", "—") if isinstance(repo_data, dict) else "—"
+        print(f"  {i}. {CYAN}{client_name}/{repo_key}{NC}  ({path})")
+
+    while True:
+        choice = input(f"\n  Seleccioná el repo [1-{len(options)}]: ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(options):
+            client_name, repo_key, repo_data = options[int(choice) - 1]
+            loader.client = client_name
+            loader.project = repo_key
+            if isinstance(repo_data, dict):
+                loader.repo_path = repo_data.get("path", loader.repo_path)
+                loader.repo_name = repo_data.get("name", repo_key)
+            return client_name, repo_key
+        print(f"  {RED}Opción inválida.{NC}")
 
 
 def _select_repo(repos: dict, default_path: str, default_name: str) -> tuple:
-    """Muestra los repos disponibles del cliente y permite seleccionar uno."""
     if not repos:
         return default_path, default_name
-
     repo_list = list(repos.items())
     if len(repo_list) == 1:
         repo_key, repo_data = repo_list[0]
@@ -115,20 +157,20 @@ def _select_repo(repos: dict, default_path: str, default_name: str) -> tuple:
         print(f"  {RED}Opción inválida.{NC}")
 
 
+# ─── Task ─────────────────────────────────────────────────────────────────────
+
 def _make_branch_name(work_type: str, number: str, title: str) -> str:
-    """Genera el nombre de branch: TIPO-NUMERO-TITULO-EN-MAYUSCULAS."""
     slug = re.sub(r"[^a-zA-Z0-9\s]", "", title)
     slug = re.sub(r"\s+", "-", slug.strip())
     slug = re.sub(r"-+", "-", slug).upper()
     return f"{work_type}-{number}-{slug}"
 
 
-def create_task(session_dir: str, client: str, project: str, repo_name: str, repo_path: str) -> str:
-    """Crea task-agent.md en el directorio de sesión del cipher project."""
+def _create_task(session_dir: str, client: str, project: str,
+                 repo_name: str, repo_path: str) -> str:
     os.makedirs(session_dir, exist_ok=True)
     task_path = os.path.join(session_dir, "task-agent.md")
 
-    # Tipo de work item
     print(f"\n  {YELLOW}▸ Tipo de work item:{NC}")
     for key, label in WORK_ITEM_TYPES.items():
         print(f"    {key}. {label}")
@@ -139,15 +181,15 @@ def create_task(session_dir: str, client: str, project: str, repo_name: str, rep
             break
         print(f"  {RED}Opción inválida.{NC}")
 
-    number = input(f"  Número de ticket (ej: 142): ").strip()
+    number = input("  Número de ticket (ej: 142): ").strip()
     if not number:
         number = datetime.now().strftime("%Y%m%d%H%M")
 
-    title = input(f"  Título breve (ej: agregar login con google): ").strip()
+    title = input("  Título breve (ej: agregar login con google): ").strip()
     if not title:
         title = "SIN-TITULO"
 
-    description = input(f"  Descripción detallada (Enter para saltar): ").strip()
+    description = input("  Descripción detallada (Enter para saltar): ").strip()
     if not description:
         description = "—"
 
@@ -185,9 +227,8 @@ Verificá que estás en la branch correcta antes de escribir cualquier código.
 - Scope limitado: solo lo necesario para este ticket.
 
 ### PASO 3 — Commit y push
-Cuando la implementación esté lista:
 ```bash
-git add -p           # revisá cada cambio antes de stagear
+git add -p
 git commit -m "{work_type}-{number}: <descripción corta del cambio>"
 git push -u origin {branch_name}
 ```
@@ -199,7 +240,6 @@ gh pr create \\
   --body "## Qué hace este PR\\n\\n{description}\\n\\n## Cómo probar\\n- [ ] ..." \\
   --base main
 ```
-Si `gh` no está disponible, indicá la URL del repo para crear el PR manualmente.
 
 ### PASO 5 — Cerrar sesión
 Ejecutá `cipher update` para actualizar el contexto con los cambios realizados.
@@ -212,79 +252,9 @@ Ejecutá `cipher update` para actualizar el contexto con los cambios realizados.
 - [ ] PR creado
 - [ ] Contexto actualizado
 """
-
     with open(task_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     print(f"  {GREEN}✓ Task creada  : {task_path}{NC}")
     print(f"  {GREEN}✓ Branch target: {branch_name}{NC}")
     return task_path
-
-
-def launch_agent(agent: str, context_path: str, task_path: str, repo_path: str):
-    """Lanza el agente de codificación con el contexto cargado."""
-    with open(context_path, encoding="utf-8") as f:
-        context_content = f.read()
-
-    with open(task_path, encoding="utf-8") as f:
-        task_content = f.read()
-
-    _launch_claude(context_content, task_content, repo_path)
-
-
-def _launch_claude(context: str, task: str, repo_path: str):
-    """Lanza Claude Code inyectando contexto via CLAUDE.md temporal.
-    El archivo se borra automáticamente al salir de la sesión.
-    """
-    if not _check_command("claude"):
-        print(f"{RED}✗ Claude Code no está instalado.{NC}")
-        print(f"  Instalalo con: npm install -g @anthropic-ai/claude-code")
-        return
-
-    claude_md_path = os.path.join(repo_path, "CLAUDE.md")
-    claude_md_existed = os.path.exists(claude_md_path)
-    original_content = None
-    if claude_md_existed:
-        with open(claude_md_path, encoding="utf-8", errors="ignore") as f:
-            original_content = f.read()
-
-    claude_md_content = f"""# Contexto cipher — SESIÓN ACTIVA (se borra al salir)
-
-## TAREA ACTUAL
-{task}
-
-## CONTEXTO DEL PROYECTO
-{context}
-"""
-    try:
-        with open(claude_md_path, "w", encoding="utf-8") as f:
-            f.write(claude_md_content)
-        print(f"  {GREEN}✓ Contexto inyectado (CLAUDE.md temporal){NC}")
-        print(f"  Iniciando Claude Code en {repo_path}...\n")
-        initial_prompt = (
-            "Leé el CLAUDE.md completo. "
-            "Empezá por el PASO 1: creá la branch indicada en la sección TAREA ACTUAL. "
-            "Luego implementá lo requerido siguiendo los pasos en orden. "
-            "Al terminar, hacé commit, push y creá el PR según las instrucciones."
-        )
-        subprocess.run(["claude", initial_prompt], cwd=repo_path)
-    finally:
-        # Siempre limpiar al salir — con error o sin él
-        if claude_md_existed and original_content is not None:
-            with open(claude_md_path, "w", encoding="utf-8") as f:
-                f.write(original_content)
-        elif os.path.exists(claude_md_path):
-            os.remove(claude_md_path)
-        print(f"  {GREEN}✓ CLAUDE.md eliminado del repo cliente{NC}")
-
-
-def _check_command(cmd: str) -> bool:
-    """Verifica si un comando está disponible en el sistema."""
-    try:
-        result = subprocess.run(
-            ["which", cmd] if os.name != "nt" else ["where", cmd],
-            capture_output=True
-        )
-        return result.returncode == 0
-    except Exception:
-        return False

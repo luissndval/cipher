@@ -7,25 +7,25 @@ Uso: cipher <comando> [opciones]
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Agregar el directorio padre al path para que los imports del paquete funcionen
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from commands.init import cmd_init
-from commands.update import cmd_update
-from commands.status import cmd_status
-from commands.session import cmd_session
+from cipher import VERSION
+from cipher.commands.init import cmd_init
+from cipher.commands.update import cmd_update
+from cipher.commands.status import cmd_status
+from cipher.commands.session import cmd_session
 
-VERSION = "1.0.0"
-
-BANNER = """
+BANNER = f"""
 \033[34m╔══════════════════════════════════════════╗
-║             cipher                       ║
+║             cipher  v{VERSION:<19}║
 ║     Memoria persistente para agentes IA  ║
 ╚══════════════════════════════════════════╝\033[0m
 """
 
 HELP = """
 Comandos:
-  cipher init       Onboarding: escanea repos y genera contexto con Gemini
+  cipher init       Onboarding: escanea repos y genera contexto con IA
   cipher claude     Abre sesión de desarrollo con Claude Code
   cipher update     Actualiza contexto después de un cambio
   cipher status     Muestra estado del contexto actual
@@ -60,16 +60,12 @@ def main():
 
     if command == "claude":
         cmd_session(agent="claude", args=extra_args)
-
     elif command == "init":
         cmd_init(args=extra_args)
-
     elif command == "update":
         cmd_update(args=extra_args)
-
     elif command == "status":
         cmd_status(args=extra_args)
-
     else:
         print(f"\033[31m✗ Comando desconocido: {command}\033[0m")
         print("  Comandos disponibles: init, claude, update, status")
