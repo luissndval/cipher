@@ -183,8 +183,8 @@ def _detect_repo_name(loader: ContextLoader) -> str | None:
         for repo_name, repo_info in client_data.get("repos", {}).items():
             if not isinstance(repo_info, dict):
                 continue
-            repo_path = repo_info.get("path", "").replace("\\", "/")
-            if repo_path and cwd.startswith(repo_path):
+            repo_path = repo_info.get("path", "").replace("\\", "/").rstrip("/")
+            if repo_path and (cwd == repo_path or cwd.startswith(repo_path + "/")):
                 return repo_name
     return None
 
