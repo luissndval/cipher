@@ -23,6 +23,24 @@ from cipher.interactive.searcher import ContextSearcher, SearchResult
 from cipher.graph.schema import DependencyGraph
 from cipher.index.schema import RepoIndex
 
+try:
+    from prompt_toolkit import PromptSession
+    from prompt_toolkit.shortcuts.prompt import CompleteStyle
+    from prompt_toolkit.styles import Style
+    from cipher.interactive.completer import AtMentionCompleter
+    _PT = True
+except ImportError:
+    _PT = False
+
+_PT_STYLE = None
+if _PT:
+    _PT_STYLE = Style.from_dict({
+        "completion-menu.completion":         "bg:#1e3a5f #aaccff",
+        "completion-menu.completion.current": "bg:#2255aa #ffffff bold",
+        "completion-menu.meta.completion":    "bg:#142840 #667799",
+        "completion-menu.meta.completion.current": "bg:#1a3d7a #99bbdd",
+    })
+
 GREEN  = '\033[0;32m'
 YELLOW = '\033[1;33m'
 RED    = '\033[0;31m'
@@ -58,9 +76,22 @@ class InteractiveSession:
         """
         self._header()
 
+        # PromptSession con autocompletado de @menciones
+        session = None
+        if _PT:
+            session = PromptSession(
+                completer=AtMentionCompleter(self.searcher),
+                complete_style=CompleteStyle.MULTI_COLUMN,
+                style=_PT_STYLE,
+                complete_while_typing=True,
+            )
+
         while True:
             try:
-                raw = input(f"\n{CYAN}>{NC} ").strip()
+                if session:
+                    raw = session.prompt("\n> ").strip()
+                else:
+                    raw = input(f"\n{CYAN}>{NC} ").strip()
             except (KeyboardInterrupt, EOFError):
                 print(f"\n\n  {YELLOW}Cancelado.{NC}\n")
                 return False
