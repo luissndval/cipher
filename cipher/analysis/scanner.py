@@ -213,7 +213,7 @@ def detect_dependencies(provider, client_name: str, repo_configs: dict, repos: l
     for repo_name, repo_path in repos:
         dep_file = os.path.join(cipher_dir, "clients", client_name, repo_name, "DEPENDENCIES.md")
         if os.path.exists(dep_file):
-            with open(dep_file) as f:
+            with open(dep_file, encoding="utf-8", errors="replace") as f:
                 content = f.read()[:1000]
             repo_summaries.append(f"=== {repo_name} ===\n{content}")
 
