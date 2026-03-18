@@ -15,6 +15,7 @@ from cipher.commands.init import cmd_init
 from cipher.commands.update import cmd_update
 from cipher.commands.status import cmd_status
 from cipher.commands.session import cmd_session
+from cipher.commands.index import cmd_index
 
 BANNER = f"""
 \033[34m╔══════════════════════════════════════════╗
@@ -29,6 +30,7 @@ Comandos:
   cipher claude     Abre sesión de desarrollo con Claude Code
   cipher update     Actualiza contexto después de un cambio
   cipher status     Muestra estado del contexto actual
+  cipher index      Genera índice estructural del repo (sin LLM)
 
 Ejemplos:
   cd /proyectos/cliente-xyz
@@ -66,6 +68,8 @@ def main():
         cmd_update(args=extra_args)
     elif command == "status":
         cmd_status(args=extra_args)
+    elif command == "index":
+        cmd_index(args=extra_args)
     else:
         print(f"\033[31m✗ Comando desconocido: {command}\033[0m")
         print("  Comandos disponibles: init, claude, update, status")

@@ -106,6 +106,17 @@ def cmd_init(args: list):
         }
         print(f"  {GREEN}✓ {repo_name} — contexto generado{NC}")
 
+        # F1-5: Indexación estructural (no bloqueante — complementa el análisis LLM)
+        try:
+            from cipher.index.indexer import RepoIndexer
+            index_out = os.path.join(loader.cipher_dir, ".cipher", "index", repo_name)
+            ri = RepoIndexer(repo_path, repo_name).index()
+            RepoIndexer(repo_path, repo_name).save(ri, index_out)
+            print(f"  {GREEN}✓ {repo_name} — índice estructural: "
+                  f"{ri.stats.total_symbols} símbolos, {ri.stats.total_imports} imports{NC}")
+        except Exception as e:
+            print(f"  {YELLOW}⚠ Indexación estructural falló (no bloqueante): {e}{NC}")
+
     if len(selected_repos) > 1:
         print(f"\n  {YELLOW}Detectando dependencias entre repos...{NC}")
         repo_configs = detect_dependencies(provider, client_name, repo_configs, selected_repos)
