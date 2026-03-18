@@ -21,7 +21,9 @@ from cipher.tasks.store import TaskStore
 from cipher.tasks.analyzer import TaskAnalyzer
 from cipher.tasks.sources.manual import ManualSource
 from cipher.index.indexer import RepoIndexer
+from cipher.index.multi_indexer import MultiRepoIndexer
 from cipher.graph.builder import GraphBuilder
+from cipher.graph.merger import GraphMerger
 from cipher.pack.builder import PackBuilder
 from cipher.audit.writer import AuditWriter
 
@@ -119,15 +121,27 @@ def cmd_task(args: list):
     print(f"  Repo    : {CYAN}{resolved_name}{NC}  Cliente: {client_name}")
     print(f"  Provider: {provider}\n")
 
-    # ── Cargar índice y grafo ───────────────────────────────────────────────
-    index_dir  = os.path.join(loader.cipher_dir, ".cipher", "index", resolved_name)
-    index_path = os.path.join(index_dir, "index.json")
-    graph_path = os.path.join(index_dir, "graph.json")
-
-    repo_index, graph = _load_or_build_index(repo_path, resolved_name, index_dir,
-                                              index_path, graph_path)
-    if repo_index is None:
+    # ── Indexar todos los repos del cliente (incremental) ──────────────────
+    print(f"  {YELLOW}▸ Indexando repos del cliente '{client_name}'...{NC}")
+    all_indices = _index_client_repos(loader, client_name, repo_path, resolved_name)
+    if not all_indices:
+        print(f"  {RED}✗ No se pudo indexar ningún repo.{NC}")
         return
+
+    # Repo actual — usado para PackBuilder y TaskAnalyzer
+    repo_index = all_indices.get(resolved_name)
+    if repo_index is None:
+        print(f"  {RED}✗ No se pudo indexar el repo actual ({resolved_name}).{NC}")
+        return
+
+    # ── Construir grafos individuales y merge en memoria ───────────────────
+    print(f"  {YELLOW}▸ Construyendo grafos de dependencias...{NC}")
+    all_graphs, graph = _build_graphs(loader, all_indices, resolved_name)
+
+    # Grafo merged (cross-repo, solo en memoria) — usado en F6
+    merged_graph = GraphMerger().merge(all_graphs) if len(all_graphs) > 1 else graph
+    print(f"  {GREEN}✓{NC} {len(all_graphs)} grafo(s) — "
+          f"{merged_graph.node_count} nodos, {merged_graph.edge_count} aristas (merged)\n")
 
     # ── Crear Task ──────────────────────────────────────────────────────────
     task_id = str(uuid.uuid4())[:8]
@@ -181,6 +195,46 @@ def cmd_task(args: list):
     manifest_path = audit.save_manifest(context_manifest, client_name, resolved_name, task_id)
     audit.append_entry(context_manifest)
     print(f"  {GREEN}✓{NC} Manifest: {manifest_path}\n")
+
+    # ── Generar Alert de impacto con Gemini (usa grafo merged) ────────────
+    print(f"  {YELLOW}▸ Analizando impacto con Gemini...{NC}")
+    try:
+        from cipher.analysis.providers import get_analysis_provider
+        from cipher.alerts.generator import AlertGenerator
+
+        gemini = get_analysis_provider("gemini")
+        if gemini.can_analyze():
+            # Impact set usando el grafo merged (cross-repo).
+            # Los paths en merged_graph están prefijados con repo_key::.
+            # Construimos el prefijo del repo actual para consultar el grafo merged.
+            current_prefix = resolved_name + "::"
+            all_impact: dict = {}
+            for target in task.target_files:
+                prefixed_target = current_prefix + target
+                for entry in merged_graph.impact_set(prefixed_target, max_depth=10):
+                    if entry.file_path not in all_impact:
+                        all_impact[entry.file_path] = entry
+                # Fallback: también consultar el grafo individual del repo actual
+                for entry in graph.impact_set(target, max_depth=10):
+                    key = entry.file_path
+                    if key not in all_impact:
+                        all_impact[key] = entry
+            impact_list = sorted(all_impact.values(), key=lambda e: (e.depth, e.file_path))
+
+            alert_gen = AlertGenerator(
+                task=task,
+                impact_entries=impact_list,
+                repo_path=repo_path,
+                client_name=client_name,
+                cipher_dir=loader.cipher_dir,
+                config=loader.config,
+            )
+            alert_path = alert_gen.generate(gemini)
+            print(f"  {GREEN}✓{NC} Alert: {CYAN}{alert_path}{NC}\n")
+        else:
+            print(f"  {YELLOW}⚠ Gemini no configurado — alert omitido{NC}\n")
+    except Exception as e:
+        print(f"  {YELLOW}⚠ Alert no generado: {e}{NC}\n")
 
     # ── Generar TaskIntent ──────────────────────────────────────────────────
     print(f"  {YELLOW}▸ Generando task intent...{NC}")
@@ -298,28 +352,71 @@ def _resolve_repo(loader, repo_name_hint):
     return None, None, None
 
 
-def _load_or_build_index(repo_path, repo_name, index_dir, index_path, graph_path):
-    if not os.path.exists(index_path):
-        print(f"  {YELLOW}⚠ Índice no encontrado. Indexando...{NC}")
-        try:
-            indexer = RepoIndexer(repo_path, repo_name)
-            repo_index = indexer.index()
-            indexer.save(repo_index, index_dir)
-        except Exception as e:
-            print(f"  {RED}✗ Error al indexar: {e}{NC}")
-            return None, None
-    else:
-        repo_index = RepoIndexer.load(index_path)
+def _index_client_repos(loader, client_name: str, current_repo_path: str, current_repo_name: str) -> dict:
+    """
+    Indexa todos los repos del cliente usando MultiRepoIndexer (incremental).
+    Si el cliente no tiene repos registrados o el repo actual no está en config,
+    indexa únicamente el repo actual como fallback.
+    Retorna dict {repo_key: RepoIndex}.
+    """
+    multi = MultiRepoIndexer(loader.cipher_dir)
+    results = multi.index_client_repos(client_name, loader.config)
 
-    if not os.path.exists(graph_path):
-        print(f"  {YELLOW}⚠ Grafo no encontrado. Construyendo...{NC}")
+    # Fallback: si el repo actual no está en los resultados, indexarlo directamente
+    if current_repo_name not in results:
+        index_dir  = os.path.join(loader.cipher_dir, ".cipher", "index", current_repo_name)
+        index_path = os.path.join(index_dir, "index.json")
+
+        existing_index = None
+        if os.path.exists(index_path):
+            try:
+                existing_index = RepoIndexer.load(index_path)
+            except Exception:
+                pass
+
+        try:
+            indexer = RepoIndexer(current_repo_path, current_repo_name)
+            repo_index = indexer.index(existing_index=existing_index)
+            indexer.save(repo_index, index_dir)
+            results[current_repo_name] = repo_index
+            print(f"  {GREEN}✓{NC} [{current_repo_name}] {repo_index.stats.total_files} archivos indexados")
+        except Exception as e:
+            print(f"  {RED}✗ Error al indexar repo actual: {e}{NC}")
+
+    return results
+
+
+def _build_graphs(loader, all_indices: dict, current_repo_name: str) -> tuple:
+    """
+    Construye un DependencyGraph por cada RepoIndex en all_indices.
+    Persiste cada grafo individual en disco (fuente de verdad).
+    Retorna (dict{repo_key: DependencyGraph}, current_graph).
+    """
+    all_graphs = {}
+
+    for repo_key, repo_index in all_indices.items():
+        index_dir  = os.path.join(loader.cipher_dir, ".cipher", "index", repo_key)
+        graph_path = os.path.join(index_dir, "graph.json")
         try:
             graph = GraphBuilder(repo_index).build()
             GraphBuilder.save(graph, index_dir)
+            all_graphs[repo_key] = graph
         except Exception as e:
-            print(f"  {RED}✗ Error al construir grafo: {e}{NC}")
-            return None, None
-    else:
-        graph = GraphBuilder.load(graph_path)
+            print(f"  {YELLOW}⚠ [{repo_key}] Error al construir grafo: {e}{NC}")
+            # Intentar cargar grafo previo desde disco
+            if os.path.exists(graph_path):
+                try:
+                    all_graphs[repo_key] = GraphBuilder.load(graph_path)
+                except Exception:
+                    pass
 
-    return repo_index, graph
+    current_graph = all_graphs.get(current_repo_name)
+
+    # Fallback extremo: si no tenemos grafo del repo actual, construirlo
+    if current_graph is None and current_repo_name in all_indices:
+        try:
+            current_graph = GraphBuilder(all_indices[current_repo_name]).build()
+        except Exception:
+            pass
+
+    return all_graphs, current_graph

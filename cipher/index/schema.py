@@ -76,6 +76,7 @@ class FileIndex:
     parse_error: Optional[str]  # None si OK, mensaje de error si falló
     size_bytes: int
     lines: int
+    content_hash: Optional[str] = None  # SHA-256 del contenido; usado para re-indexación incremental
 
     def to_dict(self) -> dict:
         return {
@@ -86,6 +87,7 @@ class FileIndex:
             "parse_error": self.parse_error,
             "size_bytes": self.size_bytes,
             "lines": self.lines,
+            "content_hash": self.content_hash,
         }
 
     @classmethod
@@ -98,6 +100,7 @@ class FileIndex:
             parse_error=d.get("parse_error"),
             size_bytes=d.get("size_bytes", 0),
             lines=d.get("lines", 0),
+            content_hash=d.get("content_hash"),
         )
 
 

@@ -84,42 +84,42 @@ def test_resolver_python_relative_same_dir():
     known = {"pkg/utils.py", "pkg/models.py", "pkg/__init__.py"}
     r = ImportResolver(known)
     imp = make_import(".utils", is_relative=True)
-    assert r.resolve(imp, "pkg/main.py", "python") == "pkg/utils.py"
+    assert r.resolve(imp, "pkg/main.py", "python") == ["pkg/utils.py"]
 
 
 def test_resolver_python_relative_parent():
     known = {"models.py", "pkg/views.py"}
     r = ImportResolver(known)
     imp = make_import("..models", is_relative=True)
-    assert r.resolve(imp, "pkg/views.py", "python") == "models.py"
+    assert r.resolve(imp, "pkg/views.py", "python") == ["models.py"]
 
 
 def test_resolver_python_relative_init():
     known = {"pkg/__init__.py"}
     r = ImportResolver(known)
     imp = make_import(".", is_relative=True)
-    assert r.resolve(imp, "pkg/sub.py", "python") == "pkg/__init__.py"
+    assert r.resolve(imp, "pkg/sub.py", "python") == ["pkg/__init__.py"]
 
 
 def test_resolver_python_relative_package_init():
     known = {"pkg/sub/__init__.py"}
     r = ImportResolver(known)
     imp = make_import(".sub", is_relative=True)
-    assert r.resolve(imp, "pkg/main.py", "python") == "pkg/sub/__init__.py"
+    assert r.resolve(imp, "pkg/main.py", "python") == ["pkg/sub/__init__.py"]
 
 
 def test_resolver_python_relative_too_many_dots():
     known = {"a.py"}
     r = ImportResolver(known)
     imp = make_import("....way.too.deep", is_relative=True)
-    assert r.resolve(imp, "pkg/sub.py", "python") is None
+    assert r.resolve(imp, "pkg/sub.py", "python") == []
 
 
 def test_resolver_python_relative_not_found():
     known = {"pkg/other.py"}
     r = ImportResolver(known)
     imp = make_import(".missing", is_relative=True)
-    assert r.resolve(imp, "pkg/main.py", "python") is None
+    assert r.resolve(imp, "pkg/main.py", "python") == []
 
 
 # ─── ImportResolver — Python absolute ─────────────────────────────────────────
@@ -128,21 +128,21 @@ def test_resolver_python_absolute_found():
     known = {"cipher/index/schema.py"}
     r = ImportResolver(known)
     imp = make_import("cipher.index.schema", is_relative=False)
-    assert r.resolve(imp, "any.py", "python") == "cipher/index/schema.py"
+    assert r.resolve(imp, "any.py", "python") == ["cipher/index/schema.py"]
 
 
 def test_resolver_python_absolute_init():
     known = {"cipher/__init__.py"}
     r = ImportResolver(known)
     imp = make_import("cipher", is_relative=False)
-    assert r.resolve(imp, "any.py", "python") == "cipher/__init__.py"
+    assert r.resolve(imp, "any.py", "python") == ["cipher/__init__.py"]
 
 
 def test_resolver_python_absolute_external():
     known = {"myapp/utils.py"}
     r = ImportResolver(known)
     imp = make_import("os.path", is_relative=False)
-    assert r.resolve(imp, "any.py", "python") is None
+    assert r.resolve(imp, "any.py", "python") == []
 
 
 # ─── ImportResolver — TypeScript ──────────────────────────────────────────────
@@ -151,42 +151,42 @@ def test_resolver_ts_relative_with_extension():
     known = {"src/utils.ts"}
     r = ImportResolver(known)
     imp = make_import("./utils", is_relative=True)
-    assert r.resolve(imp, "src/index.ts", "typescript") == "src/utils.ts"
+    assert r.resolve(imp, "src/index.ts", "typescript") == ["src/utils.ts"]
 
 
 def test_resolver_ts_relative_tsx():
     known = {"src/Button.tsx"}
     r = ImportResolver(known)
     imp = make_import("./Button", is_relative=True)
-    assert r.resolve(imp, "src/App.tsx", "typescript") == "src/Button.tsx"
+    assert r.resolve(imp, "src/App.tsx", "typescript") == ["src/Button.tsx"]
 
 
 def test_resolver_ts_relative_index():
     known = {"src/components/index.ts"}
     r = ImportResolver(known)
     imp = make_import("./components", is_relative=True)
-    assert r.resolve(imp, "src/App.ts", "typescript") == "src/components/index.ts"
+    assert r.resolve(imp, "src/App.ts", "typescript") == ["src/components/index.ts"]
 
 
 def test_resolver_ts_relative_parent_dir():
     known = {"src/shared/types.ts"}
     r = ImportResolver(known)
     imp = make_import("../shared/types", is_relative=True)
-    assert r.resolve(imp, "src/api/client.ts", "typescript") == "src/shared/types.ts"
+    assert r.resolve(imp, "src/api/client.ts", "typescript") == ["src/shared/types.ts"]
 
 
 def test_resolver_ts_absolute_returns_none():
     known = {"react/index.ts"}
     r = ImportResolver(known)
     imp = make_import("react", is_relative=False)
-    assert r.resolve(imp, "src/App.tsx", "typescript") is None
+    assert r.resolve(imp, "src/App.tsx", "typescript") == []
 
 
 def test_resolver_go_always_none():
     known = {"internal/pkg/foo.go"}
     r = ImportResolver(known)
     imp = make_import("github.com/user/repo/internal/pkg", is_relative=False)
-    assert r.resolve(imp, "main.go", "go") is None
+    assert r.resolve(imp, "main.go", "go") == []
 
 
 # ─── GraphBuilder ──────────────────────────────────────────────────────────────

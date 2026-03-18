@@ -5,6 +5,7 @@ y construye un RepoIndex determinístico.
 No depende de cipher_dir — el caller decide dónde guardar el índice.
 """
 
+import hashlib
 import os
 import json
 import time
@@ -26,14 +27,31 @@ class RepoIndexer:
         self.repo_path = os.path.abspath(repo_path)
         self.repo_name = repo_name or os.path.basename(self.repo_path)
 
-    def index(self, verbose: bool = False) -> RepoIndex:
+    @staticmethod
+    def _compute_hash(abs_path: str) -> str:
+        """Calcula el SHA-256 del contenido de un archivo."""
+        h = hashlib.sha256()
+        with open(abs_path, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+
+    def index(self, verbose: bool = False, existing_index: RepoIndex = None) -> RepoIndex:
         """
         Recorre el repo e indexa todos los archivos con parser disponible.
+        Si se provee existing_index, reutiliza entradas cuyo hash SHA-256 no cambió.
         Los errores de parse se registran en FileIndex.parse_error, no interrumpen.
         """
         start = time.time()
         file_indices = []
         lang_counts: dict[str, int] = {}
+
+        # Construir lookup de entradas previas por path → FileIndex (solo si tienen hash)
+        cached: dict[str, object] = {}
+        if existing_index:
+            for fi in existing_index.files:
+                if fi.content_hash:
+                    cached[fi.path] = fi
 
         for root, dirs, files in os.walk(self.repo_path):
             dirs[:] = sorted(
@@ -49,7 +67,14 @@ class RepoIndexer:
                 abs_path = os.path.join(root, fname)
                 rel_path = os.path.relpath(abs_path, self.repo_path).replace("\\", "/")
 
-                fi = parser.parse(abs_path, rel_path)
+                # Indexación incremental: comparar hash
+                current_hash = self._compute_hash(abs_path)
+                if rel_path in cached and cached[rel_path].content_hash == current_hash:
+                    fi = cached[rel_path]
+                else:
+                    fi = parser.parse(abs_path, rel_path)
+                    fi.content_hash = current_hash
+
                 file_indices.append(fi)
                 lang_counts[fi.language] = lang_counts.get(fi.language, 0) + 1
 
