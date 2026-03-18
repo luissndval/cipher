@@ -1,304 +1,336 @@
 # cipher — Flujo Operacional
 
-> Qué hace cada comando, en qué orden, y dónde vive cada archivo.
+> Sistema de memoria persistente para agentes IA.
+> Estructura determinística + selección de contexto + trazabilidad completa.
 
 ---
 
-## Visión general
+## Arquitectura en capas
 
 ```
-Developer                    cipher CLI                     Agente IA
-    │                            │                             │
-    │── cipher init ──────────────>│                             │
-    │                            │── escanea repos             │
-    │                            │── lee código fuente         │
-    │                            │── llama a la IA ───────────>│
-    │                            │<── genera contexto ─────────│
-    │                            │── guarda en clients/        │
-    │<── confirma registros ─────│                             │
-    │                            │                             │
-    │── cipher claude ────────────>│                             │
-    │                            │── resuelve cliente          │
-    │                            │── muestra repos             │
-    │<── seleccioná repo ────────│                             │
-    │── elige repo ─────────────>│                             │
-    │<── tipo de work item? ─────│                             │
-    │── FEATURE / nro / título ->│                             │
-    │                            │── genera branch name        │
-    │                            │── crea task-agent.md        │
-    │                            │── escribe CLAUDE.md temp    │
-    │                            │── lanza agente ────────────>│
-    │                            │                      trabaja │
-    │                            │               crea branch   │
-    │                            │              implementa...  │
-    │                            │               commit+push   │
-    │                            │               crea PR       │
-    │<── sesión finalizada ──────│<────────────────────────────│
-    │                            │── elimina CLAUDE.md         │
-    │                            │                             │
-    │── cipher update ────────────>│                             │
-    │                            │── lee git diff              │
-    │                            │── analiza con IA ──────────>│
-    │                            │<── propone cambios ─────────│
-    │<── confirmar cambios? ─────│                             │
-    │── confirma ───────────────>│                             │
-    │                            │── actualiza archivos .md    │
-    │                            │── genera ALERT.md si aplica │
+┌──────────────────────────────────────────────────────────────────┐
+│  CLI                                                             │
+│  init · index · impact · pack · task · audit · claude · update  │
+├──────────────────────────────────────────────────────────────────┤
+│  Task Engine          │  Context Pack Builder                    │
+│  tasks/               │  pack/                                   │
+│  schema · store       │  scorer · budget · builder               │
+│  analyzer · sources   │                                          │
+├──────────────────────────────────────────────────────────────────┤
+│  Dependency Graph     │  Code Indexer                            │
+│  graph/               │  index/                                  │
+│  schema · resolver    │  parsers: Python · TypeScript · Go       │
+│  builder              │  RepoIndexer                             │
+├──────────────────────────────────────────────────────────────────┤
+│  Audit & Manifest     │  Memory Layer                            │
+│  audit/               │  core/ · memory/                         │
+│  writer · reader      │  ContextLoader · SessionStore            │
+│  pr_comment           │  config · loader                         │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Flujo completo
+
+```
+Developer                    cipher CLI                  Data / IA
+    │                            │                          │
+    ├── cipher init ──────────>  │                          │
+    │                            ├─ escanea repos .git      │
+    │                            ├─ analiza con LLM ──────> │
+    │                            │ <── genera contexto .md ─┤
+    │                            ├─ guarda clients/         │
+    │                            ├─ cipher index (sin LLM)  │
+    │                            ├─ → index.json            │
+    │                            └─ → graph.json            │
+    │                                                        │
+    ├── cipher index ─────────>  │                          │
+    │                            ├─ parser AST/regex/FSM    │
+    │                            ├─ extrae símbolos+imports │
+    │                            ├─ → index.json            │
+    │                            └─ → graph.json            │
+    │                                                        │
+    ├── cipher impact <file> ─>  │                          │
+    │                            ├─ carga graph.json        │
+    │                            ├─ BFS en grafo invertido  │
+    │ <── archivos afectados ──  └─ muestra depth + via     │
+    │                                                        │
+    ├── cipher pack "tarea" ──>  │                          │
+    │                            ├─ scorer léxico           │
+    │                            ├─ expansión de deps       │
+    │                            ├─ trim por budget         │
+    │                            ├─ → context_pack.md       │
+    │ <── resumen del pack ────  └─ → context_manifest.json │
+    │                                                        │
+    ├── cipher task "tarea" ──>  │                          │
+    │  (o --from-gh / --linear)  ├─ fetch ticket            │
+    │                            ├─ detecta tipo BUG/FEAT   │
+    │                            ├─ PackBuilder             │
+    │                            ├─ TaskAnalyzer → intent   │
+    │                            ├─ AuditWriter → manifest  │
+    │                            ├─ → audit_log.jsonl       │
+    │                            └─ lanza agente ─────────> │
+    │                                                        │
+    ├── cipher audit ─────────>  │                          │
+    │                            ├─ lee audit_log.jsonl     │
+    │ <── historial + PR comment └─ filtra/stats            │
+    │                                                        │
+    └── cipher audit --pr ────>  │                          │
+                                 └─ actualiza manifest + log│
 ```
 
 ---
 
 ## Comando: `cipher init`
 
-**Propósito:** registrar un cliente nuevo y generar su contexto con IA.
+Registra repos y genera contexto con IA (marcado como `⚠️ DRAFT`).
+Además corre indexación estructural sin LLM.
 
 ```
-cipher init
+cipher init [--scan <path>]
     │
-    ├─ 1. Escanear directorio actual
-    │      └─ busca subdirectorios con .git
-    │         muestra lista y pregunta cuáles registrar
-    │
-    ├─ 2. Elegir agente de análisis
-    │      └─ Claude / Gemini / OpenAI
-    │         verifica que el provider esté configurado
-    │         si no, pide API key y la guarda en config.local.json
-    │
-    ├─ 3. Nombrar el cliente
-    │      └─ nombre del cliente/empresa (ej: "acme-corp")
-    │
-    ├─ 4. Analizar cada repo con IA
-    │      └─ lee estructura de directorios (4 niveles)
-    │         lee archivos de código fuente relevantes
-    │         envía todo al agente en un único request
-    │         parsea respuesta con delimitadores <<<FILE:nombre>>>
-    │
-    ├─ 5. Guardar archivos de contexto
-    │      └─ clients/<cliente>/<repo>/
-    │             ARCHITECTURE.md
-    │             BUSINESS_RULES.md
-    │             DEPENDENCIES.md
-    │             RISK_MATRIX.md
-    │
-    └─ 6. Actualizar config
-           └─ .cipher/config.json  ← agrega cliente y repos con paths
+    ├─ 1. Escanear directorio → repos .git
+    ├─ 2. Elegir proveedor de análisis (Gemini recomendado — 400k ctx)
+    ├─ 3. Nombrar cliente
+    ├─ 4. Analizar cada repo con LLM
+    │      └─ genera: ARCHITECTURE.md · BUSINESS_RULES.md
+    │                 DEPENDENCIES.md · RISK_MATRIX.md
+    │         todos marcados ⚠️ [DRAFT] — no son verdad estructural
+    ├─ 5. Indexación estructural (sin LLM, determinística)
+    │      └─ → .cipher/index/<repo>/index.json
+    │         → .cipher/index/<repo>/graph.json
+    └─ 6. Actualizar .cipher/config.json
 ```
 
-**Archivos tocados:**
-| Archivo | Acción |
-|---------|--------|
-| `clients/<cliente>/<repo>/*.md` | Creados por IA |
-| `.cipher/config.json` | Actualizado con el nuevo cliente |
-| `.cipher/config.local.json` | Actualizado con API key (si se configura) |
-
----
-
-## Comando: `cipher claude` / `cipher gemini` / `cipher codex`
-
-**Propósito:** abrir una sesión de desarrollo con contexto completo y ticket activo.
-
+**Archivos generados:**
 ```
-cipher claude
-    │
-    ├─ 1. Resolver cliente
-    │      └─ detecta repo actual via git rev-parse
-    │         busca match en .cipher/config.json
-    │         si no encuentra: ofrece cipher init
-    │
-    ├─ 2. Seleccionar repo de trabajo
-    │      └─ muestra todos los repos del cliente
-    │         desarrollador elige en cuál trabajar
-    │         (si hay solo uno, lo usa directamente)
-    │
-    ├─ 3. Cargar contexto
-    │      └─ si existe .cipher/sessions/<cliente>/<repo>/ACTIVE_CONTEXT.md
-    │             lo usa directamente
-    │         si no existe
-    │             ensambla desde capas (global + cliente + proyecto)
-    │             guarda en sessions/
-    │
-    ├─ 4. Crear ticket
-    │      └─ pregunta tipo: FEATURE / TASK / ERROR / HOTFIX
-    │         pide número, título y descripción
-    │         genera nombre de branch: TIPO-NUMERO-TITULO-EN-MAYUSCULAS
-    │         crea task-agent.md con instrucciones paso a paso
-    │
-    ├─ 5. Inyectar contexto
-    │      └─ [Claude]  escribe CLAUDE.md temporal en el repo
-    │         [Gemini]  carga contexto como system prompt en memoria
-    │         [Codex]   escribe codex-context.md temporal
-    │         [Aider]   escribe CONVENTIONS.md temporal
-    │
-    ├─ 6. Lanzar agente
-    │      └─ abre el CLI/sesión del agente elegido
-    │         pasa prompt inicial: "empezá por crear la branch..."
-    │
-    └─ 7. Al salir (finally)
-           └─ elimina CLAUDE.md del repo cliente
-              (o restaura contenido anterior si ya existía)
-```
-
-**Instrucciones que recibe el agente:**
-1. Crear la branch `TIPO-NUMERO-TITULO`
-2. Implementar la tarea
-3. `git add -p` → `git commit` → `git push -u origin <branch>`
-4. `gh pr create` con título y descripción pre-armados
-5. `cipher update` para cerrar la sesión
-
-**Archivos tocados:**
-| Archivo | Acción |
-|---------|--------|
-| `.cipher/sessions/<cliente>/<repo>/ACTIVE_CONTEXT.md` | Creado/leído |
-| `.cipher/sessions/<cliente>/<repo>/task-agent.md` | Creado |
-| `<repo>/CLAUDE.md` | Creado temporalmente, eliminado al salir |
-
----
-
-## Ensamblado de contexto (capas)
-
-```
-ACTIVE_CONTEXT.md
-│
-├─ CAPA GLOBAL  ──────────────────────────────────────── aplica a todos
-│   ├─ global/CONVENTIONS.md    (estándares de código)
-│   ├─ global/WORKFLOW.md       (GitFlow, proceso de PRs)
-│   └─ global/AGENT.md          (comportamiento del agente)
-│
-├─ CAPA CLIENTE  ─────────────────────────────────────── aplica al cliente
-│   ├─ clients/<cliente>/BUSINESS_RULES.md
-│   └─ clients/<cliente>/ARCHITECTURE.md
-│
-└─ CAPA PROYECTO  ────────────────────────────────────── específico del repo
-    ├─ clients/<cliente>/<repo>/BUSINESS_RULES.md
-    ├─ clients/<cliente>/<repo>/DEPENDENCIES.md
-    ├─ clients/<cliente>/<repo>/RISK_MATRIX.md
-    ├─ clients/<cliente>/<repo>/IMPACT_RULES.md
-    ├─ clients/<cliente>/<repo>/TASK_FLOW.md
-    └─ clients/<cliente>/<repo>/TEST_STRATEGY.md
-```
-
-Modo `summary`: primeras 30 líneas de cada archivo (~900 tokens total).
-Los paths completos se incluyen como referencias; el agente los carga on-demand.
-
----
-
-## Formato de branch
-
-El nombre se genera a partir del tipo, número y título del ticket:
-
-```
-FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE
-TASK-89-REFACTORIZAR-MODULO-PAGOS
-ERROR-301-FIX-NULL-POINTER-EN-CHECKOUT
-HOTFIX-7-PARCHE-CRITICO-SESION-EXPIRADA
-```
-
-Regla: `{TIPO}-{NUMERO}-{TITULO-SLUGIFICADO-EN-MAYUSCULAS}`
-- Solo letras, números y guiones
-- Sin caracteres especiales ni espacios
-- Todo en mayúsculas
-
----
-
-## Comando: `cipher update`
-
-**Propósito:** actualizar el contexto después de terminar trabajo.
-
-```
-cipher update
-    │
-    ├─ 1. Obtener git diff del repo actual
-    │      └─ git diff HEAD (staged + unstaged)
-    │
-    ├─ 2. Leer task activo
-    │      └─ .cipher/sessions/<cliente>/<repo>/task-agent.md
-    │
-    ├─ 3. Analizar con IA
-    │      └─ envía diff + task al agente
-    │         pide: summary, impact_level, affected_files,
-    │               cross_repo_impact, context_updates
-    │
-    ├─ 4. Aplicar cambios sugeridos
-    │      └─ muestra propuesta al desarrollador
-    │         confirma antes de sobrescribir
-    │         actualiza archivos .md correspondientes
-    │
-    └─ 5. Impacto cruzado
-           └─ si hay repos afectados
-                 "¿Genero ALERT.md en <repo>? [S/n]"
-                 escribe .cipher/ALERT.md en el repo afectado
+.cipher/
+  config.json
+  clients/<cliente>/<repo>/
+    ARCHITECTURE.md          ⚠️ DRAFT — generado por LLM
+    BUSINESS_RULES.md        ⚠️ DRAFT
+    DEPENDENCIES.md          ⚠️ DRAFT
+    RISK_MATRIX.md           ⚠️ DRAFT
+  index/<repo>/
+    index.json               ✓ DETERMINÍSTICO — parser AST/regex
+    graph.json               ✓ DETERMINÍSTICO — grafo de imports
 ```
 
 ---
 
-## Comando: `cipher status`
+## Comando: `cipher index`
 
-**Propósito:** ver el estado actual del proyecto en cipher.
+Indexa un repo sin LLM. Extrae símbolos, imports y construye el grafo.
 
 ```
-cipher status
+cipher index [--repo <path>]
     │
-    ├─ muestra: cliente, proyecto, repo detectado
-    ├─ indica si existe ACTIVE_CONTEXT.md y su fecha
-    ├─ lista archivos de contexto y si están desactualizados
-    └─ muestra alertas pendientes en repos del cliente
+    ├─ Python  → ast.parse() — clases, funciones, métodos, imports
+    ├─ TypeScript/JS → regex — interfaces, clases, funciones, require/import
+    ├─ Go → FSM línea a línea — structs, interfaces, funcs, import blocks
+    │
+    ├─ → .cipher/index/<repo>/index.json
+    │      {files: [{path, language, symbols, imports, lines}]}
+    │
+    └─ → .cipher/index/<repo>/graph.json
+           {nodes: {path → GraphNode}, edges: [GraphEdge], external_imports}
 ```
 
 ---
 
-## Aislamiento de archivos
+## Comando: `cipher impact <archivo>`
 
-cipher nunca deja archivos permanentes en los repos de los clientes.
+Calcula qué archivos se ven afectados si cambia un archivo dado.
 
 ```
-cipher/                              ← TODO vive acá
-  .cipher/
-    config.json                    ← registro de clientes
-    config.local.json              ← API keys (gitignored)
-    sessions/
-      <cliente>/
-        <repo>/
-          ACTIVE_CONTEXT.md        ← contexto generado
-          task-agent.md            ← ticket activo
-
-<repo-cliente>/                    ← solo archivos temporales
-  CLAUDE.md                        ← existe SOLO durante la sesión
-                                      se elimina en el finally block
+cipher impact auth/login.py [--repo <nombre>] [--depth <n>]
+    │
+    ├─ carga graph.json
+    ├─ BFS sobre el grafo invertido (dependents)
+    ├─ retorna ImpactEntry[] ordenado por (depth, path)
+    └─ muestra agrupado por nivel de profundidad
 ```
 
----
-
-## Providers y modelos
-
-| Agente | Provider | Modelo por defecto | Contexto máx. |
-|--------|----------|--------------------|---------------|
-| `cipher claude` | Anthropic | `claude-sonnet-4-6` | ~60k chars |
-| `cipher gemini` | Google | `gemini-2.5-flash` | ~400k chars |
-| `cipher codex` | OpenAI | `gpt-4o` | ~60k chars |
-| `cipher aider` | Ext. (aider CLI) | según keys disponibles | — |
-
-Los modelos se pueden sobreescribir en `.cipher/config.local.json`:
-```json
-{ "anthropic": { "model": "claude-opus-4-6" } }
+**Ejemplo de output:**
+```
+  depth 1
+    users/views.py     (importa directamente auth/login.py)
+  depth 2
+    api/endpoints.py   via users/views.py
+    tests/test_auth.py via users/views.py
 ```
 
 ---
 
-## Diagrama de archivos por operación
+## Comando: `cipher pack <descripción>`
+
+Genera el contexto mínimo necesario para una tarea. Sin LLM.
 
 ```
-Operación          Archivos leídos                  Archivos escritos
-─────────────────────────────────────────────────────────────────────
-cipher init          <repos>/**/*.{py,ts,js,...}       clients/<c>/<r>/*.md
-                                                     .cipher/config.json
-
-cipher claude        .cipher/config.json                 sessions/<c>/<r>/ACTIVE_CONTEXT.md
-                   global/*.md                       sessions/<c>/<r>/task-agent.md
-                   clients/<c>/<r>/*.md              <repo>/CLAUDE.md  (temporal)
-
-cipher update        sessions/<c>/<r>/task-agent.md    clients/<c>/<r>/*.md
-                   git diff HEAD                     <repo-afectado>/.cipher/ALERT.md
-
-cipher status        sessions/<c>/<r>/ACTIVE_CONTEXT.md  —
-                   .cipher/config.json
+cipher pack "fix login timeout" [--provider claude|gemini] [--repo <nombre>]
+    │
+    ├─ 1. Scorer léxico (sin LLM)
+    │      └─ tokeniza descripción → palabras clave
+    │         +2.0 por match en path del archivo
+    │         +1.0 por match en nombre de símbolo
+    │         +0.5 si archivo muy importado (top 20%, mín. 3 inbound)
+    │         +0.3 si tiene símbolos definidos
+    │
+    ├─ 2. Selección de targets (top archivos por score)
+    │
+    ├─ 3. Expansión de dependencias via grafo
+    │      └─ dependencies_of(target) → rol "dependency"
+    │
+    ├─ 4. Budget manager
+    │      └─ Claude: 60k tokens · Gemini: 400k tokens
+    │         90% para archivos · 5% para rules · 5% para architecture
+    │         trim por newline si excede budget
+    │
+    ├─ 5. → .cipher/packs/<repo>/<task_id>/context_pack.md
+    └─ 6. → .cipher/packs/<repo>/<task_id>/context_manifest.json
 ```
+
+---
+
+## Comando: `cipher task <descripción>`
+
+Crea una task formalizada, genera intent, construye pack y lanza el agente.
+
+```
+cipher task "descripción"
+cipher task --from-gh owner/repo#123
+cipher task --from-linear ENG-456
+cipher task "descripción" --dry-run
+cipher task --list [--status PENDING|IN_PROGRESS|DONE|FAILED]
+    │
+    ├─ 1. Obtener ticket
+    │      ├─ ManualSource: "título: descripción"
+    │      ├─ GitHubIssueSource: GitHub REST API (GITHUB_TOKEN)
+    │      └─ LinearSource: GraphQL API (LINEAR_API_KEY)
+    │
+    ├─ 2. Crear Task
+    │      └─ detecta tipo: HOTFIX > BUG > FEATURE > TASK
+    │         → .cipher/tasks/<client>/<repo>/<task_id>/task.json
+    │
+    ├─ 3. Construir Context Pack (ver cipher pack)
+    │      └─ → .cipher/packs/<repo>/<task_id>/context_pack.md
+    │
+    ├─ 4. Generar ContextManifest (F5 — Audit)
+    │      └─ → .cipher/sessions/<client>/<repo>/<task_id>/CONTEXT_MANIFEST.json
+    │         → .cipher/audit/audit_log.jsonl (append)
+    │
+    ├─ 5. Generar TaskIntent
+    │      └─ files_to_modify · files_to_read · constraints
+    │         → .cipher/tasks/<client>/<repo>/<task_id>/task_intent.json
+    │
+    └─ 6. Lanzar agente con context_pack.md + task_intent.json
+```
+
+**Detección de tipo:**
+```
+texto contiene                     → tipo
+─────────────────────────────────────────
+hotfix / critical / urgent / p0    → HOTFIX
+bug / fix / error / crash / falla  → BUG
+add / new / implement / feature    → FEATURE
+(default)                          → TASK
+```
+
+---
+
+## Comando: `cipher audit`
+
+Historial de trazabilidad de sesiones IA.
+
+```
+cipher audit                         lista todas las entradas
+cipher audit <task_id>               detalle + PR comment preview
+cipher audit --repo <nombre>         filtrar por repo
+cipher audit --client <nombre>       filtrar por cliente
+cipher audit --since 2024-03         filtrar desde fecha
+cipher audit --result done|failed    filtrar por resultado
+cipher audit --stats                 estadísticas globales
+cipher audit --pr <task_id> <url>    registrar PR en el manifest
+```
+
+**PR Comment generado automáticamente:**
+```markdown
+## 🤖 Context usado por la IA
+
+**Task:** `t001`  |  **Modelo:** `claude`  |  **Brain v0.5.0**
+**Tokens:** 5,000 / 60,000 (8%) █░░░░░░░░░
+
+### Archivos incluidos
+| Archivo           | Rol         | Tokens |
+|-------------------|-------------|--------|
+| `auth/login.py`   | 🎯 target   | ~300   |
+| `auth/models.py`  | 🔗 dependency | ~100 |
+
+<details><summary>Reproducibilidad</summary>
+**Context pack hash:** `deadbeef...`
+</details>
+```
+
+---
+
+## Estructura de archivos completa
+
+```
+.cipher/
+  config.json                        ← clientes + repos registrados
+  config.local.json                  ← API keys (gitignored)
+
+  index/<repo>/
+    index.json                       ← símbolos + imports (determinístico)
+    graph.json                       ← grafo de dependencias
+
+  packs/<repo>/<task_id>_<slug>/
+    context_pack.md                  ← contexto recortado por budget
+    context_manifest.json            ← metadata del pack (hash, tokens)
+
+  tasks/<client>/<repo>/<task_id>/
+    task.json                        ← PENDING→IN_PROGRESS→DONE|FAILED
+    task_intent.json                 ← files_to_modify · constraints
+
+  sessions/<client>/<repo>/<task_id>/
+    CONTEXT_MANIFEST.json            ← qué vio la IA (F5 — trazabilidad)
+
+  audit/
+    audit_log.jsonl                  ← historial append-only
+
+  clients/<client>/
+    BUSINESS_RULES.md                ← ⚠️ DRAFT (LLM, nivel cliente)
+    ARCHITECTURE.md                  ← ⚠️ DRAFT
+    <repo>/
+      ARCHITECTURE.md                ← ⚠️ DRAFT (LLM, nivel repo)
+      BUSINESS_RULES.md              ← ⚠️ DRAFT
+      DEPENDENCIES.md                ← ⚠️ DRAFT
+      RISK_MATRIX.md                 ← ⚠️ DRAFT
+```
+
+---
+
+## Comandos disponibles
+
+| Comando | Descripción | Usa LLM |
+|---------|-------------|---------|
+| `cipher init` | Registra repos y genera contexto | Sí (análisis inicial) |
+| `cipher index` | Indexa código: símbolos + imports + grafo | No |
+| `cipher impact <file>` | Impact set de un archivo (BFS) | No |
+| `cipher pack <desc>` | Context pack mínimo para una tarea | No |
+| `cipher task <desc>` | Task formalizada → intent → pack → agente | Solo al lanzar agente |
+| `cipher task --from-gh` | Task desde GitHub Issue | No (fetch) |
+| `cipher task --from-linear` | Task desde Linear ticket | No (fetch) |
+| `cipher audit` | Historial de sesiones IA | No |
+| `cipher claude` | Sesión directa con contexto ensamblado | Solo agente |
+| `cipher update` | Actualiza contexto post-cambio | Sí |
+| `cipher status` | Estado del contexto actual | No |
+
+---
+
+## Principio rector
+
+> No resolver esto con prompts cada vez mejores.
+>
+> **estructura determinística → selección de contexto → IA → trazabilidad**

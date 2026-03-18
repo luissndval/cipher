@@ -19,9 +19,7 @@
     --red:       #f87171;
     --cyan:      #22d3ee;
     --pink:      #f472b6;
-    --layer1:    #7c6aff;
-    --layer2:    #22d3ee;
-    --layer3:    #34d399;
+    --orange:    #fb923c;
     --radius:    12px;
     --radius-sm: 6px;
   }
@@ -39,7 +37,7 @@
   /* ─── NAV ─────────────────────────────────────────── */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(13,15,20,.85);
+    background: rgba(13,15,20,.9);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 0 2rem;
@@ -55,1037 +53,745 @@
   }
   .nav-links a:hover { color: var(--text); }
 
-  /* ─── LAYOUT ──────────────────────────────────────── */
-  main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+  /* ─── LAYOUT ───────────────────────────────────────── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 80px 2rem 4rem; }
 
-  section { padding: 5rem 0 3rem; }
-  section + section { border-top: 1px solid var(--border); }
+  h1 { font-size: 2rem; font-weight: 700; color: var(--accent2); margin-bottom: .5rem; }
+  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 3rem; }
+  h2 { font-size: 1.2rem; font-weight: 600; color: var(--accent2); margin: 2.5rem 0 1rem; }
+  h3 { font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 1.5rem 0 .75rem; }
 
-  h1 { font-size: 3rem; font-weight: 800; line-height: 1.15; }
-  h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 1.5rem; }
-  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .6rem; }
-  p  { color: #94a3b8; margin-bottom: .8rem; }
-
-  .tag {
-    display: inline-block; padding: .2rem .7rem;
-    border-radius: 99px; font-size: .72rem; font-weight: 600;
-    letter-spacing: .06em; text-transform: uppercase;
-  }
-  .tag-accent  { background: #7c6aff22; color: var(--accent2); border: 1px solid #7c6aff44; }
-  .tag-green   { background: #34d39922; color: var(--green);   border: 1px solid #34d39944; }
-  .tag-yellow  { background: #fbbf2422; color: var(--yellow);  border: 1px solid #fbbf2444; }
-  .tag-cyan    { background: #22d3ee22; color: var(--cyan);    border: 1px solid #22d3ee44; }
-
-  code {
-    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-    background: var(--bg3); color: var(--accent2);
-    padding: .1rem .45rem; border-radius: var(--radius-sm);
-    font-size: .85em;
-  }
-
-  /* ─── HERO ────────────────────────────────────────── */
-  #hero { padding-top: 7rem; text-align: center; }
-
-  .hero-kicker {
-    font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--accent); font-weight: 600; margin-bottom: 1.2rem;
-    display: flex; align-items: center; justify-content: center; gap: .5rem;
-  }
-  .hero-kicker::before, .hero-kicker::after {
-    content: ''; flex: 1; max-width: 60px;
-    height: 1px; background: var(--accent);
-  }
-
-  #hero h1 { margin-bottom: 1.2rem; }
-  #hero h1 em { font-style: normal; color: var(--accent2); }
-  #hero .subtitle {
-    font-size: 1.05rem; color: var(--muted);
-    max-width: 580px; margin: 0 auto 2.5rem;
-  }
-
-  .hero-pills { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
-  .pill {
-    padding: .4rem 1rem; border-radius: 99px;
-    border: 1px solid var(--border); color: var(--muted);
-    font-size: .82rem;
-  }
-
-  /* ─── PROBLEM / SOLUTION ──────────────────────────── */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-
-  .card {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.75rem;
-  }
-  .card-bad  { border-color: #f8717133; }
-  .card-good { border-color: #34d39933; }
-
-  .card-icon { font-size: 1.8rem; margin-bottom: 1rem; }
-  .card h3 { font-size: 1rem; margin-bottom: .75rem; }
-  .card ul { list-style: none; display: flex; flex-direction: column; gap: .45rem; }
-  .card ul li { color: #94a3b8; font-size: .9rem; padding-left: 1.2rem; position: relative; }
-  .card ul li::before { content: attr(data-icon); position: absolute; left: 0; }
-
-  /* ─── LAYERS ──────────────────────────────────────── */
-  .layers-visual {
-    display: flex; flex-direction: column; gap: 0;
-    max-width: 700px; margin: 0 auto;
-  }
-
-  .layer {
-    display: grid; grid-template-columns: 220px 1fr;
-    border-radius: 0; overflow: hidden;
+  /* ─── LAYER DIAGRAM ────────────────────────────────── */
+  .layers {
+    display: grid;
+    grid-template-rows: repeat(4, auto);
+    gap: 0;
     border: 1px solid var(--border);
-    transition: transform .2s;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 2rem;
   }
-  .layer:hover { transform: translateX(6px); z-index: 1; }
-  .layer:first-child { border-radius: var(--radius) var(--radius) 0 0; }
-  .layer:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
-  .layer + .layer { border-top: none; }
-
-  .layer-label {
-    padding: 1.2rem 1.5rem;
-    display: flex; flex-direction: column; justify-content: center;
-    font-weight: 700; font-size: .9rem; letter-spacing: .04em;
-  }
-  .layer-label small { font-weight: 400; font-size: .75rem; margin-top: .2rem; opacity: .7; }
-  .layer-content {
-    padding: 1rem 1.5rem; background: var(--bg2);
-    display: flex; flex-direction: column; justify-content: center; gap: .35rem;
-  }
-
-  .layer-global  .layer-label { background: #7c6aff22; color: var(--layer1); border-right: 1px solid #7c6aff33; }
-  .layer-client  .layer-label { background: #22d3ee22; color: var(--layer2); border-right: 1px solid #22d3ee33; }
-  .layer-project .layer-label { background: #34d39922; color: var(--layer3); border-right: 1px solid #34d39933; }
-
-  .file-chip {
-    display: inline-block; padding: .15rem .5rem;
-    border-radius: var(--radius-sm); font-family: monospace; font-size: .78rem;
-  }
-  .chip-1 { background: #7c6aff15; color: var(--accent2); }
-  .chip-2 { background: #22d3ee15; color: var(--cyan); }
-  .chip-3 { background: #34d39915; color: var(--green); }
-
-  .layer-arrow {
-    text-align: center; color: var(--muted); font-size: 1rem;
-    padding: .3rem 0;
-  }
-
-  .context-result {
-    margin-top: 1.5rem;
-    background: var(--bg2); border: 1px solid #7c6aff33;
-    border-radius: var(--radius); padding: 1.2rem 1.5rem;
-    display: flex; align-items: center; gap: 1rem;
-  }
-  .context-result .icon { font-size: 1.5rem; }
-  .context-result .info { flex: 1; }
-  .context-result .info strong { color: var(--accent2); font-family: monospace; font-size: .9rem; }
-  .context-result .info p { font-size: .82rem; margin: 0; }
-  .token-badge {
-    background: #7c6aff22; color: var(--accent2);
-    border: 1px solid #7c6aff44;
-    padding: .3rem .8rem; border-radius: 99px; font-size: .78rem; white-space: nowrap;
-  }
-
-  /* ─── COMMANDS ────────────────────────────────────── */
-  .cmd-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .cmd-tab {
-    padding: .5rem 1.2rem; border-radius: 99px;
-    border: 1px solid var(--border); background: transparent;
-    color: var(--muted); font-size: .85rem; cursor: pointer;
-    transition: all .2s; font-family: inherit;
-  }
-  .cmd-tab:hover { border-color: var(--accent); color: var(--accent2); }
-  .cmd-tab.active {
-    background: #7c6aff22; border-color: var(--accent);
-    color: var(--accent2);
-  }
-
-  .cmd-panel { display: none; }
-  .cmd-panel.active { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; }
-
-  .cmd-info h3 { font-size: 1rem; color: var(--text); margin-bottom: .5rem; }
-  .cmd-info .cmd-desc { font-size: .9rem; color: #94a3b8; margin-bottom: 1.2rem; }
-
-  .steps { display: flex; flex-direction: column; gap: 0; }
-  .step {
-    display: flex; gap: 1rem; padding: .9rem 0;
+  .layer {
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
   }
-  .step:last-child { border-bottom: none; }
-  .step-num {
-    width: 24px; height: 24px; min-width: 24px;
-    border-radius: 99px; display: flex; align-items: center; justify-content: center;
-    font-size: .72rem; font-weight: 700;
-    background: #7c6aff22; color: var(--accent2); border: 1px solid #7c6aff44;
+  .layer:last-child { border-bottom: none; }
+  .layer.cli {
+    grid-template-columns: 1fr;
+    background: linear-gradient(135deg, rgba(124,106,255,.12), rgba(167,139,250,.06));
   }
-  .step-body { flex: 1; }
-  .step-body strong { display: block; font-size: .88rem; color: var(--text); margin-bottom: .2rem; }
-  .step-body span { font-size: .82rem; color: var(--muted); }
+  .layer.engine { background: rgba(34,211,238,.04); }
+  .layer.structure { background: rgba(52,211,153,.04); }
+  .layer.memory { background: rgba(251,191,36,.04); }
 
-  .cmd-terminal {
-    background: #0a0c10; border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden;
+  .layer-title {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    grid-column: 1 / -1;
+    margin-bottom: .25rem;
   }
-  .terminal-header {
-    padding: .7rem 1rem; background: var(--bg3); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: .5rem;
+  .layer-box {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: .75rem 1rem;
   }
-  .dot { width: 10px; height: 10px; border-radius: 99px; }
-  .dot-r { background: #f87171; }
-  .dot-y { background: #fbbf24; }
-  .dot-g { background: #34d399; }
-  .terminal-title { font-size: .78rem; color: var(--muted); margin-left: .3rem; }
-  .terminal-body { padding: 1.2rem; font-family: monospace; font-size: .82rem; line-height: 1.8; }
-  .t-prompt { color: var(--accent); }
-  .t-cmd    { color: var(--text); }
-  .t-out    { color: var(--muted); }
-  .t-q      { color: var(--yellow); }
-  .t-ans    { color: var(--cyan); }
-  .t-ok     { color: var(--green); }
-  .t-branch { color: var(--pink); }
+  .layer-box-title { font-weight: 600; color: var(--text); font-size: .9rem; margin-bottom: .35rem; }
+  .layer-box-sub { color: var(--muted); font-size: .8rem; }
+  .layer-box-sub span { color: var(--accent2); }
 
-  /* ─── FLOW ────────────────────────────────────────── */
-  .flow-timeline { position: relative; padding-left: 2rem; }
-  .flow-timeline::before {
-    content: ''; position: absolute; left: .45rem; top: 0; bottom: 0;
-    width: 2px; background: linear-gradient(to bottom, var(--accent), var(--green));
-    border-radius: 2px;
+  .cli-commands {
+    display: flex; flex-wrap: wrap; gap: .5rem; grid-column: 1 / -1;
   }
-
-  .flow-step {
-    position: relative; margin-bottom: 2rem;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.25rem 1.5rem;
+  .cmd-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: .3rem .75rem;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: .8rem;
+    color: var(--accent2);
+    cursor: default;
     transition: border-color .2s;
   }
-  .flow-step:hover { border-color: var(--accent); }
-  .flow-step::before {
-    content: ''; position: absolute;
-    left: -2.45rem; top: 1.5rem;
-    width: 12px; height: 12px; border-radius: 99px;
-    background: var(--accent); border: 2px solid var(--bg);
-    box-shadow: 0 0 8px var(--accent);
-  }
+  .cmd-badge:hover { border-color: var(--accent); }
+  .cmd-badge.new { border-color: rgba(52,211,153,.4); color: var(--green); }
 
-  .flow-step-header {
-    display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem;
+  /* ─── FLOW DIAGRAM ─────────────────────────────────── */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
   }
-  .flow-cmd {
-    font-family: monospace; font-size: .88rem;
-    background: #7c6aff22; color: var(--accent2);
-    border: 1px solid #7c6aff33; border-radius: var(--radius-sm);
-    padding: .2rem .6rem;
-  }
-  .flow-step p { font-size: .88rem; margin: 0; }
+  @media (max-width: 700px) { .flow-grid { grid-template-columns: 1fr; } }
 
-  .flow-substeps {
-    margin-top: .75rem;
-    display: flex; flex-direction: column; gap: .4rem;
+  .flow-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    transition: border-color .2s;
   }
-  .flow-sub {
-    display: flex; align-items: flex-start; gap: .6rem;
-    font-size: .83rem; color: #94a3b8;
+  .flow-card:hover { border-color: var(--accent); }
+  .flow-card-header {
+    display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem;
   }
-  .flow-sub-icon { font-size: .8rem; margin-top: .1rem; opacity: .7; }
-
-  .flow-output {
-    margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--border);
-    display: flex; align-items: center; gap: .75rem;
+  .flow-card-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
   }
-  .flow-output-label { font-size: .75rem; color: var(--muted); text-transform: uppercase;
-    letter-spacing: .06em; white-space: nowrap; }
-  .flow-output-files { display: flex; flex-wrap: wrap; gap: .4rem; }
-
-  /* ─── BRANCH FORMAT ───────────────────────────────── */
-  .branch-demo {
-    background: #0a0c10; border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 2rem; text-align: center;
+  .flow-card-cmd {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: .95rem; font-weight: 600; color: var(--accent2);
   }
-  .branch-name {
-    font-family: monospace; font-size: 1.4rem; font-weight: 700;
-    letter-spacing: .04em; margin: 1rem 0;
+  .flow-card-desc { font-size: .8rem; color: var(--muted); }
+
+  .flow-steps { list-style: none; }
+  .flow-steps li {
+    display: flex; gap: .6rem; padding: .35rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .85rem; color: var(--muted);
+    align-items: flex-start;
   }
-  .branch-part { display: inline-block; }
-  .bp-type   { color: var(--pink); }
-  .bp-sep    { color: var(--muted); }
-  .bp-num    { color: var(--yellow); }
-  .bp-title  { color: var(--cyan); }
-
-  .branch-types { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
-  .btype {
-    padding: .5rem 1.2rem; border-radius: var(--radius-sm);
-    font-family: monospace; font-size: .85rem; font-weight: 600;
-    border: 1px solid; cursor: default;
+  .flow-steps li:last-child { border-bottom: none; }
+  .step-num {
+    flex-shrink: 0; width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    font-size: .7rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent2); margin-top: 2px;
   }
-  .btype-feature { background: #7c6aff15; color: var(--accent2); border-color: #7c6aff33; }
-  .btype-task    { background: #22d3ee15; color: var(--cyan);    border-color: #22d3ee33; }
-  .btype-error   { background: #f8717115; color: var(--red);     border-color: #f8717133; }
-  .btype-hotfix  { background: #fbbf2415; color: var(--yellow);  border-color: #fbbf2433; }
-
-  /* ─── PROVIDERS ───────────────────────────────────── */
-  .providers-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-
-  .provider-card {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.5rem;
-    transition: transform .2s, border-color .2s;
+  .step-txt { flex: 1; }
+  .step-txt strong { color: var(--text); }
+  .step-txt code {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: .78rem;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 3px; padding: .1rem .35rem; color: var(--cyan);
   }
-  .provider-card:hover { transform: translateY(-3px); }
-  .provider-card.p-claude { border-color: #7c6aff44; }
-  .provider-card.p-gemini { border-color: #22d3ee44; }
-  .provider-card.p-openai { border-color: #34d39944; }
-  .provider-card.p-aider  { border-color: #fbbf2444; }
-
-  .provider-icon { font-size: 1.8rem; margin-bottom: .8rem; }
-  .provider-name { font-weight: 700; font-size: .95rem; margin-bottom: .3rem; }
-  .provider-model { font-family: monospace; font-size: .75rem; color: var(--muted); margin-bottom: .8rem; }
-  .provider-ctx { font-size: .78rem; color: var(--muted); }
-  .provider-ctx strong { color: var(--text); }
-
-  /* ─── ISOLATION ───────────────────────────────────── */
-  .isolation-visual { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-
-  .fs-tree {
-    background: #0a0c10; border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.5rem;
-    font-family: monospace; font-size: .83rem; line-height: 1.9;
+  .step-tag {
+    font-size: .65rem; font-weight: 700; letter-spacing: .06em;
+    padding: .15rem .4rem; border-radius: 4px;
+    text-transform: uppercase; flex-shrink: 0; margin-top: 2px;
   }
-  .fs-title { font-size: .75rem; color: var(--muted); text-transform: uppercase;
-    letter-spacing: .08em; margin-bottom: 1rem; font-family: inherit; }
-  .fs-dir  { color: var(--accent2); }
-  .fs-file { color: var(--text); }
-  .fs-generated { color: var(--green); }
-  .fs-temp { color: var(--yellow); }
-  .fs-never { color: var(--muted); text-decoration: line-through; }
-  .fs-note { color: var(--muted); font-size: .75rem; }
+  .tag-llm { background: rgba(167,139,250,.15); color: var(--accent2); }
+  .tag-det { background: rgba(52,211,153,.12); color: var(--green); }
+  .tag-io  { background: rgba(34,211,238,.1);  color: var(--cyan); }
 
-  .isolation-rules { display: flex; flex-direction: column; gap: .75rem; }
-  .i-rule {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: .9rem 1rem;
-    display: flex; gap: .75rem; align-items: flex-start;
+  /* ─── MASTER FLOW ──────────────────────────────────── */
+  .master-flow {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    overflow-x: auto;
+    margin-bottom: 2rem;
   }
-  .i-rule-icon { font-size: 1.1rem; }
-  .i-rule-body strong { display: block; font-size: .88rem; margin-bottom: .15rem; }
-  .i-rule-body span { font-size: .82rem; color: var(--muted); }
+  .master-flow pre {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: .8rem;
+    line-height: 1.8;
+    color: var(--muted);
+    white-space: pre;
+  }
+  .master-flow pre .hl-cmd   { color: var(--accent2); font-weight: 700; }
+  .master-flow pre .hl-arrow { color: var(--accent); }
+  .master-flow pre .hl-file  { color: var(--cyan); }
+  .master-flow pre .hl-llm   { color: var(--yellow); }
+  .master-flow pre .hl-det   { color: var(--green); }
 
-  /* ─── FOOTER ──────────────────────────────────────── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 2.5rem 1.5rem; text-align: center;
-    color: var(--muted); font-size: .82rem;
+  /* ─── FILE TREE ─────────────────────────────────────── */
+  .file-tree {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: .82rem;
+    line-height: 2;
+    overflow-x: auto;
+    margin-bottom: 2rem;
   }
-  footer a { color: var(--accent2); text-decoration: none; }
+  .ft-dir   { color: var(--accent2); font-weight: 600; }
+  .ft-file  { color: var(--text); }
+  .ft-det   { color: var(--green); }
+  .ft-llm   { color: var(--yellow); }
+  .ft-cm    { color: var(--muted); font-size: .75rem; }
 
-  /* ─── RESPONSIVE ──────────────────────────────────── */
-  @media (max-width: 768px) {
-    h1 { font-size: 2rem; }
-    .two-col { grid-template-columns: 1fr; }
-    .cmd-panel.active { grid-template-columns: 1fr; }
-    .providers-grid { grid-template-columns: 1fr 1fr; }
-    .isolation-visual { grid-template-columns: 1fr; }
-    .layer { grid-template-columns: 1fr; }
-    .layer-label { padding: .8rem 1rem; }
-    .nav-links { display: none; }
+  /* ─── COMMANDS TABLE ────────────────────────────────── */
+  .cmd-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    font-size: .85rem;
   }
+  .cmd-table th {
+    background: var(--bg3);
+    padding: .75rem 1rem;
+    text-align: left;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-table td {
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .cmd-table tr:last-child td { border-bottom: none; }
+  .cmd-table tr:hover td { background: rgba(255,255,255,.02); }
+  .cmd-table td:first-child {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    color: var(--accent2); white-space: nowrap;
+  }
+  .cmd-table td:last-child { text-align: center; }
+  .badge-llm { background: rgba(167,139,250,.15); color: var(--accent2); padding: .2rem .5rem; border-radius: 4px; font-size: .72rem; }
+  .badge-no  { background: rgba(52,211,153,.12);  color: var(--green);   padding: .2rem .5rem; border-radius: 4px; font-size: .72rem; }
+
+  /* ─── DETECTIVE ─────────────────────────────────────── */
+  .type-detect {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 700px) { .type-detect { grid-template-columns: 1fr 1fr; } }
+  .type-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+  }
+  .type-name { font-weight: 700; font-size: .9rem; margin-bottom: .5rem; }
+  .type-kw   { font-size: .75rem; color: var(--muted); line-height: 1.8; }
+  .type-kw span { color: var(--text); }
+
+  /* ─── SCORER ────────────────────────────────────────── */
+  .scorer-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 700px) { .scorer-grid { grid-template-columns: 1fr 1fr; } }
+  .scorer-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem; text-align: center;
+  }
+  .scorer-val { font-size: 1.8rem; font-weight: 700; color: var(--accent2); }
+  .scorer-label { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+  /* ─── BUDGET ────────────────────────────────────────── */
+  .budget-row {
+    display: flex; gap: 1rem; margin-bottom: 1rem;
+  }
+  .budget-card {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem; text-align: center;
+  }
+  .budget-prov  { font-weight: 600; font-size: .9rem; color: var(--text); }
+  .budget-tokens { font-size: 1.4rem; font-weight: 700; color: var(--accent2); }
+  .budget-sub   { font-size: .75rem; color: var(--muted); }
+  .budget-bar   { height: 6px; border-radius: 3px; background: var(--bg3); margin: .75rem 0 .5rem; overflow: hidden; }
+  .budget-seg   { height: 100%; float: left; }
+
+  /* ─── PRINCIPLE ─────────────────────────────────────── */
+  .principle {
+    background: linear-gradient(135deg, rgba(124,106,255,.1), rgba(34,211,238,.05));
+    border: 1px solid rgba(124,106,255,.3);
+    border-radius: var(--radius);
+    padding: 1.5rem 2rem;
+    text-align: center;
+  }
+  .principle p { color: var(--muted); font-size: .95rem; margin-bottom: .75rem; }
+  .principle .formula {
+    font-size: 1rem; font-weight: 600; color: var(--text);
+    display: flex; justify-content: center; align-items: center;
+    flex-wrap: wrap; gap: .5rem;
+  }
+  .formula-part { padding: .35rem .85rem; border-radius: 6px; font-size: .9rem; }
+  .fp-det   { background: rgba(52,211,153,.15);  color: var(--green); }
+  .fp-ctx   { background: rgba(34,211,238,.12);  color: var(--cyan); }
+  .fp-ai    { background: rgba(167,139,250,.15); color: var(--accent2); }
+  .fp-trace { background: rgba(251,191,36,.12);  color: var(--yellow); }
+  .formula-arrow { color: var(--muted); font-size: 1rem; }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
-  <span class="nav-logo">cipher <span>/ docs</span></span>
+  <div class="nav-logo">cipher <span>/ system brain</span></div>
   <div class="nav-links">
-    <a href="#problema">Problema</a>
-    <a href="#capas">Capas</a>
-    <a href="#comandos">Comandos</a>
-    <a href="#flujo">Flujo</a>
-    <a href="#branch">Branches</a>
-    <a href="#providers">Providers</a>
-    <a href="#aislamiento">Aislamiento</a>
+    <a href="#layers">Arquitectura</a>
+    <a href="#flow">Flujo</a>
+    <a href="#commands">Comandos</a>
+    <a href="#files">Archivos</a>
+    <a href="#audit">Audit</a>
   </div>
 </nav>
 
-<main>
+<div class="page">
 
-  <!-- HERO -->
-  <section id="hero">
-    <div class="hero-kicker">sistema de contexto para agentes IA</div>
-    <h1>La <em>memoria</em> que<br>cualquier agente consume.</h1>
-    <p class="subtitle">
-      cipher centraliza el conocimiento de tus proyectos y lo inyecta automáticamente
-      en Claude, Gemini o Codex al iniciar cada sesión.
-    </p>
-    <div class="hero-pills">
-      <span class="pill">✨ Gemini — análisis de repos</span>
-      <span class="pill">🤖 Claude — agente de código</span>
-      <span class="pill">🏢 Multi-cliente</span>
-      <span class="pill">🔒 Aislamiento total</span>
-      <span class="pill">⚡ Branch automation</span>
-    </div>
-  </section>
+  <h1>cipher</h1>
+  <p class="subtitle">Sistema de memoria persistente para agentes IA · estructura determinística + selección de contexto + trazabilidad completa</p>
 
-  <!-- PROBLEMA -->
-  <section id="problema">
-    <div class="tag tag-accent" style="margin-bottom:1.2rem">El problema</div>
-    <h2>Sin cipher, cada sesión empieza desde cero.</h2>
-    <div class="two-col">
-      <div class="card card-bad">
-        <div class="card-icon">😓</div>
-        <h3 style="color:var(--red)">Sin cipher</h3>
-        <ul>
-          <li data-icon="✗ ">El dev re-explica el proyecto cada vez</li>
-          <li data-icon="✗ ">El agente desconoce reglas de negocio</li>
-          <li data-icon="✗ ">No sabe el stack ni las dependencias</li>
-          <li data-icon="✗ ">Cambiás de herramienta y empezás de cero</li>
-          <li data-icon="✗ ">El conocimiento vive en la cabeza del dev</li>
-        </ul>
-      </div>
-      <div class="card card-good">
-        <div class="card-icon">🚀</div>
-        <h3 style="color:var(--green)">Con cipher</h3>
-        <ul>
-          <li data-icon="✓ ">El contexto se carga automáticamente</li>
-          <li data-icon="✓ ">Todos los devs comparten la misma memoria</li>
-          <li data-icon="✓ ">Funciona con Claude, Gemini, Codex o Aider</li>
-          <li data-icon="✓ ">El agente crea branches y PRs automáticamente</li>
-          <li data-icon="✓ ">El conocimiento vive en el repo, versionado</li>
-        </ul>
+  <!-- ─── LAYERS ──────────────────────────────────────────── -->
+  <h2 id="layers">Arquitectura en capas</h2>
+
+  <div class="layers">
+    <div class="layer cli">
+      <div class="layer-title">CLI — Comandos disponibles</div>
+      <div class="cli-commands">
+        <span class="cmd-badge">cipher init</span>
+        <span class="cmd-badge new">cipher index</span>
+        <span class="cmd-badge new">cipher impact</span>
+        <span class="cmd-badge new">cipher pack</span>
+        <span class="cmd-badge new">cipher task</span>
+        <span class="cmd-badge new">cipher audit</span>
+        <span class="cmd-badge">cipher claude</span>
+        <span class="cmd-badge">cipher update</span>
+        <span class="cmd-badge">cipher status</span>
       </div>
     </div>
-  </section>
 
-  <!-- CAPAS -->
-  <section id="capas">
-    <div class="tag tag-cyan" style="margin-bottom:1.2rem">Arquitectura de contexto</div>
-    <h2>El contexto se ensambla en tres capas.</h2>
-    <p>Cada sesión combina reglas globales, datos del cliente y detalles del repo en un único archivo <code>ACTIVE_CONTEXT.md</code>.</p>
-
-    <br>
-    <div class="layers-visual">
-
-      <div class="layer layer-global">
-        <div class="layer-label">
-          🌐 GLOBAL
-          <small>Todos los proyectos</small>
-        </div>
-        <div class="layer-content">
-          <span class="file-chip chip-1">CONVENTIONS.md</span>
-          <span class="file-chip chip-1">WORKFLOW.md</span>
-          <span class="file-chip chip-1">AGENT.md</span>
+    <div class="layer engine">
+      <div class="layer-title">Fase 4 + 3 — Task Engine &amp; Context Pack Builder</div>
+      <div class="layer-box">
+        <div class="layer-box-title">Task Engine <code style="font-size:.75rem;color:var(--muted)">cipher/tasks/</code></div>
+        <div class="layer-box-sub">
+          <span>schema</span> · <span>store</span> · <span>analyzer</span><br>
+          sources: <span>manual</span> · <span>github</span> · <span>linear</span>
         </div>
       </div>
-
-      <div class="layer layer-client">
-        <div class="layer-label">
-          🏢 CLIENTE
-          <small>Por empresa / cliente</small>
-        </div>
-        <div class="layer-content">
-          <span class="file-chip chip-2">BUSINESS_RULES.md</span>
-          <span class="file-chip chip-2">ARCHITECTURE.md</span>
-        </div>
-      </div>
-
-      <div class="layer layer-project">
-        <div class="layer-label">
-          📦 PROYECTO
-          <small>Por repo específico</small>
-        </div>
-        <div class="layer-content">
-          <span class="file-chip chip-3">DEPENDENCIES.md</span>
-          <span class="file-chip chip-3">RISK_MATRIX.md</span>
-          <span class="file-chip chip-3">IMPACT_RULES.md</span>
-          <span class="file-chip chip-3">TASK_FLOW.md</span>
-          <span class="file-chip chip-3">TEST_STRATEGY.md</span>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="context-result">
-      <div class="icon">📄</div>
-      <div class="info">
-        <strong>.cipher/sessions/&lt;cliente&gt;/&lt;repo&gt;/ACTIVE_CONTEXT.md</strong>
-        <p>Contexto ensamblado — solo vive en el repo cipher, nunca en el repo del cliente.</p>
-      </div>
-      <div class="token-badge">~900 tokens (modo summary)</div>
-    </div>
-  </section>
-
-  <!-- COMANDOS -->
-  <section id="comandos">
-    <div class="tag tag-green" style="margin-bottom:1.2rem">Comandos</div>
-    <h2>Cuatro comandos para el flujo completo.</h2>
-
-    <div class="cmd-tabs">
-      <button class="cmd-tab active" onclick="showCmd('init')">cipher init</button>
-      <button class="cmd-tab" onclick="showCmd('session')">cipher claude / gemini / codex</button>
-      <button class="cmd-tab" onclick="showCmd('update')">cipher update</button>
-      <button class="cmd-tab" onclick="showCmd('status')">cipher status</button>
-    </div>
-
-    <!-- INIT -->
-    <div class="cmd-panel active" id="cmd-init">
-      <div class="cmd-info">
-        <h3>Registrar un cliente nuevo</h3>
-        <p class="cmd-desc">Escanea los repos de una carpeta, analiza el código fuente con IA y genera toda la documentación de contexto automáticamente.</p>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <strong>Detectar repos</strong>
-              <span>Escanea subdirectorios con <code>.git</code> en el directorio actual</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <strong>Elegir agente de análisis</strong>
-              <span>Claude, Gemini o OpenAI — verifica y configura la API key si es necesario</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <strong>Leer código fuente real</strong>
-              <span>Lee archivos .py .ts .js .go .env etc. hasta el límite del provider</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-body">
-              <strong>Generar contexto con IA</strong>
-              <span>Un request por repo genera los 4 archivos .md usando delimitadores</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">5</div>
-            <div class="step-body">
-              <strong>Guardar y registrar</strong>
-              <span>Guarda en <code>clients/&lt;cliente&gt;/&lt;repo&gt;/</code> y actualiza <code>config.json</code></span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="cmd-terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-          <span class="terminal-title">terminal</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cd /proyectos/acme-corp</span></div>
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher init</span></div>
-          <br>
-          <div class="t-out">  Repos encontrados:</div>
-          <div class="t-out">    1. acme-api   (.git ✓)</div>
-          <div class="t-out">    2. acme-web   (.git ✓)</div>
-          <div class="t-out">    3. acme-admin (.git ✓)</div>
-          <br>
-          <div class="t-q">  ¿Registrar todos? [S/n]:</div>
-          <div><span class="t-ans">  S</span></div>
-          <br>
-          <div class="t-q">  Agente de análisis [1=Claude 2=Gemini 3=OpenAI]:</div>
-          <div><span class="t-ans">  2</span></div>
-          <br>
-          <div class="t-out">  Analizando acme-api...</div>
-          <div class="t-ok">  ✓ ARCHITECTURE.md generado</div>
-          <div class="t-ok">  ✓ BUSINESS_RULES.md generado</div>
-          <div class="t-ok">  ✓ DEPENDENCIES.md generado</div>
-          <div class="t-ok">  ✓ RISK_MATRIX.md generado</div>
-          <br>
-          <div class="t-ok">  ✓ Cliente registrado en config.json</div>
+      <div class="layer-box">
+        <div class="layer-box-title">Context Pack Builder <code style="font-size:.75rem;color:var(--muted)">cipher/pack/</code></div>
+        <div class="layer-box-sub">
+          <span>scorer</span> léxico · <span>budget</span> manager<br>
+          <span>builder</span> → context_pack.md
         </div>
       </div>
     </div>
 
-    <!-- SESSION -->
-    <div class="cmd-panel" id="cmd-session">
-      <div class="cmd-info">
-        <h3>Abrir una sesión de desarrollo</h3>
-        <p class="cmd-desc">Carga el contexto, crea el ticket, genera el nombre de branch y lanza el agente con todo inyectado.</p>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <strong>Resolver cliente</strong>
-              <span>Detecta el repo actual via <code>git rev-parse</code> y busca en <code>config.json</code></span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <strong>Seleccionar repo de trabajo</strong>
-              <span>Muestra todos los repos del cliente y permite elegir en cuál trabajar</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <strong>Cargar contexto</strong>
-              <span>Usa <code>ACTIVE_CONTEXT.md</code> existente o lo genera ensamblando las 3 capas</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-body">
-              <strong>Crear ticket</strong>
-              <span>Tipo (FEATURE/TASK/ERROR/HOTFIX), número, título y descripción</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">5</div>
-            <div class="step-body">
-              <strong>Lanzar agente</strong>
-              <span>Inyecta contexto + ticket y arranca el agente en el repo seleccionado</span>
-            </div>
-          </div>
+    <div class="layer structure">
+      <div class="layer-title">Fase 1 + 2 — Code Indexer &amp; Dependency Graph</div>
+      <div class="layer-box">
+        <div class="layer-box-title">Code Indexer <code style="font-size:.75rem;color:var(--muted)">cipher/index/</code></div>
+        <div class="layer-box-sub">
+          parsers: <span>Python AST</span> · <span>TS regex</span> · <span>Go FSM</span><br>
+          símbolos · imports · líneas
         </div>
       </div>
-      <div class="cmd-terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-          <span class="terminal-title">terminal</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher claude</span></div>
-          <br>
-          <div class="t-out">  Cliente: acme-corp</div>
-          <br>
-          <div class="t-q">  ▸ Repos disponibles:</div>
-          <div class="t-out">    1. acme-api   (C:\...\acme-api)</div>
-          <div class="t-out">    2. acme-web   (C:\...\acme-web)</div>
-          <div class="t-q">  Seleccioná el repo [1-2]:</div>
-          <div><span class="t-ans">  1</span></div>
-          <br>
-          <div class="t-q">  ▸ Tipo de work item:</div>
-          <div class="t-out">    1. FEATURE  2. TASK  3. ERROR  4. HOTFIX</div>
-          <div class="t-q">  Seleccioná [1-4]:</div>
-          <div><span class="t-ans">  1</span></div>
-          <br>
-          <div class="t-q">  Número de ticket:</div>
-          <div><span class="t-ans">  142</span></div>
-          <div class="t-q">  Título breve:</div>
-          <div><span class="t-ans">  agregar login con google</span></div>
-          <br>
-          <div class="t-ok">  ✓ Task creada</div>
-          <div class="t-branch">  ✓ Branch: FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</div>
-          <div class="t-ok">  ✓ Contexto inyectado (CLAUDE.md temporal)</div>
-          <br>
-          <div class="t-out">  Iniciando Claude Code...</div>
+      <div class="layer-box">
+        <div class="layer-box-title">Dependency Graph <code style="font-size:.75rem;color:var(--muted)">cipher/graph/</code></div>
+        <div class="layer-box-sub">
+          <span>ImportResolver</span> · <span>GraphBuilder</span><br>
+          BFS impact set · nodos · aristas
         </div>
       </div>
     </div>
 
-    <!-- UPDATE -->
-    <div class="cmd-panel" id="cmd-update">
-      <div class="cmd-info">
-        <h3>Actualizar contexto post-tarea</h3>
-        <p class="cmd-desc">Analiza el git diff, detecta cambios arquitecturales y propone actualizaciones a los archivos de contexto.</p>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <strong>Obtener git diff</strong>
-              <span>Lee <code>git diff HEAD</code> (staged + unstaged)</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <strong>Analizar con IA</strong>
-              <span>Envía diff + task al agente, pide: summary, impact_level, affected_files</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <strong>Confirmar y aplicar</strong>
-              <span>Muestra propuesta al dev y actualiza los archivos .md confirmados</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-body">
-              <strong>Impacto cruzado</strong>
-              <span>Si afecta otros repos, genera <code>ALERT.md</code> automáticamente</span>
-            </div>
-          </div>
+    <div class="layer memory">
+      <div class="layer-title">Fase 0 + 5 — Memory Layer &amp; Audit</div>
+      <div class="layer-box">
+        <div class="layer-box-title">Memory Layer <code style="font-size:.75rem;color:var(--muted)">cipher/core/ · cipher/memory/</code></div>
+        <div class="layer-box-sub">
+          <span>ContextLoader</span> · <span>SessionStore</span> · config
         </div>
       </div>
-      <div class="cmd-terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-          <span class="terminal-title">terminal</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher update</span></div>
-          <br>
-          <div class="t-out">  Analizando git diff...</div>
-          <div class="t-out">  → 3 archivos modificados</div>
-          <br>
-          <div class="t-out">  Impacto: <span style="color:var(--yellow)">MEDIO</span></div>
-          <div class="t-out">  Resumen: Se agregó OAuth2 via Google.</div>
-          <div class="t-out">  Nuevo endpoint: POST /auth/google</div>
-          <br>
-          <div class="t-q">  Actualizar ARCHITECTURE.md? [S/n]:</div>
-          <div><span class="t-ans">  S</span></div>
-          <div class="t-ok">  ✓ ARCHITECTURE.md actualizado</div>
-          <br>
-          <div class="t-q">  ¿Generar ALERT en acme-web? [S/n]:</div>
-          <div><span class="t-ans">  S</span></div>
-          <div class="t-ok">  ✓ ALERT.md generado en acme-web</div>
+      <div class="layer-box">
+        <div class="layer-box-title">Audit &amp; Manifest <code style="font-size:.75rem;color:var(--muted)">cipher/audit/</code></div>
+        <div class="layer-box-sub">
+          <span>AuditWriter</span> · <span>AuditReader</span><br>
+          ContextManifest · PR comment · jsonl
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- STATUS -->
-    <div class="cmd-panel" id="cmd-status">
-      <div class="cmd-info">
-        <h3>Ver estado del proyecto</h3>
-        <p class="cmd-desc">Muestra un snapshot del contexto activo, archivos de cipher y alertas pendientes del cliente.</p>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <strong>Resolver contexto</strong>
-              <span>Cliente, repo y última fecha de actualización del contexto</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <strong>Estado de archivos</strong>
-              <span>Lista qué archivos .md existen y si están desactualizados</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <strong>Alertas pendientes</strong>
-              <span>Muestra ALERT.md de otros repos del mismo cliente si existen</span>
-            </div>
-          </div>
+  <!-- ─── MASTER FLOW ─────────────────────────────────────── -->
+  <h2 id="flow">Flujo completo</h2>
+
+  <div class="master-flow">
+    <pre>
+<span class="hl-cm" style="color:var(--muted)">Developer                    cipher CLI                       Data / IA</span>
+    │                            │                                 │
+    ├── <span class="hl-cmd">cipher init</span> ──────────>  │                                 │
+    │                            ├─ escanea repos .git             │
+    │                            ├─ analiza con <span class="hl-llm">LLM</span> ──────────> │
+    │                            │ &lt;── genera contexto .md ────────┤
+    │                            ├─ guarda <span class="hl-file">clients/</span>               │
+    │                            ├─ <span class="hl-det">cipher index (sin LLM)</span>       │
+    │                            ├─ → <span class="hl-file">.cipher/index/&lt;repo&gt;/index.json</span>│
+    │                            └─ → <span class="hl-file">.cipher/index/&lt;repo&gt;/graph.json</span>│
+    │                                                               │
+    ├── <span class="hl-cmd">cipher index</span> ─────────>  │                                 │
+    │                            ├─ <span class="hl-det">parser AST / regex / FSM</span>       │
+    │                            ├─ → <span class="hl-file">index.json</span>  (símbolos+imports)│
+    │                            └─ → <span class="hl-file">graph.json</span> (nodos+aristas)    │
+    │                                                               │
+    ├── <span class="hl-cmd">cipher impact</span> auth/login.py                                 │
+    │                            ├─ carga <span class="hl-file">graph.json</span>               │
+    │                            ├─ <span class="hl-det">BFS grafo invertido</span>            │
+    │ &lt;── archivos afectados ──  └─ depth · via                     │
+    │                                                               │
+    ├── <span class="hl-cmd">cipher pack</span> "fix login" ─>│                                 │
+    │                            ├─ <span class="hl-det">scorer léxico</span>                  │
+    │                            ├─ expansión de deps via grafo    │
+    │                            ├─ budget manager (60k/400k)      │
+    │                            ├─ → <span class="hl-file">context_pack.md</span>             │
+    │ &lt;── resumen del pack ────  └─ → <span class="hl-file">context_manifest.json</span>        │
+    │                                                               │
+    ├── <span class="hl-cmd">cipher task</span> "fix login" ─>│                                 │
+    │  (o --from-gh / --linear)  ├─ fetch ticket                   │
+    │                            ├─ <span class="hl-det">detecta tipo BUG/FEAT/HOTFIX</span>   │
+    │                            ├─ <span class="hl-det">PackBuilder</span>                    │
+    │                            ├─ <span class="hl-det">TaskAnalyzer → intent</span>          │
+    │                            ├─ AuditWriter → <span class="hl-file">CONTEXT_MANIFEST</span> │
+    │                            ├─ → <span class="hl-file">audit_log.jsonl</span> (append)     │
+    │                            └─ lanza agente <span class="hl-llm">──────────────></span> │
+    │                                                               │
+    ├── <span class="hl-cmd">cipher audit</span> ─────────>  │                                 │
+    │                            ├─ lee <span class="hl-file">audit_log.jsonl</span>           │
+    │ &lt;── historial + stats ───  └─ genera PR comment markdown     │
+    │                                                               │
+    └── <span class="hl-cmd">cipher audit --pr</span> t001 https://github.com/...              │
+                                 └─ actualiza manifest + log       │
+    </pre>
+  </div>
+
+  <!-- ─── COMMAND CARDS ────────────────────────────────────── -->
+  <h2 id="commands">Comandos</h2>
+
+  <div class="flow-grid">
+
+    <!-- cipher init -->
+    <div class="flow-card">
+      <div class="flow-card-header">
+        <div class="flow-card-icon" style="background:rgba(124,106,255,.15)">🚀</div>
+        <div>
+          <div class="flow-card-cmd">cipher init</div>
+          <div class="flow-card-desc">Registra repos y genera contexto inicial</div>
         </div>
       </div>
-      <div class="cmd-terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-          <span class="terminal-title">terminal</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher status</span></div>
-          <br>
-          <div class="t-out">  ── Proyecto ──────────────────</div>
-          <div class="t-out">  Cliente  : acme-corp</div>
-          <div class="t-out">  Repo     : acme-api</div>
-          <div class="t-out">  Contexto : <span class="t-ok">✓ activo</span> (hace 2 días)</div>
-          <br>
-          <div class="t-out">  ── Archivos de contexto ──────</div>
-          <div class="t-ok">  ✓ ARCHITECTURE.md</div>
-          <div class="t-ok">  ✓ BUSINESS_RULES.md</div>
-          <div class="t-ok">  ✓ DEPENDENCIES.md</div>
-          <div class="t-ok">  ✓ RISK_MATRIX.md</div>
-          <br>
-          <div class="t-out">  ── Alertas ───────────────────</div>
-          <div style="color:var(--yellow)">  ⚠ acme-web: ALERT.md pendiente</div>
-          <div class="t-out">    → Cambio en /auth/google</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FLUJO COMPLETO -->
-  <section id="flujo">
-    <div class="tag tag-yellow" style="margin-bottom:1.2rem">Flujo operacional</div>
-    <h2>El ciclo completo de una tarea.</h2>
-    <p>Desde registrar el proyecto hasta mergear el PR, cipher acompaña cada paso.</p>
-    <br>
-
-    <div class="flow-timeline">
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">cipher init</span>
-          <span class="tag tag-accent">Una vez por cliente</span>
-        </div>
-        <p>El dev escanea la carpeta del cliente. cipher detecta los repos, analiza el código fuente con IA y genera toda la documentación base.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Lee estructura de directorios (4 niveles) y archivos fuente</div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Un solo request al agente por repo (no 4 llamadas separadas)</div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Parsea la respuesta con delimitadores <code>&lt;&lt;&lt;FILE:nombre&gt;&gt;&gt;</code></div>
-        </div>
-        <div class="flow-output">
-          <span class="flow-output-label">Genera →</span>
-          <div class="flow-output-files">
-            <span class="file-chip chip-3">clients/&lt;c&gt;/&lt;r&gt;/ARCHITECTURE.md</span>
-            <span class="file-chip chip-3">BUSINESS_RULES.md</span>
-            <span class="file-chip chip-3">DEPENDENCIES.md</span>
-            <span class="file-chip chip-3">RISK_MATRIX.md</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">cipher claude</span>
-          <span class="tag tag-green">Inicio de tarea</span>
-        </div>
-        <p>El dev abre sesión. cipher pregunta en qué repo trabajar, qué tipo de ticket es, y lanza el agente con el contexto y el ticket ya cargados.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> El dev selecciona repo: <code>acme-api</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Tipo: <code>FEATURE</code> · Número: <code>142</code> · Título: <code>agregar login con google</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Branch generada: <code style="color:var(--pink)">FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Se escribe <code>CLAUDE.md</code> temporal en el repo del cliente</div>
-        </div>
-        <div class="flow-output">
-          <span class="flow-output-label">Genera →</span>
-          <div class="flow-output-files">
-            <span class="file-chip chip-2">sessions/&lt;c&gt;/&lt;r&gt;/ACTIVE_CONTEXT.md</span>
-            <span class="file-chip chip-2">sessions/&lt;c&gt;/&lt;r&gt;/task-agent.md</span>
-            <span class="file-chip" style="background:#fbbf2415;color:var(--yellow)">&lt;repo&gt;/CLAUDE.md ⏱ temporal</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">Agente IA trabaja</span>
-          <span class="tag tag-cyan">Automático</span>
-        </div>
-        <p>El agente recibe instrucciones en el <code>task-agent.md</code> y ejecuta el workflow completo sin intervención manual.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">1.</span> <code>git checkout -b FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">2.</span> Implementa la tarea según el contexto del proyecto</div>
-          <div class="flow-sub"><span class="flow-sub-icon">3.</span> <code>git add -p</code> · <code>git commit -m "FEATURE-142: ..."</code> · <code>git push -u origin &lt;branch&gt;</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">4.</span> <code>gh pr create --title "[FEATURE-142] ..." --base main</code></div>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">Sesión finalizada</span>
-          <span class="tag tag-accent">Limpieza automática</span>
-        </div>
-        <p>Al salir del agente (con éxito o con error), el bloque <code>finally</code> elimina <code>CLAUDE.md</code> del repo del cliente.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si <code>CLAUDE.md</code> no existía antes: se elimina</div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si ya existía: se restaura el contenido original</div>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">cipher update</span>
-          <span class="tag tag-green">Cerrar sesión</span>
-        </div>
-        <p>El dev ejecuta <code>cipher update</code> para que cipher analice qué cambió y actualice la documentación de contexto.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si el cambio rompe una interfaz pública: genera <code>ALERT.md</code> en repos que la consumen</div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Los devs de esos repos verán la alerta al abrir su próxima sesión</div>
-        </div>
-        <div class="flow-output">
-          <span class="flow-output-label">Actualiza →</span>
-          <div class="flow-output-files">
-            <span class="file-chip chip-3">clients/&lt;c&gt;/&lt;r&gt;/*.md</span>
-            <span class="file-chip" style="background:#f8717115;color:var(--red)">&lt;repo-afectado&gt;/.cipher/ALERT.md</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- BRANCH FORMAT -->
-  <section id="branch">
-    <div class="tag tag-accent" style="margin-bottom:1.2rem">Branches</div>
-    <h2>Naming convention automático.</h2>
-    <p>El nombre de branch se genera a partir del tipo, número y título del ticket — sin que el dev tenga que pensarlo.</p>
-    <br>
-
-    <div class="branch-demo">
-      <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem">Ejemplo de branch generada</div>
-      <div class="branch-name">
-        <span class="branch-part bp-type">FEATURE</span>
-        <span class="branch-part bp-sep">-</span>
-        <span class="branch-part bp-num">142</span>
-        <span class="branch-part bp-sep">-</span>
-        <span class="branch-part bp-title">AGREGAR-LOGIN-CON-GOOGLE</span>
-      </div>
-      <div style="color:var(--muted);font-size:.82rem;">
-        <span style="color:var(--pink)">TIPO</span> ·
-        <span style="color:var(--yellow)">NÚMERO</span> ·
-        <span style="color:var(--cyan)">TÍTULO SLUGIFICADO EN MAYÚSCULAS</span>
-      </div>
-      <div class="branch-types">
-        <div class="btype btype-feature">FEATURE</div>
-        <div class="btype btype-task">TASK</div>
-        <div class="btype btype-error">ERROR</div>
-        <div class="btype btype-hotfix">HOTFIX</div>
-      </div>
-    </div>
-
-    <br>
-    <div class="card" style="border-color:var(--border)">
-      <h3>Regla de formato</h3>
-      <p style="font-family:monospace;color:var(--text);font-size:.9rem;margin-top:.5rem">
-        {TIPO}-{NUMERO}-{TITULO-SLUGIFICADO-EN-MAYUSCULAS}
-      </p>
-      <ul style="margin-top:.75rem;list-style:none;display:flex;flex-direction:column;gap:.35rem">
-        <li style="color:#94a3b8;font-size:.88rem">✓ Solo letras, números y guiones</li>
-        <li style="color:#94a3b8;font-size:.88rem">✓ Sin espacios ni caracteres especiales</li>
-        <li style="color:#94a3b8;font-size:.88rem">✓ Todo en mayúsculas</li>
-        <li style="color:#94a3b8;font-size:.88rem">✓ Generado automáticamente — no hay que escribirlo a mano</li>
+      <ul class="flow-steps">
+        <li><span class="step-num">1</span><span class="step-txt">Escanear directorio → repos <code>.git</code></span></li>
+        <li><span class="step-num">2</span><span class="step-txt">Elegir proveedor: <strong>Gemini</strong> (400k) o Claude (60k)</span></li>
+        <li><span class="step-num">3</span><span class="step-txt">Nombrar cliente</span></li>
+        <li><span class="step-num">4</span><span class="step-txt">Analizar con <strong>LLM</strong> → ARCHITECTURE · RULES · DEPS <span class="step-tag tag-llm">LLM</span></span></li>
+        <li><span class="step-num">5</span><span class="step-txt">Indexación estructural sin LLM <span class="step-tag tag-det">DET</span></span></li>
+        <li><span class="step-num">6</span><span class="step-txt">→ <code>index.json</code> + <code>graph.json</code></span></li>
       </ul>
     </div>
-  </section>
 
-  <!-- PROVIDERS -->
-  <section id="providers">
-    <div class="tag tag-green" style="margin-bottom:1.2rem">Providers</div>
-    <h2>Dos IAs, dos roles bien definidos.</h2>
-    <p>Gemini analiza y genera contexto. Claude ejecuta el desarrollo. Cada una donde rinde más.</p>
-    <br>
-    <div class="providers-grid" style="grid-template-columns:1fr 1fr">
-
-      <div class="provider-card p-gemini" style="border-width:2px">
-        <div class="provider-icon">✨</div>
-        <div class="provider-name">Gemini <span style="color:var(--muted);font-weight:400;font-size:.8rem">— análisis</span></div>
-        <div class="provider-model">gemini-2.5-flash</div>
-        <div class="provider-ctx"><strong>~400k</strong> chars de contexto</div>
-        <div class="provider-ctx" style="margin-top:.4rem;font-size:.75rem;color:var(--muted)">Lee el código fuente completo del repo y genera los 4 archivos de contexto en una sola llamada. Úsalo en <code>cipher init</code> y <code>cipher update</code>.</div>
-      </div>
-
-      <div class="provider-card p-claude" style="border-width:2px">
-        <div class="provider-icon">🤖</div>
-        <div class="provider-name">Claude <span style="color:var(--muted);font-weight:400;font-size:.8rem">— codificación</span></div>
-        <div class="provider-model">claude-sonnet-4-6</div>
-        <div class="provider-ctx"><strong>CLI agéntico</strong> real</div>
-        <div class="provider-ctx" style="margin-top:.4rem;font-size:.75rem;color:var(--muted)">Recibe el contexto vía CLAUDE.md temporal, crea la branch, implementa, hace commit y abre el PR. Úsalo con <code>cipher claude</code>.</div>
-      </div>
-
-    </div>
-
-    <br>
-    <div class="card" style="border-color:#7c6aff33">
-      <h3 style="margin-bottom:.5rem">¿Querés integrar otro provider?</h3>
-      <p style="font-size:.88rem;margin-bottom:.75rem">La arquitectura está diseñada para ser extensible. Para agregar un nuevo provider de análisis o un nuevo agente de codificación:</p>
-      <pre style="background:var(--bg3);padding:1rem;border-radius:var(--radius-sm);font-size:.82rem;overflow-x:auto;color:#94a3b8"><code style="background:transparent;color:inherit;padding:0"><span style="color:var(--muted)"># 1. Crear la clase en providers.py</span>
-<span style="color:var(--accent2)">class</span> <span style="color:var(--cyan)">MiProvider</span>:
-    <span style="color:var(--accent2)">def</span> <span style="color:var(--green)">analyze_repo</span>(self, prompt): ...
-    <span style="color:var(--accent2)">def</span> <span style="color:var(--green)">analyze_diff</span>(self, ...): ...
-
-<span style="color:var(--muted)"># 2. Registrarlo en get_analysis_provider()</span>
-<span style="color:var(--accent2)">elif</span> preferred == <span style="color:var(--green)">"mi-provider"</span>:
-    <span style="color:var(--accent2)">return</span> MiProvider(...)</code></pre>
-    </div>
-
-    <br>
-    <div class="card">
-      <h3>Configuración en <code>.cipher/config.local.json</code></h3>
-      <pre style="margin-top:.75rem;background:var(--bg3);padding:1rem;border-radius:var(--radius-sm);font-size:.82rem;overflow-x:auto;color:#94a3b8"><code style="background:transparent;color:inherit;padding:0">{
-  <span style="color:var(--accent2)">"anthropic"</span>: { <span style="color:var(--cyan)">"api_key"</span>: <span style="color:var(--green)">"sk-ant-..."</span>, <span style="color:var(--cyan)">"model"</span>: <span style="color:var(--green)">"claude-sonnet-4-6"</span> },
-  <span style="color:var(--accent2)">"google"</span>:    { <span style="color:var(--cyan)">"api_key"</span>: <span style="color:var(--green)">"AIza..."</span>,    <span style="color:var(--cyan)">"model"</span>: <span style="color:var(--green)">"gemini-2.5-flash"</span>  }
-}</code></pre>
-    </div>
-  </section>
-
-  <!-- AISLAMIENTO -->
-  <section id="aislamiento">
-    <div class="tag tag-yellow" style="margin-bottom:1.2rem">Aislamiento</div>
-    <h2>Nada permanente en repos de clientes.</h2>
-    <p>Todo el estado de cipher vive dentro del repo <code>cipher/</code>. Los repos clientes solo reciben archivos temporales durante la sesión.</p>
-    <br>
-    <div class="isolation-visual">
-
-      <div>
-        <div class="fs-tree">
-          <div class="fs-title">cipher/ — todo vive acá</div>
-          <div><span class="fs-dir">cipher/</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-dir">.cipher/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">config.json</span> <span class="fs-note">← registro de clientes</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">config.local.json</span> <span class="fs-note">← API keys (gitignored)</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">sessions/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-corp/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-api/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-generated">ACTIVE_CONTEXT.md</span> <span class="fs-note">← generado</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-generated">task-agent.md</span> <span class="fs-note">← generado</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-dir">clients/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-corp/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-api/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">ARCHITECTURE.md</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">BUSINESS_RULES.md</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">...</span></div>
-        </div>
-        <br>
-        <div class="fs-tree">
-          <div class="fs-title">acme-api/ — solo archivos temporales</div>
-          <div><span class="fs-dir">acme-api/</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-temp">CLAUDE.md</span> <span class="fs-note">← existe SOLO durante sesión</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-note">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;se borra en finally block</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-never">ACTIVE_CONTEXT.md</span> <span class="fs-note">← nunca</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-never">task-agent.md</span> <span class="fs-note">← nunca</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-file">src/</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-file">...</span></div>
+    <!-- cipher index -->
+    <div class="flow-card">
+      <div class="flow-card-header">
+        <div class="flow-card-icon" style="background:rgba(52,211,153,.12)">🔍</div>
+        <div>
+          <div class="flow-card-cmd">cipher index</div>
+          <div class="flow-card-desc">Indexa código sin LLM · extrae estructura real</div>
         </div>
       </div>
+      <ul class="flow-steps">
+        <li><span class="step-num">1</span><span class="step-txt"><strong>Python</strong> → <code>ast.parse()</code> clases, funcs, imports <span class="step-tag tag-det">DET</span></span></li>
+        <li><span class="step-num">2</span><span class="step-txt"><strong>TypeScript/JS</strong> → regex: interfaces, clases, require</span></li>
+        <li><span class="step-num">3</span><span class="step-txt"><strong>Go</strong> → FSM: structs, interfaces, funcs, import blocks</span></li>
+        <li><span class="step-num">4</span><span class="step-txt">→ <code>.cipher/index/&lt;repo&gt;/index.json</code></span></li>
+        <li><span class="step-num">5</span><span class="step-txt">→ <code>.cipher/index/&lt;repo&gt;/graph.json</code></span></li>
+      </ul>
+    </div>
 
-      <div class="isolation-rules">
-        <div class="i-rule">
-          <div class="i-rule-icon">🔒</div>
-          <div class="i-rule-body">
-            <strong>Sesiones en cipher, no en el cliente</strong>
-            <span>ACTIVE_CONTEXT.md y task-agent.md se guardan en <code>.cipher/sessions/</code> dentro del repo cipher, no en el repo del cliente.</span>
-          </div>
-        </div>
-        <div class="i-rule">
-          <div class="i-rule-icon">⏱</div>
-          <div class="i-rule-body">
-            <strong>CLAUDE.md es temporal</strong>
-            <span>Se crea justo antes de lanzar el agente y se elimina en el bloque <code>finally</code> al salir, sin importar si hubo error.</span>
-          </div>
-        </div>
-        <div class="i-rule">
-          <div class="i-rule-icon">♻️</div>
-          <div class="i-rule-body">
-            <strong>Restauración si ya existía</strong>
-            <span>Si el repo ya tenía <code>CLAUDE.md</code>, cipher guarda el contenido original y lo restaura al terminar la sesión.</span>
-          </div>
-        </div>
-        <div class="i-rule">
-          <div class="i-rule-icon">🚫</div>
-          <div class="i-rule-body">
-            <strong>API keys nunca al repo</strong>
-            <span><code>config.local.json</code> está en <code>.gitignore</code>. Las keys solo viven en local o en variables de entorno.</span>
-          </div>
-        </div>
-        <div class="i-rule">
-          <div class="i-rule-icon">📡</div>
-          <div class="i-rule-body">
-            <strong>Alertas cruzadas controladas</strong>
-            <span><code>ALERT.md</code> se escribe en <code>.cipher/</code> del repo afectado — carpeta ignorada por git del cliente, solo leída por cipher.</span>
-          </div>
+    <!-- cipher impact -->
+    <div class="flow-card">
+      <div class="flow-card-header">
+        <div class="flow-card-icon" style="background:rgba(34,211,238,.1)">⚡</div>
+        <div>
+          <div class="flow-card-cmd">cipher impact &lt;archivo&gt;</div>
+          <div class="flow-card-desc">¿Qué se rompe si cambio este archivo?</div>
         </div>
       </div>
-
+      <ul class="flow-steps">
+        <li><span class="step-num">1</span><span class="step-txt">Carga <code>graph.json</code> del repo <span class="step-tag tag-det">DET</span></span></li>
+        <li><span class="step-num">2</span><span class="step-txt">BFS sobre grafo invertido (dependents)</span></li>
+        <li><span class="step-num">3</span><span class="step-txt">Retorna <code>ImpactEntry[]</code> con depth + via-chain</span></li>
+        <li><span class="step-num">4</span><span class="step-txt">Agrupa resultado por nivel de profundidad</span></li>
+        <li><span class="step-num">5</span><span class="step-txt">Flags: <code>--depth &lt;n&gt;</code> · <code>--repo &lt;nombre&gt;</code></span></li>
+      </ul>
     </div>
-  </section>
 
-</main>
+    <!-- cipher pack -->
+    <div class="flow-card">
+      <div class="flow-card-header">
+        <div class="flow-card-icon" style="background:rgba(251,191,36,.1)">📦</div>
+        <div>
+          <div class="flow-card-cmd">cipher pack &lt;descripción&gt;</div>
+          <div class="flow-card-desc">Contexto mínimo para una tarea · sin LLM</div>
+        </div>
+      </div>
+      <ul class="flow-steps">
+        <li><span class="step-num">1</span><span class="step-txt"><strong>Scorer léxico</strong>: path +2 · símbolo +1 · inbound +0.5 <span class="step-tag tag-det">DET</span></span></li>
+        <li><span class="step-num">2</span><span class="step-txt">Selecciona top archivos como <strong>target</strong></span></li>
+        <li><span class="step-num">3</span><span class="step-txt">Expande <strong>dependencies</strong> via grafo</span></li>
+        <li><span class="step-num">4</span><span class="step-txt">Budget: 60k Claude · 400k Gemini · trim por newline</span></li>
+        <li><span class="step-num">5</span><span class="step-txt">→ <code>context_pack.md</code> + <code>context_manifest.json</code></span></li>
+      </ul>
+    </div>
 
-<footer>
-  <p>cipher — sistema de contexto persistente para agentes IA</p>
-  <p style="margin-top:.4rem">MIT License · <a href="https://github.com/tu-org/cipher">github.com/tu-org/cipher</a></p>
-</footer>
+    <!-- cipher task -->
+    <div class="flow-card" style="border-color: rgba(124,106,255,.3)">
+      <div class="flow-card-header">
+        <div class="flow-card-icon" style="background:rgba(124,106,255,.2)">🎯</div>
+        <div>
+          <div class="flow-card-cmd">cipher task &lt;descripción&gt;</div>
+          <div class="flow-card-desc">Task formalizada → intent → pack → agente</div>
+        </div>
+      </div>
+      <ul class="flow-steps">
+        <li><span class="step-num">1</span><span class="step-txt">Fetch ticket: <strong>Manual</strong> · <strong>GitHub</strong> · <strong>Linear</strong> <span class="step-tag tag-det">DET</span></span></li>
+        <li><span class="step-num">2</span><span class="step-txt">Crea <code>task.json</code> · detecta tipo HOTFIX/BUG/FEATURE/TASK</span></li>
+        <li><span class="step-num">3</span><span class="step-txt">PackBuilder → <code>context_pack.md</code></span></li>
+        <li><span class="step-num">4</span><span class="step-txt">AuditWriter → <code>CONTEXT_MANIFEST.json</code> + <code>audit_log.jsonl</code></span></li>
+        <li><span class="step-num">5</span><span class="step-txt">TaskAnalyzer → <code>task_intent.json</code> (files · constraints)</span></li>
+        <li><span class="step-num">6</span><span class="step-txt">Lanza agente con pack + intent <span class="step-tag tag-llm">LLM</span></span></li>
+      </ul>
+    </div>
 
-<script>
-  function showCmd(id) {
-    document.querySelectorAll('.cmd-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.cmd-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('cmd-' + id).classList.add('active');
-    event.target.classList.add('active');
-  }
-</script>
+    <!-- cipher audit -->
+    <div class="flow-card">
+      <div class="flow-card-header">
+        <div class="flow-card-icon" style="background:rgba(248,113,113,.1)">🔎</div>
+        <div>
+          <div class="flow-card-cmd">cipher audit</div>
+          <div class="flow-card-desc">Trazabilidad completa · ¿qué vio la IA?</div>
+        </div>
+      </div>
+      <ul class="flow-steps">
+        <li><span class="step-num">1</span><span class="step-txt">Lee <code>audit_log.jsonl</code> (append-only) <span class="step-tag tag-det">DET</span></span></li>
+        <li><span class="step-num">2</span><span class="step-txt">Filtra: <code>--repo</code> · <code>--client</code> · <code>--since</code> · <code>--result</code></span></li>
+        <li><span class="step-num">3</span><span class="step-txt"><code>cipher audit &lt;task_id&gt;</code> → detalle + PR comment preview</span></li>
+        <li><span class="step-num">4</span><span class="step-txt"><code>--stats</code> → tokens totales · por repo · por resultado</span></li>
+        <li><span class="step-num">5</span><span class="step-txt"><code>--pr &lt;task_id&gt; &lt;url&gt;</code> → registra PR en manifest + log</span></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ─── SCORER ───────────────────────────────────────────── -->
+  <h2>Scoring léxico (sin LLM)</h2>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Usado por <code style="color:var(--cyan)">cipher pack</code> y <code style="color:var(--cyan)">cipher task</code> para encontrar archivos relevantes.</p>
+
+  <div class="scorer-grid">
+    <div class="scorer-card">
+      <div class="scorer-val">+2.0</div>
+      <div class="scorer-label">Palabra de la tarea en el <strong>path</strong> del archivo</div>
+    </div>
+    <div class="scorer-card">
+      <div class="scorer-val">+1.0</div>
+      <div class="scorer-label">Palabra en nombre de <strong>símbolo</strong> (clase/función)</div>
+    </div>
+    <div class="scorer-card">
+      <div class="scorer-val">+0.5</div>
+      <div class="scorer-label">Archivo <strong>muy importado</strong> (top 20%, mín. 3 inbound)</div>
+    </div>
+    <div class="scorer-card">
+      <div class="scorer-val">+0.3</div>
+      <div class="scorer-label">Archivo tiene <strong>símbolos</strong> definidos (no solo imports)</div>
+    </div>
+  </div>
+
+  <!-- ─── TASK TYPE DETECTION ──────────────────────────────── -->
+  <h2>Detección automática de tipo de tarea</h2>
+
+  <div class="type-detect">
+    <div class="type-card" style="border-color:rgba(248,113,113,.3)">
+      <div class="type-name" style="color:var(--red)">HOTFIX</div>
+      <div class="type-kw"><span>hotfix</span> · <span>critical</span><br><span>urgent</span> · <span>p0</span> · <span>sev0</span><br><span>production</span> · <span>prod bug</span></div>
+    </div>
+    <div class="type-card" style="border-color:rgba(251,191,36,.3)">
+      <div class="type-name" style="color:var(--yellow)">BUG</div>
+      <div class="type-kw"><span>bug</span> · <span>fix</span> · <span>error</span><br><span>crash</span> · <span>falla</span> · <span>broken</span><br><span>regression</span> · <span>exception</span></div>
+    </div>
+    <div class="type-card" style="border-color:rgba(52,211,153,.3)">
+      <div class="type-name" style="color:var(--green)">FEATURE</div>
+      <div class="type-kw"><span>add</span> · <span>new</span> · <span>implement</span><br><span>create</span> · <span>feature</span> · <span>soporte</span><br><span>agregar</span> · <span>nuevo</span></div>
+    </div>
+    <div class="type-card" style="border-color:rgba(100,116,139,.3)">
+      <div class="type-name" style="color:var(--muted)">TASK</div>
+      <div class="type-kw">default cuando no<br>hay match con<br>los patrones anteriores</div>
+    </div>
+  </div>
+
+  <!-- ─── BUDGET ───────────────────────────────────────────── -->
+  <h2>Token Budget Manager</h2>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">El pack prioriza y recorta contenido para no superar el límite del modelo.</p>
+
+  <div class="budget-row">
+    <div class="budget-card">
+      <div class="budget-prov">Claude</div>
+      <div class="budget-tokens">60,000</div>
+      <div class="budget-sub">tokens</div>
+      <div class="budget-bar">
+        <div class="budget-seg" style="width:90%;background:var(--cyan)"></div>
+        <div class="budget-seg" style="width:5%;background:var(--accent2)"></div>
+        <div class="budget-seg" style="width:5%;background:var(--green)"></div>
+      </div>
+      <div style="display:flex;gap:.5rem;font-size:.72rem;color:var(--muted);justify-content:center">
+        <span style="color:var(--cyan)">■ 90% archivos</span>
+        <span style="color:var(--accent2)">■ 5% rules</span>
+        <span style="color:var(--green)">■ 5% arch</span>
+      </div>
+    </div>
+    <div class="budget-card">
+      <div class="budget-prov">Gemini</div>
+      <div class="budget-tokens">400,000</div>
+      <div class="budget-sub">tokens</div>
+      <div class="budget-bar">
+        <div class="budget-seg" style="width:90%;background:var(--cyan)"></div>
+        <div class="budget-seg" style="width:5%;background:var(--accent2)"></div>
+        <div class="budget-seg" style="width:5%;background:var(--green)"></div>
+      </div>
+      <div style="display:flex;gap:.5rem;font-size:.72rem;color:var(--muted);justify-content:center">
+        <span style="color:var(--cyan)">■ 90% archivos</span>
+        <span style="color:var(--accent2)">■ 5% rules</span>
+        <span style="color:var(--green)">■ 5% arch</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── FILE TREE ─────────────────────────────────────────── -->
+  <h2 id="files">Estructura de archivos</h2>
+
+  <div class="file-tree">
+    <div><span class="ft-dir">.cipher/</span></div>
+    <div>&nbsp;&nbsp;<span class="ft-file">config.json</span>  <span class="ft-cm">← clientes + repos registrados</span></div>
+    <div>&nbsp;&nbsp;<span class="ft-file">config.local.json</span>  <span class="ft-cm">← API keys (gitignored)</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">index/&lt;repo&gt;/</span>  <span class="ft-cm">← generado por cipher index</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-det">index.json</span>  <span class="ft-cm">✓ DETERMINÍSTICO — símbolos + imports</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-det">graph.json</span>  <span class="ft-cm">✓ DETERMINÍSTICO — nodos + aristas</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">packs/&lt;repo&gt;/&lt;task_id&gt;_&lt;slug&gt;/</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-det">context_pack.md</span>  <span class="ft-cm">← contexto recortado por budget</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-det">context_manifest.json</span>  <span class="ft-cm">← hash + tokens + files</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">tasks/&lt;client&gt;/&lt;repo&gt;/&lt;task_id&gt;/</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-det">task.json</span>  <span class="ft-cm">← PENDING → IN_PROGRESS → DONE | FAILED</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-det">task_intent.json</span>  <span class="ft-cm">← files_to_modify · constraints</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">sessions/&lt;client&gt;/&lt;repo&gt;/&lt;task_id&gt;/</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-det">CONTEXT_MANIFEST.json</span>  <span class="ft-cm">← qué vio la IA (F5 — trazabilidad)</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">audit/</span>  <span class="ft-cm" id="audit">← historial append-only</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-det">audit_log.jsonl</span>  <span class="ft-cm">← una línea JSON por sesión</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">clients/&lt;client&gt;/&lt;repo&gt;/</span>  <span class="ft-cm">← generado por cipher init con LLM</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-llm">ARCHITECTURE.md</span>  <span class="ft-cm">⚠️ DRAFT — no es verdad estructural</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-llm">BUSINESS_RULES.md</span>  <span class="ft-cm">⚠️ DRAFT</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-llm">DEPENDENCIES.md</span>  <span class="ft-cm">⚠️ DRAFT</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-llm">RISK_MATRIX.md</span>  <span class="ft-cm">⚠️ DRAFT</span></div>
+  </div>
+
+  <!-- ─── CMD TABLE ─────────────────────────────────────────── -->
+  <h2>Tabla de comandos</h2>
+
+  <table class="cmd-table">
+    <thead>
+      <tr>
+        <th>Comando</th>
+        <th>Descripción</th>
+        <th>Usa LLM</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>cipher init</td>
+        <td>Registra repos y genera contexto inicial con análisis LLM + indexación determinística</td>
+        <td><span class="badge-llm">Sí</span></td>
+      </tr>
+      <tr>
+        <td>cipher index</td>
+        <td>Indexa código: extrae símbolos, imports y construye el grafo de dependencias</td>
+        <td><span class="badge-no">No</span></td>
+      </tr>
+      <tr>
+        <td>cipher impact &lt;file&gt;</td>
+        <td>Calcula qué archivos se ven afectados si cambia un archivo (BFS sobre grafo)</td>
+        <td><span class="badge-no">No</span></td>
+      </tr>
+      <tr>
+        <td>cipher pack &lt;desc&gt;</td>
+        <td>Genera el contexto mínimo para una tarea: scorer + expansión + budget manager</td>
+        <td><span class="badge-no">No</span></td>
+      </tr>
+      <tr>
+        <td>cipher task &lt;desc&gt;</td>
+        <td>Task formalizada: fetch ticket → pack → intent → manifest → lanza agente</td>
+        <td><span class="badge-llm">Solo agente</span></td>
+      </tr>
+      <tr>
+        <td>cipher task --from-gh</td>
+        <td>Importa issue de GitHub vía REST API (requiere GITHUB_TOKEN para repos privados)</td>
+        <td><span class="badge-no">No</span></td>
+      </tr>
+      <tr>
+        <td>cipher task --from-linear</td>
+        <td>Importa ticket de Linear vía GraphQL API (requiere LINEAR_API_KEY)</td>
+        <td><span class="badge-no">No</span></td>
+      </tr>
+      <tr>
+        <td>cipher audit</td>
+        <td>Historial de sesiones IA con filtros, stats y generación de PR comment</td>
+        <td><span class="badge-no">No</span></td>
+      </tr>
+      <tr>
+        <td>cipher claude</td>
+        <td>Sesión directa con contexto ensamblado por capas + session manifest</td>
+        <td><span class="badge-llm">Solo agente</span></td>
+      </tr>
+      <tr>
+        <td>cipher update</td>
+        <td>Actualiza contexto después de un cambio analizando el git diff</td>
+        <td><span class="badge-llm">Sí</span></td>
+      </tr>
+      <tr>
+        <td>cipher status</td>
+        <td>Muestra estado del contexto, cliente y repo activos</td>
+        <td><span class="badge-no">No</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ─── PRINCIPLE ─────────────────────────────────────────── -->
+  <div class="principle">
+    <p>Principio rector</p>
+    <div class="formula">
+      <span class="formula-part fp-det">estructura determinística</span>
+      <span class="formula-arrow">→</span>
+      <span class="formula-part fp-ctx">selección de contexto</span>
+      <span class="formula-arrow">→</span>
+      <span class="formula-part fp-ai">IA</span>
+      <span class="formula-arrow">→</span>
+      <span class="formula-part fp-trace">trazabilidad</span>
+    </div>
+  </div>
+
+</div>
 </body>
 </html>
