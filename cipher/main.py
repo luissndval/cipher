@@ -25,8 +25,10 @@ def _relaunch_with_winpty():
     if not winpty:
         return
 
+    import subprocess
     os.environ["CIPHER_WINPTY"] = "1"
-    os.execvp(winpty, [winpty, sys.executable] + sys.argv)
+    result = subprocess.run([winpty, sys.executable] + sys.argv, env=os.environ)
+    sys.exit(result.returncode)
 
 
 _relaunch_with_winpty()
