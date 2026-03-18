@@ -145,7 +145,8 @@ def _interactive_mode(args: list):
     if not repo_name:
         repo_name = _detect_repo_name(loader)
     if not repo_name:
-        print(f"{RED}✗ No se pudo detectar el repo. Usá --repo <nombre>.{NC}")
+        repo_name = _pick_repo(loader)
+    if not repo_name:
         return
 
     index_path = os.path.join(loader.cipher_dir, ".cipher", "index", repo_name, "index.json")
@@ -241,6 +242,57 @@ def _fuzzy_pick(query: str, graph: DependencyGraph, repo_name: str) -> str | Non
     except ValueError:
         print(f"{RED}✗ Ingresá un número.{NC}")
         return None
+
+
+def _pick_repo(loader: ContextLoader) -> str | None:
+    """Lista todos los repos indexados y deja elegir uno interactivamente."""
+    cipher_index_dir = os.path.join(loader.cipher_dir, ".cipher", "index")
+    repos = []
+
+    # Repos con grafo ya construido
+    if os.path.isdir(cipher_index_dir):
+        for name in sorted(os.listdir(cipher_index_dir)):
+            graph_path = os.path.join(cipher_index_dir, name, "graph.json")
+            if os.path.exists(graph_path):
+                repos.append(name)
+
+    if not repos:
+        print(f"{RED}✗ No hay repos indexados. Ejecutá: cipher index{NC}")
+        return None
+
+    if len(repos) == 1:
+        print(f"  {YELLOW}→ Repo:{NC} {CYAN}{repos[0]}{NC}")
+        return repos[0]
+
+    print(f"\n  {BLUE}Repos disponibles:{NC}\n")
+    for i, name in enumerate(repos, 1):
+        print(f"  {YELLOW}{i:>3}{NC}. {CYAN}{name}{NC}")
+    print()
+
+    try:
+        raw = input(f"  Elegí un repo (número o nombre, Enter para cancelar): ").strip()
+    except (KeyboardInterrupt, EOFError):
+        print()
+        return None
+
+    if not raw:
+        return None
+
+    # Por número
+    try:
+        idx = int(raw) - 1
+        if 0 <= idx < len(repos):
+            return repos[idx]
+    except ValueError:
+        pass
+
+    # Por nombre (case-insensitive)
+    for name in repos:
+        if name.lower() == raw.lower():
+            return name
+
+    print(f"{RED}✗ Repo no encontrado: '{raw}'{NC}")
+    return None
 
 
 def _looks_like_repo_name(s: str) -> bool:
