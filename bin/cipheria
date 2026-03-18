@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+export CIPHER_PATH="/c/Users/LuisSandoval/PycharmProjects/lore"
+python3 "/c/Users/LuisSandoval/PycharmProjects/lore/cipher/main.py" "$@"

@@ -211,7 +211,7 @@ class InteractiveSession:
 
     def _header(self):
         print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-        print(f"║      cipher impact — modo interactivo     ║")
+        print(f"║    cipheria impact — modo interactivo     ║")
         print(f"╚══════════════════════════════════════════╝{NC}")
         print(f"\n  Repo: {CYAN}{self.repo_name}{NC}"
               f"  ({self.graph.node_count} archivos · {self.graph.edge_count} aristas)\n")

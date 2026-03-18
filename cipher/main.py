@@ -31,28 +31,28 @@ from cipher.commands.audit import cmd_audit
 
 BANNER = f"""
 \033[34m╔══════════════════════════════════════════╗
-║             cipher  v{VERSION:<19}║
+║           cipheria  v{VERSION:<18}║
 ║     Memoria persistente para agentes IA  ║
 ╚══════════════════════════════════════════╝\033[0m
 """
 
 HELP = """
 Comandos:
-  cipher init       Onboarding: escanea repos y genera contexto con IA
-  cipher claude     Abre sesión de desarrollo con Claude Code
-  cipher update     Actualiza contexto después de un cambio
-  cipher status     Muestra estado del contexto actual
-  cipher index      Genera índice estructural del repo (sin LLM)
-  cipher impact     Muestra qué archivos se ven afectados por un cambio
-  cipher pack       Genera el context pack mínimo para una tarea
-  cipher task       Crea una task, genera intent y lanza el agente
-  cipher audit      Historial de auditoría de sesiones IA
+  cipheria init       Onboarding: escanea repos y genera contexto con IA
+  cipheria claude     Abre sesión de desarrollo con Claude Code
+  cipheria update     Actualiza contexto después de un cambio
+  cipheria status     Muestra estado del contexto actual
+  cipheria index      Genera índice estructural del repo (sin LLM)
+  cipheria impact     Muestra qué archivos se ven afectados por un cambio
+  cipheria pack       Genera el context pack mínimo para una tarea
+  cipheria task       Crea una task, genera intent y lanza el agente
+  cipheria audit      Historial de auditoría de sesiones IA
 
 Ejemplos:
   cd /proyectos/cliente-xyz
-  cipher init
+  cipheria init
 
-  cipher claude
+  cipheria claude
 
   cipher update
 """
