@@ -162,6 +162,11 @@ def _interactive_mode(args: list):
     repo_index = RepoIndexer.load(index_path)
     graph = GraphBuilder.load(graph_path)
 
+    if graph.node_count == 0:
+        print(f"{RED}✗ El índice de '{repo_name}' está vacío (0 archivos).{NC}")
+        print(f"  Ejecutá {YELLOW}cipher index{NC} dentro del repo para indexarlo.")
+        return
+
     from cipher.interactive.prompt import InteractiveSession
     InteractiveSession(repo_index, graph, repo_name, max_depth).run()
 
