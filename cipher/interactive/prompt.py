@@ -23,17 +23,30 @@ from cipher.interactive.searcher import ContextSearcher, SearchResult
 from cipher.graph.schema import DependencyGraph
 from cipher.index.schema import RepoIndex
 
-try:
+def _pt_available() -> bool:
+    """
+    True si prompt_toolkit puede usarse con el terminal actual.
+    - Linux / macOS: siempre sí
+    - Windows Terminal / PowerShell / cmd: sí (tienen Win32 console)
+    - Git Bash / mintty: NO (mintty no tiene Win32 console API)
+    """
+    if sys.platform == "win32" and os.environ.get("MSYSTEM"):
+        return False  # Git Bash / mintty
+    try:
+        from prompt_toolkit import PromptSession  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+_USE_PT = _pt_available()
+
+_PT_STYLE = None
+if _USE_PT:
     from prompt_toolkit import PromptSession
     from prompt_toolkit.shortcuts.prompt import CompleteStyle
     from prompt_toolkit.styles import Style
     from cipher.interactive.completer import AtMentionCompleter
-    _PT = True
-except ImportError:
-    _PT = False
-
-_PT_STYLE = None
-if _PT:
     _PT_STYLE = Style.from_dict({
         "completion-menu.completion":              "bg:#1e3a5f #aaccff",
         "completion-menu.completion.current":      "bg:#2255aa #ffffff bold",
@@ -42,7 +55,7 @@ if _PT:
     })
 
 
-def _make_pt_session(completer) -> "PromptSession":
+def _make_pt_session(completer):
     """Crea PromptSession con autocompletado de @menciones."""
     return PromptSession(
         completer=completer,
@@ -88,7 +101,7 @@ class InteractiveSession:
 
         # PromptSession con autocompletado de @menciones
         session = None
-        if _PT:
+        if _USE_PT:
             try:
                 session = _make_pt_session(AtMentionCompleter(self.searcher))
             except Exception:
@@ -205,6 +218,8 @@ class InteractiveSession:
         print(f"  {DIM}Escribí tu intención o usá {NC}{YELLOW}@nombre{NC}{DIM} para buscar archivos.")
         print(f"  {NC}{YELLOW}/list{NC}{DIM} → ver selección · {NC}{YELLOW}/cls{NC}{DIM} → limpiar · "
               f"{NC}{YELLOW}Enter{NC}{DIM} (con archivos) → ejecutar{NC}")
+        if not _USE_PT:
+            print(f"  {DIM}(autocompletado en tiempo real disponible en Windows Terminal, Linux y macOS){NC}")
 
     def _show_selected(self):
         if not self.selected:

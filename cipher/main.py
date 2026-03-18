@@ -8,30 +8,6 @@ import sys
 import os
 
 
-def _relaunch_with_winpty():
-    """
-    En Git Bash (mintty), prompt_toolkit necesita winpty para control de terminal.
-    Si detectamos mintty y winpty está disponible, relanzamos automáticamente.
-    """
-    if sys.platform != "win32":
-        return
-    if "CIPHER_WINPTY" in os.environ:
-        return  # ya fuimos relanzados, evitar loop
-    if not os.environ.get("MSYSTEM"):
-        return  # no es Git Bash
-
-    import shutil
-    winpty = shutil.which("winpty")
-    if not winpty:
-        return
-
-    import subprocess
-    os.environ["CIPHER_WINPTY"] = "1"
-    result = subprocess.run([winpty, sys.executable] + sys.argv, env=os.environ)
-    sys.exit(result.returncode)
-
-
-_relaunch_with_winpty()
 
 # Fix encoding on Windows consoles (cp1252 → utf-8)
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
