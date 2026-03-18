@@ -166,7 +166,8 @@ def _add_to_path_windows(bin_dir: str):
             import ctypes
             ctypes.windll.user32.SendMessageW(0xFFFF, 0x001A, 0, "Environment")
             ok(f"PATH actualizado permanentemente ({bin_dir})")
-            warn("Reiniciá PowerShell/CMD para que tome efecto")
+            print(f"\n  Para aplicarlo {YELLOW}sin reiniciar{NC} PowerShell, ejecutá:")
+            print(f'  {YELLOW}$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","User") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","Machine"){NC}\n')
         else:
             ok("PATH ya contiene el directorio bin/")
     except Exception as e:
