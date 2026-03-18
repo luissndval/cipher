@@ -7,6 +7,12 @@ Uso: cipher <comando> [opciones]
 import sys
 import os
 
+# Fix encoding on Windows consoles (cp1252 → utf-8)
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if sys.stderr.encoding and sys.stderr.encoding.lower() != "utf-8":
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Agregar el directorio padre al path para que los imports del paquete funcionen
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
