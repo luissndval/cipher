@@ -113,7 +113,7 @@ class PackBuilder:
             brain_version=BRAIN_VERSION,
             provider=provider,
             token_budget=budget.total,
-            tokens_used=budget.used,
+            tokens_used=sum(e.tokens for e in entries),
             files_included=[e.to_dict() for e in entries],
             context_pack_hash=pack_hash,
         )

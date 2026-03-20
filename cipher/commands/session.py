@@ -10,6 +10,7 @@ from datetime import datetime
 from cipher.core.loader import ContextLoader
 from cipher.memory.session import SessionStore
 from cipher.agents.launcher import launch_agent
+from cipher.core.paths import resolve_repo_path
 
 GREEN  = '\033[0;32m'
 YELLOW = '\033[1;33m'
@@ -30,7 +31,7 @@ def cmd_session(agent: str, args: list):
     """Punto de entrada para cipher claude."""
 
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-    print(f"║     cipher {agent:<10} — Iniciando sesión  ║")
+    print(f"║  cipheria {agent:<10} — Iniciando sesión  ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
 
     try:
@@ -99,8 +100,8 @@ def _select_client_project(loader: ContextLoader) -> tuple:
     clients = loader.config.get("clients", {})
 
     if not clients:
-        print(f"{YELLOW}⚠ No hay clientes registrados en cipher.{NC}")
-        answer = input("  ¿Registrar un proyecto ahora con 'cipher init'? [S/n]: ").strip().lower()
+        print(f"{YELLOW}⚠ No hay clientes registrados en cipheria.{NC}")
+        answer = input("  ¿Registrar un proyecto ahora con 'cipheria init'? [S/n]: ").strip().lower()
         if answer in ["", "s", "si", "y"]:
             from cipher.commands.init import cmd_init
             cmd_init(args=[])
@@ -112,10 +113,13 @@ def _select_client_project(loader: ContextLoader) -> tuple:
     for client_name, client_data in clients.items():
         repos = client_data.get("repos", {}) if isinstance(client_data, dict) else {}
         for repo_key, repo_data in repos.items():
+            rpath = resolve_repo_path(client_data, repo_key, repo_data) if isinstance(repo_data, dict) else None
+            if isinstance(repo_data, dict) and rpath:
+                repo_data = {**repo_data, "path": rpath}  # inyectar path resuelto
             options.append((client_name, repo_key, repo_data))
 
     if not options:
-        print(f"{RED}✗ No hay repos registrados. Ejecutá 'cipher init' primero.{NC}")
+        print(f"{RED}✗ No hay repos registrados. Ejecutá 'cipheria init' primero.{NC}")
         return None, None
 
     print(f"\n  {YELLOW}▸ Repos registrados:{NC}")
@@ -246,7 +250,7 @@ gh pr create \\
 ```
 
 ### PASO 5 — Cerrar sesión
-Ejecutá `cipher update` para actualizar el contexto con los cambios realizados.
+Ejecutá `cipheria update` para actualizar el contexto con los cambios realizados.
 
 ## Estado
 - [ ] Branch creada

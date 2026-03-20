@@ -22,7 +22,7 @@ NC     = '\033[0m'
 
 def cmd_update(args: list):
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-    print(f"║       cipher update — Actualizar contexto  ║")
+    print(f"║     cipheria update — Actualizar contexto  ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
 
     try:
@@ -33,8 +33,8 @@ def cmd_update(args: list):
 
     client, project = loader.resolve_project()
     if not client:
-        print(f"{RED}✗ Este repo no está registrado en cipher.{NC}")
-        print(f"  Ejecutá 'cipher init' primero.")
+        print(f"{RED}✗ Este repo no está registrado en cipheria.{NC}")
+        print(f"  Ejecutá 'cipheria init' primero.")
         return
 
     print(f"  Repo    : {CYAN}{loader.repo_name}{NC}")
@@ -195,11 +195,11 @@ def _generate_alerts(loader, client: str, cross_impact: list, alert_content: str
         with open(alert_path, "w") as f:
             f.write(
                 f"# ⚠️ ALERT — Impacto detectado\n"
-                f"> Generado por cipher | {now}\n"
+                f"> Generado por cipheria | {now}\n"
                 f"> **Origen:** {loader.repo_name} | **Cliente:** {client}\n\n"
                 f"{alert_content}\n\n---\n"
-                f"> Ejecutá `cipher status` para ver el contexto completo actualizado.\n"
-                f"> Al resolver este impacto, ejecutá `cipher update` en este repo.\n"
+                f"> Ejecutá `cipheria status` para ver el contexto completo actualizado.\n"
+                f"> Al resolver este impacto, ejecutá `cipheria update` en este repo.\n"
             )
         print(f"  {GREEN}✓ ALERT.md generado en {affected_repo}{NC}")
         owner = repo_data.get("owner", "")

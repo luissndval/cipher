@@ -1,6 +1,6 @@
 """
-cipher pack — Genera el context pack para una tarea.
-Uso: cipher pack <descripción de tarea> [--repo <nombre>] [--provider <claude|gemini>]
+cipheria pack — Genera el context pack para una tarea.
+Uso: cipheria pack <descripción de tarea> [--repo <nombre>] [--provider <claude|gemini>]
 """
 
 import os
@@ -43,11 +43,11 @@ def cmd_pack(args: list):
             i += 1
 
     if not task_description:
-        print(f"{RED}Uso: cipher pack <descripción de tarea> [--repo <nombre>] [--provider claude|gemini]{NC}")
+        print(f"{RED}Uso: cipheria pack <descripción de tarea> [--repo <nombre>] [--provider claude|gemini]{NC}")
         return
 
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-    print(f"║          cipher pack                      ║")
+    print(f"║          cipheria pack                      ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
     print(f"  Task    : {task_description}")
     print(f"  Provider: {provider}\n")

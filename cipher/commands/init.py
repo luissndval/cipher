@@ -31,7 +31,7 @@ def cmd_init(args: list):
     scan_path = os.path.abspath(scan_path)
 
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-    print(f"║          cipher init — Onboarding         ║")
+    print(f"║        cipheria init — Onboarding         ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
     print(f"  Escaneando: {scan_path}\n")
 
@@ -134,7 +134,7 @@ def cmd_init(args: list):
     print(f"  Repos   : {len(selected_repos)}")
     print(f"  Contexto: {client_dir}")
     print(f"\n  Próximo paso:")
-    print(f"  {YELLOW}cipher claude{NC}   → iniciar sesión de desarrollo\n")
+    print(f"  {YELLOW}cipheria claude{NC}   → iniciar sesión de desarrollo\n")
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -47,8 +47,41 @@ class ContextLoader:
         config_path = os.path.join(self.cipher_dir, ".cipher", "config.json")
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"✗ No se encontró config.json en {config_path}")
-        with open(config_path) as f:
-            return json.load(f)
+        with open(config_path, encoding="utf-8") as f:
+            config = json.load(f)
+
+        # Fusionar config.local.json — agrega paths locales sin commitearlos
+        local_path = os.path.join(self.cipher_dir, ".cipher", "config.local.json")
+        if os.path.exists(local_path):
+            try:
+                with open(local_path, encoding="utf-8") as f:
+                    local = json.load(f)
+                self._merge_local(config, local)
+            except Exception:
+                pass
+
+        return config
+
+    @staticmethod
+    def _merge_local(config: dict, local: dict):
+        """
+        Fusiona config.local.json sobre config.json.
+        Solo aplica paths de repos — no sobreescribe estructura ni dependencias.
+        """
+        for client_name, local_client in local.get("clients", {}).items():
+            if not isinstance(local_client, dict):
+                continue
+            cfg_client = config.setdefault("clients", {}).setdefault(client_name, {})
+            # repos_base local sobreescribe al del config base
+            if "repos_base" in local_client:
+                cfg_client["repos_base"] = local_client["repos_base"]
+            # paths por repo
+            for repo_key, local_repo in local_client.get("repos", {}).items():
+                if not isinstance(local_repo, dict):
+                    continue
+                cfg_repo = cfg_client.setdefault("repos", {}).setdefault(repo_key, {})
+                if "path" in local_repo:
+                    cfg_repo["path"] = local_repo["path"]
 
     def _detect_repo_name(self) -> str:
         try:

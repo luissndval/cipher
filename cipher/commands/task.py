@@ -92,7 +92,7 @@ def cmd_task(args: list):
 
     # ── Obtener ticket ──────────────────────────────────────────────────────
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-    print(f"║          cipher task                      ║")
+    print(f"║         cipheria task                     ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
 
     raw = _fetch_ticket(from_gh, from_linear, description)
@@ -113,8 +113,9 @@ def cmd_task(args: list):
     # ── Resolver repo ───────────────────────────────────────────────────────
     repo_path, resolved_name, client_name = _resolve_repo(loader, repo_name)
     if not repo_path:
-        print(f"{RED}✗ No se pudo detectar el repo. Usá --repo <nombre>.{NC}")
-        return
+        repo_path, resolved_name, client_name = _select_repo_interactive(loader)
+        if not repo_path:
+            return
 
     if not resolved_name:
         resolved_name = os.path.basename(repo_path)
@@ -274,7 +275,8 @@ def cmd_task(args: list):
     store.update_status(task, TaskStatus.IN_PROGRESS.value)
     try:
         from cipher.agents.launcher import launch_agent
-        launch_agent("claude", md_path, intent_path, repo_path)
+        branch = raw.extra.get("branch", "") if raw and raw.extra else ""
+        launch_agent("claude", md_path, intent_path, repo_path, branch=branch)
         store.update_status(task, TaskStatus.DONE.value)
         audit.update_entry(context_manifest.manifest_id, result="done")
         audit.update_manifest(context_manifest, result="done")
@@ -385,11 +387,20 @@ def _fetch_ticket(from_gh, from_linear, description):
             print(f"{RED}✗ {e}{NC}")
             return None
     if description:
+        # Si el argumento es un archivo .md, leerlo como fuente de la task
+        if description.endswith(".md"):
+            try:
+                from cipher.tasks.sources.markdown import MarkdownSource
+                return MarkdownSource().fetch(description)
+            except ValueError as e:
+                print(f"{RED}✗ {e}{NC}")
+                return None
         return ManualSource().fetch(description)
     return None
 
 
 def _resolve_repo(loader, repo_name_hint):
+    from cipher.core.paths import resolve_repo_path
     cwd = os.getcwd().replace("\\", "/")
     config = loader.config
     for client_name, client_data in config.get("clients", {}).items():
@@ -398,16 +409,47 @@ def _resolve_repo(loader, repo_name_hint):
         for rname, rinfo in client_data.get("repos", {}).items():
             if not isinstance(rinfo, dict):
                 continue
-            rpath = rinfo.get("path", "").replace("\\", "/")
+            rpath = resolve_repo_path(client_data, rname, rinfo)
             if not rpath:
                 continue
-            if cwd.startswith(rpath):
+            rpath_norm = rpath.replace("\\", "/")
+            if cwd.startswith(rpath_norm):
                 return rpath, rname, client_name
             if repo_name_hint and rname == repo_name_hint:
                 return rpath, rname, client_name
     if not config.get("clients"):
         return os.getcwd(), os.path.basename(os.getcwd()), None
     return None, None, None
+
+
+def _select_repo_interactive(loader) -> tuple:
+    """Muestra menú de repos registrados cuando no se detecta el repo por CWD."""
+    from cipher.core.paths import resolve_repo_path
+    options = []
+    for client_name, client_data in loader.config.get("clients", {}).items():
+        if not isinstance(client_data, dict):
+            continue
+        for rname, rinfo in client_data.get("repos", {}).items():
+            if not isinstance(rinfo, dict):
+                continue
+            rpath = resolve_repo_path(client_data, rname, rinfo)
+            if rpath:
+                options.append((client_name, rname, rpath))
+
+    if not options:
+        print(f"{RED}✗ No hay repos registrados. Ejecutá 'cipheria init' primero.{NC}")
+        return None, None, None
+
+    print(f"\n  {YELLOW}▸ No se detectó el repo por CWD. Repos disponibles:{NC}")
+    for i, (client_name, rname, rpath) in enumerate(options, 1):
+        print(f"  {i}. {CYAN}{client_name}/{rname}{NC}  ({rpath})")
+
+    while True:
+        choice = input(f"\n  Seleccioná el repo [1-{len(options)}]: ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(options):
+            client_name, rname, rpath = options[int(choice) - 1]
+            return rpath, rname, client_name
+        print(f"  {RED}Opción inválida.{NC}")
 
 
 def _index_client_repos(loader, client_name: str, current_repo_path: str, current_repo_name: str) -> dict:

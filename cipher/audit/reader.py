@@ -8,6 +8,7 @@ import os
 from datetime import datetime, timezone
 
 from cipher.audit.schema import AuditEntry, ContextManifest
+from cipher.core.paths import to_abs
 
 
 class AuditReader:
@@ -63,11 +64,16 @@ class AuditReader:
 
     def load_manifest(self, manifest_path: str) -> ContextManifest | None:
         """Carga el ContextManifest completo desde disco."""
-        if not manifest_path or not os.path.exists(manifest_path):
+        # Resolver relativo → absoluto (retrocompatible con JSONs viejos que ya son absolutos)
+        abs_path = to_abs(manifest_path, self.cipher_dir)
+        if not abs_path or not os.path.exists(abs_path):
             return None
         try:
-            with open(manifest_path, "r", encoding="utf-8") as f:
-                return ContextManifest.from_dict(json.load(f))
+            with open(abs_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            # Restaurar manifest_path como absoluto en memoria
+            data["manifest_path"] = abs_path
+            return ContextManifest.from_dict(data)
         except Exception:
             return None
 

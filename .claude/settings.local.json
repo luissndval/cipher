@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git checkout:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cipher help:*)",
+      "Bash(cipher:*)",
+      "Bash(pip show:*)",
+      "Bash(where winpty:*)",
+      "Bash(git rm:*)",
+      "Bash(find . -maxdepth 2 -type f -name *.py -o -name *.json -o -name *.toml -o -name *.yaml -o -name *.yml)",
+      "Bash(wc -l /c/Users/LuisSandoval/PycharmProjects/lore/tests/*.py)",
+      "Bash(CIPHER_PATH=/c/Users/LuisSandoval/PycharmProjects/lore python -m cipher.main task --list 2>&1)",
+      "Bash(CIPHER_PATH=/c/Users/LuisSandoval/PycharmProjects/lore python -m cipher.main task \"agregar tests para MultiRepoIndexer\" --dry-run 2>&1)",
+      "Bash(xargs wc:*)"
     ]
   }
 }

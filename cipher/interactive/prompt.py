@@ -18,6 +18,7 @@ Triggers:
 
 import os
 import re
+import sys
 
 from cipher.interactive.searcher import ContextSearcher, SearchResult
 from cipher.graph.schema import DependencyGraph

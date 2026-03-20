@@ -7,6 +7,7 @@ import json
 import os
 
 from cipher.tasks.schema import Task, TaskIntent, TaskStatus
+from cipher.core.paths import to_rel, to_abs
 
 
 class TaskStore:
@@ -21,8 +22,12 @@ class TaskStore:
         task_dir = self._task_dir(task.client, task.repo, task.task_id)
         os.makedirs(task_dir, exist_ok=True)
         path = os.path.join(task_dir, "task.json")
+        data = task.to_dict()
+        # Guardar intent_path relativo al cipher_dir para portabilidad
+        if data.get("intent_path"):
+            data["intent_path"] = to_rel(data["intent_path"], self.cipher_dir)
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(task.to_dict(), f, indent=2, ensure_ascii=False)
+            json.dump(data, f, indent=2, ensure_ascii=False)
         return path
 
     def load_task(self, client: str, repo: str, task_id: str) -> Task | None:
@@ -30,7 +35,11 @@ class TaskStore:
         if not os.path.exists(path):
             return None
         with open(path, encoding="utf-8") as f:
-            return Task.from_dict(json.load(f))
+            data = json.load(f)
+        # Resolver intent_path a absoluto
+        if data.get("intent_path"):
+            data["intent_path"] = to_abs(data["intent_path"], self.cipher_dir)
+        return Task.from_dict(data)
 
     def update_status(self, task: Task, status: str) -> Task:
         task.status = status
@@ -82,8 +91,12 @@ class TaskStore:
         task_dir = self._task_dir(client, repo, intent.task_id)
         os.makedirs(task_dir, exist_ok=True)
         path = os.path.join(task_dir, "task_intent.json")
+        data = intent.to_dict()
+        # Guardar context_pack_path relativo al cipher_dir para portabilidad
+        if data.get("context_pack_path"):
+            data["context_pack_path"] = to_rel(data["context_pack_path"], self.cipher_dir)
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(intent.to_dict(), f, indent=2, ensure_ascii=False)
+            json.dump(data, f, indent=2, ensure_ascii=False)
         return path
 
     def load_intent(self, client: str, repo: str, task_id: str) -> TaskIntent | None:
@@ -91,7 +104,11 @@ class TaskStore:
         if not os.path.exists(path):
             return None
         with open(path, encoding="utf-8") as f:
-            return TaskIntent.from_dict(json.load(f))
+            data = json.load(f)
+        # Resolver context_pack_path a absoluto
+        if data.get("context_pack_path"):
+            data["context_pack_path"] = to_abs(data["context_pack_path"], self.cipher_dir)
+        return TaskIntent.from_dict(data)
 
     # ─── Helpers ──────────────────────────────────────────────────────────────
 

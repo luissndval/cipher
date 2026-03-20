@@ -18,7 +18,7 @@ NC     = '\033[0m'
 
 def cmd_status(args: list):
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-    print(f"║          cipher status                    ║")
+    print(f"║        cipheria status                    ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
 
     try:
@@ -38,7 +38,7 @@ def cmd_status(args: list):
         print(f"  Cliente  : {GREEN}{client}{NC}")
         print(f"  Proyecto : {GREEN}{project}{NC}")
     else:
-        print(f"  Cliente  : {RED}No registrado — ejecutá cipher init{NC}")
+        print(f"  Cliente  : {RED}No registrado — ejecutá cipheria init{NC}")
 
     # Contexto en cipher
     if client and project:

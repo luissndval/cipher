@@ -74,7 +74,7 @@ def cmd_impact(args: list):
 
     graph_path = os.path.join(loader.cipher_dir, ".cipher", "index", repo_name, "graph.json")
     if not os.path.exists(graph_path):
-        print(f"{RED}! No se encontró grafo para '{repo_name}'. Ejecutá: cipher index{NC}")
+        print(f"{RED}! No se encontró grafo para '{repo_name}'. Ejecutá: cipheria index{NC}")
         return
 
     graph: DependencyGraph = GraphBuilder.load(graph_path)
@@ -153,10 +153,10 @@ def _interactive_mode(args: list):
     graph_path = os.path.join(loader.cipher_dir, ".cipher", "index", repo_name, "graph.json")
 
     if not os.path.exists(graph_path):
-        print(f"{RED}! No se encontró grafo para '{repo_name}'. Ejecutá: cipher index{NC}")
+        print(f"{RED}! No se encontró grafo para '{repo_name}'. Ejecutá: cipheria index{NC}")
         return
     if not os.path.exists(index_path):
-        print(f"{RED}! No se encontró índice para '{repo_name}'. Ejecutá: cipher index{NC}")
+        print(f"{RED}! No se encontró índice para '{repo_name}'. Ejecutá: cipheria index{NC}")
         return
 
     repo_index = RepoIndexer.load(index_path)
@@ -164,7 +164,7 @@ def _interactive_mode(args: list):
 
     if graph.node_count == 0:
         print(f"{RED}! El índice de '{repo_name}' está vacío (0 archivos).{NC}")
-        print(f"  Ejecutá {YELLOW}cipher index{NC} dentro del repo para indexarlo.")
+        print(f"  Ejecutá {YELLOW}cipheria index{NC} dentro del repo para indexarlo.")
         return
 
     from cipher.interactive.prompt import InteractiveSession
@@ -262,7 +262,7 @@ def _pick_repo(loader: ContextLoader) -> str | None:
                 repos.append(name)
 
     if not repos:
-        print(f"{RED}! No hay repos indexados. Ejecutá: cipher index{NC}")
+        print(f"{RED}! No hay repos indexados. Ejecutá: cipheria index{NC}")
         return None
 
     if len(repos) == 1:

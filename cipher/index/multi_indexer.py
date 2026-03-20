@@ -8,6 +8,7 @@ import subprocess
 
 from cipher.index.indexer import RepoIndexer
 from cipher.index.schema import RepoIndex
+from cipher.core.paths import resolve_repo_path
 
 YELLOW = "\033[1;33m"
 RED    = "\033[0;31m"
@@ -54,7 +55,7 @@ class MultiRepoIndexer:
                 continue
 
             repo_name = repo_info.get("name") or repo_key
-            repo_path = repo_info.get("path", "").replace("\\", "/")
+            repo_path = resolve_repo_path(client_data, repo_key, repo_info)
 
             if not repo_path:
                 print(f"  {YELLOW}⚠ [{repo_key}] Sin path configurado — omitido.{NC}")

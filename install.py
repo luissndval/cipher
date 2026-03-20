@@ -110,21 +110,31 @@ def main():
 
     # ── 6. config.local.json ─────────────────────────────────────────────────
     step("Configurando config.local.json...")
-    config_local = os.path.join(HERE, ".cipher", "config.local.json")
-    config_example = os.path.join(HERE, ".cipher", "config.local.example.json")
-    if not os.path.exists(config_local):
-        if os.path.exists(config_example):
-            shutil.copy(config_example, config_local)
-        else:
-            os.makedirs(os.path.dirname(config_local), exist_ok=True)
-            with open(config_local, "w") as f:
-                json.dump({
-                    "anthropic": {"api_key": "", "model": "claude-sonnet-4-6"},
-                    "google":    {"api_key": "", "model": "gemini-2.5-flash"},
-                }, f, indent=2)
-        ok("config.local.json creado — agregá tus API keys")
+    config_local_path = os.path.join(HERE, ".cipher", "config.local.json")
+    os.makedirs(os.path.dirname(config_local_path), exist_ok=True)
+
+    # Cargar o crear config.local.json
+    if os.path.exists(config_local_path):
+        with open(config_local_path, encoding="utf-8") as f:
+            local_cfg = json.load(f)
+        ok("config.local.json existente — actualizando paths...")
     else:
-        ok("config.local.json ya existe")
+        local_cfg = {
+            "anthropic": {"api_key": "", "model": "claude-sonnet-4-6"},
+            "google":    {"api_key": "", "model": "gemini-2.5-flash"},
+        }
+        ok("config.local.json creado — agregá tus API keys en .cipher/config.local.json")
+
+    # Leer clientes registrados en config.json y preguntar paths
+    config_json_path = os.path.join(HERE, ".cipher", "config.json")
+    if os.path.exists(config_json_path):
+        with open(config_json_path, encoding="utf-8") as f:
+            base_cfg = json.load(f)
+        _configure_repo_paths(base_cfg, local_cfg)
+
+    with open(config_local_path, "w", encoding="utf-8") as f:
+        json.dump(local_cfg, f, indent=2, ensure_ascii=False)
+    ok("config.local.json guardado")
 
     # ── 7. Resumen ───────────────────────────────────────────────────────────
     print(f"""
@@ -197,6 +207,94 @@ def _add_to_path_unix(bin_dir: str):
             ok("PATH ya configurado")
     else:
         warn(f"No se encontró shell RC. Agregá manualmente a tu perfil:\n  {export_line}")
+
+
+def _configure_repo_paths(base_cfg: dict, local_cfg: dict):
+    """
+    Para cada cliente en config.json:
+      1. Pregunta la carpeta base donde viven sus repos.
+      2. Para repos que ya existen ahí → registra el path.
+      3. Para repos que no existen pero tienen git_url → clona automáticamente (SSH).
+      4. Para repos sin git_url y sin path → avisa que hay que configurarlos manualmente.
+    Los paths se guardan en config.local.json (gitignoreado).
+    """
+    clients = base_cfg.get("clients", {})
+    if not clients:
+        return
+
+    print(f"\n  {YELLOW}Configurando paths de repos cliente...{NC}")
+    print(f"  (Los paths se guardan en config.local.json — no se commitean)\n")
+
+    local_clients = local_cfg.setdefault("clients", {})
+
+    for client_name, client_data in clients.items():
+        if not isinstance(client_data, dict):
+            continue
+        repos = client_data.get("repos", {})
+        if not repos:
+            continue
+
+        print(f"  {BLUE}Cliente: {client_name}{NC}  ({len(repos)} repo(s): {', '.join(repos.keys())})")
+
+        local_client = local_clients.setdefault(client_name, {})
+        local_repos = local_client.setdefault("repos", {})
+
+        # Detectar carpeta base actual desde paths ya registrados
+        existing_paths = [
+            local_repos.get(rk, {}).get("path", "")
+            for rk in repos
+            if local_repos.get(rk, {}).get("path", "")
+        ]
+        default_base = os.path.dirname(existing_paths[0]) if existing_paths else ""
+
+        base_hint = f" [{default_base}]" if default_base else ""
+        answer = input(
+            f"  ¿Carpeta base donde clonar/encontrar los repos de '{client_name}'?{base_hint}\n"
+            f"  (Enter para usar default / 'skip' para omitir): "
+        ).strip()
+
+        if answer.lower() == "skip":
+            print(f"  {YELLOW}  → {client_name} omitido.{NC}\n")
+            continue
+
+        if not answer and default_base:
+            answer = default_base
+
+        if not answer:
+            print(f"  {YELLOW}  → Sin carpeta base — omitido.{NC}\n")
+            continue
+
+        repos_base = os.path.normpath(os.path.expanduser(answer))
+        os.makedirs(repos_base, exist_ok=True)
+
+        for repo_key, repo_data in repos.items():
+            if not isinstance(repo_data, dict):
+                continue
+            rpath = os.path.join(repos_base, repo_key)
+
+            if os.path.isdir(rpath):
+                ok(f"[{repo_key}] encontrado → {rpath}")
+                local_repos.setdefault(repo_key, {})["path"] = rpath
+                continue
+
+            # No existe localmente — intentar clonar si hay git_url
+            git_url = repo_data.get("git_url", "").strip()
+            if git_url:
+                print(f"  Clonando {CYAN}{repo_key}{NC} desde {git_url} ...")
+                result = subprocess.run(
+                    ["git", "clone", git_url, rpath],
+                    capture_output=True, text=True
+                )
+                if result.returncode == 0:
+                    ok(f"[{repo_key}] clonado → {rpath}")
+                    local_repos.setdefault(repo_key, {})["path"] = rpath
+                else:
+                    err(f"[{repo_key}] Error al clonar: {result.stderr.strip()}")
+                    warn(f"  Verificá que tu SSH key tenga acceso a {git_url}")
+            else:
+                warn(f"[{repo_key}] no encontrado y sin git_url — configurá el path manualmente en config.local.json")
+
+        print()
 
 
 if __name__ == "__main__":

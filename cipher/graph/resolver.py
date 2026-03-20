@@ -23,31 +23,32 @@ class ImportResolver:
         """
         self.known_files = known_files
 
-    def resolve(self, imp: Import, from_file: str, language: str) -> str | None:
+    def resolve(self, imp: Import, from_file: str, language: str) -> list:
         """
-        Intenta resolver un import a un rel_path en el repo.
-        Retorna el rel_path si lo encuentra, None si es externo/stdlib.
+        Intenta resolver un import a rel_paths en el repo.
+        Retorna lista de rel_paths encontrados (puede ser vacía).
         """
         if imp.is_relative:
             if language == "python":
                 return self._python_relative(imp, from_file)
             if language in ("typescript", "javascript"):
                 return self._ts_relative(imp, from_file)
-            return None
+            return []
         else:
             if language == "python":
                 return self._python_absolute(imp)
             # TS/Go non-relative → siempre externo en Fase 2
-            return None
+            return []
 
     # ─── Python ───────────────────────────────────────────────────────────────
 
-    def _python_relative(self, imp: Import, from_file: str) -> str | None:
+    def _python_relative(self, imp: Import, from_file: str) -> list:
         """
         Resuelve imports relativos Python.
         .utils        → mismo paquete, archivo utils.py
         ..models      → paquete padre, archivo models.py
         ...pkg.sub    → dos niveles arriba, pkg/sub.py
+        from . import a, b → prueba a.py y b.py en el mismo paquete
         """
         module = imp.module   # ej: ".utils", "..models", ".."
         level = len(module) - len(module.lstrip("."))
@@ -61,29 +62,34 @@ class ImportResolver:
         up = level - 1
         if up > 0:
             if up > len(parts):
-                return None
+                return []
             parts = parts[:-up]
 
         base_dir = "/".join(parts)
+        prefix = f"{base_dir}/" if base_dir else ""
 
         if rest:
             module_path = rest.replace(".", "/")
-            prefix = f"{base_dir}/" if base_dir else ""
             candidates = [
                 f"{prefix}{module_path}.py",
                 f"{prefix}{module_path}/__init__.py",
             ]
         else:
-            # from . import something → __init__.py del mismo paquete
-            prefix = f"{base_dir}/" if base_dir else ""
+            # from . import a, b → __init__.py + cada nombre como posible submódulo
             candidates = [f"{prefix}__init__.py"]
+            for name in (imp.names or []):
+                candidates += [
+                    f"{prefix}{name}.py",
+                    f"{prefix}{name}/__init__.py",
+                ]
 
-        return next((c for c in candidates if c in self.known_files), None)
+        return [c for c in candidates if c in self.known_files]
 
-    def _python_absolute(self, imp: Import) -> str | None:
+    def _python_absolute(self, imp: Import) -> list:
         """
-        Intenta encontrar un módulo Python absoluto en el repo.
-        Solo funciona si el módulo es parte del proyecto (no stdlib/third-party).
+        Intenta encontrar módulos Python absolutos en el repo.
+        Además del módulo principal, prueba cada nombre importado como submódulo.
+        Ej: from app.api.v1 import menu → también prueba app/api/v1/menu.py
         """
         module_path = imp.module.replace(".", "/")
         candidates = [
@@ -96,11 +102,24 @@ class ImportResolver:
                 f"{prefix}/{module_path}.py",
                 f"{prefix}/{module_path}/__init__.py",
             ]
-        return next((c for c in candidates if c in self.known_files), None)
+
+        # Cada nombre importado puede ser un submódulo, no solo un símbolo
+        for name in (imp.names or []):
+            candidates += [
+                f"{module_path}/{name}.py",
+                f"{module_path}/{name}/__init__.py",
+            ]
+            for prefix in ("src", "app", "lib", "core"):
+                candidates += [
+                    f"{prefix}/{module_path}/{name}.py",
+                    f"{prefix}/{module_path}/{name}/__init__.py",
+                ]
+
+        return [c for c in candidates if c in self.known_files]
 
     # ─── TypeScript / JavaScript ───────────────────────────────────────────────
 
-    def _ts_relative(self, imp: Import, from_file: str) -> str | None:
+    def _ts_relative(self, imp: Import, from_file: str) -> list:
         """
         Resuelve imports relativos TypeScript/JS.
         Intenta extensiones TS/JS y archivos index.
@@ -111,17 +130,17 @@ class ImportResolver:
 
         # 1. El import ya tiene extensión
         if raw in self.known_files:
-            return raw
+            return [raw]
 
         # 2. Probar extensiones
         for ext in self.TS_EXTENSIONS:
             if (raw + ext) in self.known_files:
-                return raw + ext
+                return [raw + ext]
 
         # 3. Probar como directorio con index file
         for index_name in self.TS_INDEX_NAMES:
             candidate = f"{raw}/{index_name}"
             if candidate in self.known_files:
-                return candidate
+                return [candidate]
 
-        return None
+        return []

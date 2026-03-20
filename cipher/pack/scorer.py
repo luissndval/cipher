@@ -28,6 +28,17 @@ def _task_tokens(task_description: str) -> set:
     return {w for w in words if len(w) > 2 and w not in stop}
 
 
+_FILE_EXT_RE = re.compile(
+    r"\b([\w][\w\-.]*\.(?:py|ts|js|tsx|jsx|go|java|rb|rs|php|cs|cpp|c|h|kt|swift))\b",
+    re.IGNORECASE,
+)
+
+
+def _file_mentions(task_description: str) -> set[str]:
+    """Extrae nombres de archivo mencionados explícitamente en la descripción."""
+    return {m.lower() for m in _FILE_EXT_RE.findall(task_description)}
+
+
 def score_files(
     files: list,
     task_description: str,
@@ -42,7 +53,9 @@ def score_files(
         graph: opcional — si se provee, usa inbound degree para bonus
     """
     tokens = _task_tokens(task_description)
-    if not tokens:
+    mentions = _file_mentions(task_description)
+
+    if not tokens and not mentions:
         # Sin tokens útiles: devolver todos con score 0
         return [(0.0, f) for f in files]
 
@@ -62,15 +75,28 @@ def score_files(
 
     scored = []
     for file_index in files:
-        s = _score_one(file_index, tokens, high_inbound)
+        s = _score_one(file_index, tokens, high_inbound, mentions)
         scored.append((s, file_index))
 
     return sorted(scored, key=lambda x: x[0], reverse=True)
 
 
-def _score_one(file_index: FileIndex, tokens: set, high_inbound: set) -> float:
+def _score_one(
+    file_index: FileIndex,
+    tokens: set,
+    high_inbound: set,
+    mentions: set | None = None,
+) -> float:
     score = 0.0
     path_lower = file_index.path.lower()
+    basename = path_lower.split("/")[-1].split("\\")[-1]
+
+    # Boost fuerte: nombre de archivo mencionado explícitamente (ej: "dashboard.py")
+    if mentions:
+        for mention in mentions:
+            if mention == basename or mention in basename:
+                score += 5.0
+                break
 
     # Palabras de la tarea en el path
     for token in tokens:

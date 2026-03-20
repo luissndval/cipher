@@ -114,7 +114,7 @@ def cmd_audit(args: list):
     )
 
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-    print(f"║          cipher audit                     ║")
+    print(f"║        cipheria audit                     ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
 
     if not entries:
@@ -177,7 +177,7 @@ def _show_detail(reader: AuditReader, task_id: str):
 
 def _show_stats(reader: AuditReader):
     s = reader.stats()
-    print(f"\n{BLUE}── cipher audit stats ──{NC}\n")
+    print(f"\n{BLUE}── cipheria audit stats ──{NC}\n")
     if not s["total"]:
         print(f"  {YELLOW}Audit log vacío.{NC}\n")
         return

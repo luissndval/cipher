@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 
 from cipher.audit.schema import ContextManifest, AuditEntry, BRAIN_VERSION
 from cipher.pack.schema import PackManifest
+from cipher.core.paths import to_rel, to_abs
 
 
 class AuditWriter:
@@ -86,9 +87,12 @@ class AuditWriter:
         os.makedirs(session_dir, exist_ok=True)
         path = os.path.join(session_dir, "CONTEXT_MANIFEST.json")
         manifest.client = client
-        manifest.manifest_path = path
+        manifest.manifest_path = path  # absoluto en memoria
+        data = manifest.to_dict()
+        # Guardar manifest_path relativo al cipher_dir para portabilidad
+        data["manifest_path"] = to_rel(path, self.cipher_dir)
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(manifest.to_dict(), f, indent=2, ensure_ascii=False)
+            json.dump(data, f, indent=2, ensure_ascii=False)
         return path
 
     def update_manifest(self, manifest: ContextManifest, **kwargs) -> ContextManifest:
@@ -109,8 +113,12 @@ class AuditWriter:
         """Agrega una entrada al audit_log.jsonl (append-only)."""
         os.makedirs(self._audit_dir, exist_ok=True)
         entry = AuditEntry.from_manifest(manifest)
+        data = entry.to_dict()
+        # Guardar manifest_path relativo para portabilidad
+        if data.get("manifest_path"):
+            data["manifest_path"] = to_rel(data["manifest_path"], self.cipher_dir)
         with open(self._log_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry.to_dict(), ensure_ascii=False) + "\n")
+            f.write(json.dumps(data, ensure_ascii=False) + "\n")
         return entry
 
     def update_entry(self, manifest_id: str, **kwargs):

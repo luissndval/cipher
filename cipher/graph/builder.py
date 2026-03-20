@@ -38,14 +38,15 @@ class GraphBuilder:
         for file_index in self.repo_index.files:
             rel_path = file_index.path
             for imp in file_index.imports:
-                resolved = self._resolver.resolve(imp, rel_path, file_index.language)
-                if resolved:
-                    edges.append(GraphEdge(
-                        from_file=rel_path,
-                        to_file=resolved,
-                        kind="import",
-                        names=list(imp.names) if imp.names else [],
-                    ))
+                resolved_list = self._resolver.resolve(imp, rel_path, file_index.language)
+                if resolved_list:
+                    for resolved in resolved_list:
+                        edges.append(GraphEdge(
+                            from_file=rel_path,
+                            to_file=resolved,
+                            kind="import",
+                            names=list(imp.names) if imp.names else [],
+                        ))
                 else:
                     # Import externo: contar por módulo
                     mod = imp.module

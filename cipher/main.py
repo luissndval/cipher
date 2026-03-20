@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-cipher CLI — Punto de entrada principal
-Uso: cipher <comando> [opciones]
+cipheria CLI — Punto de entrada principal
+Uso: cipheria <comando> [opciones]
 """
 
 import sys
@@ -25,7 +25,6 @@ from cipher.commands.status import cmd_status
 from cipher.commands.session import cmd_session
 from cipher.commands.index import cmd_index
 from cipher.commands.impact import cmd_impact
-from cipher.commands.pack import cmd_pack
 from cipher.commands.task import cmd_task
 from cipher.commands.audit import cmd_audit
 
@@ -38,23 +37,31 @@ BANNER = f"""
 
 HELP = """
 Comandos:
-  cipheria init       Onboarding: escanea repos y genera contexto con IA
-  cipheria claude     Abre sesión de desarrollo con Claude Code
-  cipheria update     Actualiza contexto después de un cambio
-  cipheria status     Muestra estado del contexto actual
-  cipheria index      Genera índice estructural del repo (sin LLM)
-  cipheria impact     Muestra qué archivos se ven afectados por un cambio
-  cipheria pack       Genera el context pack mínimo para una tarea
-  cipheria task       Crea una task, genera intent y lanza el agente
-  cipheria audit      Historial de auditoría de sesiones IA
+  cipheria init         Onboarding: escanea repos y genera contexto con IA
+  cipheria claude       Sesión rápida con Claude Code (sin formalización)
+  cipheria task         Tarea formal: context pack + impact + intent + agente
+  cipheria audit        Historial de auditoría de sesiones IA
+  cipheria impact       Muestra qué archivos se ven afectados por un cambio
+  cipheria index        Reindexar repo explícitamente (mantenimiento)
+  cipheria update       Actualiza contexto después de un cambio
+  cipheria status       Muestra estado del contexto actual
 
-Ejemplos:
-  cd /proyectos/cliente-xyz
-  cipheria init
+Flujo recomendado:
+  cipheria init                          Registrar repos (una vez)
+  cipheria claude                        Desarrollo rápido / exploración
+  cipheria task "descripción"            Tarea formal con rastreo completo
+  cipheria task feature-4040-login.md    Tarea desde archivo markdown
+  cipheria task "desc" --dry-run         Ver intent sin lanzar agente
+  cipheria audit --stats                 Ver historial y tokens usados
 
-  cipheria claude
+Formato de archivo .md:
+  # Título de la tarea
+  Descripción libre del trabajo a realizar.
+  Link: https://linear.app/acme/issue/ENG-4040
 
-  cipher update
+  El nombre del archivo define tipo y número:
+  feature-4040-*.md → FEATURE  |  bug-123-*.md → BUG
+  hotfix-7-*.md     → HOTFIX   |  task-99-*.md → TASK
 """
 
 
@@ -65,7 +72,7 @@ def main():
         sys.exit(0)
 
     if sys.argv[1] in ("--version", "-v"):
-        print(f"cipher v{VERSION}")
+        print(f"cipheria v{VERSION}")
         sys.exit(0)
 
     if sys.argv[1] in ("--help", "-h"):
@@ -88,16 +95,14 @@ def main():
         cmd_index(args=extra_args)
     elif command == "impact":
         cmd_impact(args=extra_args)
-    elif command == "pack":
-        cmd_pack(args=extra_args)
     elif command == "task":
         cmd_task(args=extra_args)
     elif command == "audit":
         cmd_audit(args=extra_args)
     else:
         print(f"\033[31m✗ Comando desconocido: {command}\033[0m")
-        print("  Comandos disponibles: init, claude, update, status")
-        print("  Ejecutá 'cipher --help' para más información.")
+        print("  Comandos disponibles: init, claude, task, audit, impact, index, update, status")
+        print("  Ejecutá 'cipheria --help' para más información.")
         sys.exit(1)
 
 

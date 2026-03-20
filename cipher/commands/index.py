@@ -26,7 +26,7 @@ def cmd_index(args: list):
     repo_path = os.path.abspath(repo_path)
 
     print(f"\n{BLUE}╔══════════════════════════════════════════╗")
-    print(f"║          cipher index                     ║")
+    print(f"║        cipheria index                     ║")
     print(f"╚══════════════════════════════════════════╝{NC}\n")
 
     try:
