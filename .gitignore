@@ -1,14 +1,26 @@
 # cipher — .gitignore
 
-# API keys personales — NUNCA al repo
+# API keys y paths locales — NUNCA al repo
 .cipher/config.local.json
+
+# Artefactos generados por install.py — paths absolutos del developer
+bin/cipheria
+bin/cipheria.cmd
+bin/cipher
+
+# Datos generados en runtime — no son del repo
+.cipher/sessions/
+.cipher/tasks/
+.cipher/packs/
+.cipher/alerts/
+.cipher/audit/
+.cipher/index/
 
 # Contexto generado automáticamente
 CLAUDE.md
 .cipher/ACTIVE_CONTEXT.md
 .cipher/task-agent.md
 .cipher/ALERT.md
-.cipher/sessions/
 
 # Python
 __pycache__/

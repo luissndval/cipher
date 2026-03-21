@@ -3,1089 +3,2128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>cipher — Flujo Operacional</title>
+<title>cipher - Guia de uso y archivos generados</title>
 <style>
   :root {
-    --bg:        #0d0f14;
-    --bg2:       #13161e;
-    --bg3:       #1a1e2a;
-    --border:    #252a38;
-    --text:      #e2e8f0;
-    --muted:     #64748b;
-    --accent:    #7c6aff;
-    --accent2:   #a78bfa;
-    --green:     #34d399;
-    --yellow:    #fbbf24;
-    --red:       #f87171;
-    --cyan:      #22d3ee;
-    --pink:      #f472b6;
-    --layer1:    #7c6aff;
-    --layer2:    #22d3ee;
-    --layer3:    #34d399;
-    --radius:    12px;
-    --radius-sm: 6px;
+    --bg: #07080f;
+    --bg-soft: #0b0d18;
+    --panel: rgba(14, 18, 38, 0.8);
+    --panel-strong: rgba(18, 22, 48, 0.9);
+    --text: #dce8ff;
+    --muted: #5c6e94;
+    --line: rgba(80, 140, 230, 0.13);
+    --accent: #00c8ff;
+    --accent-soft: rgba(0, 200, 255, 0.1);
+    --teal: #00e5c0;
+    --teal-soft: rgba(0, 229, 192, 0.1);
+    --red: #ff4a6e;
+    --yellow: #f5a623;
+    --purple: #9d6eff;
+    --purple-soft: rgba(157, 110, 255, 0.1);
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    --radius-lg: 26px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+    --max: 1200px;
+    --terminal-bg: #050709;
+    --terminal-green: #00ff9d;
+    --terminal-yellow: #f5a623;
+    --terminal-blue: #00c8ff;
+    --terminal-purple: #c084fc;
+    --terminal-red: #ff4a6e;
+    --terminal-muted: #3d4f6e;
+    --terminal-text: #c8d8f0;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
 
   body {
-    background: var(--bg);
+    margin: 0;
+    font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
     color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
+    background:
+      radial-gradient(ellipse at 10% 5%, rgba(0, 180, 255, 0.07) 0%, transparent 45%),
+      radial-gradient(ellipse at 90% 8%, rgba(157, 110, 255, 0.07) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 100%, rgba(0, 229, 192, 0.05) 0%, transparent 50%),
+      #07080f;
+    line-height: 1.55;
+    min-height: 100vh;
   }
 
-  /* ─── NAV ─────────────────────────────────────────── */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(13,15,20,.85);
+  a { color: inherit; }
+
+  .shell {
+    width: min(var(--max), calc(100% - 32px));
+    margin: 0 auto;
+    padding-bottom: 64px;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin-top: 16px;
+    backdrop-filter: blur(20px);
+    background: rgba(8, 10, 22, 0.85);
+    border: 1px solid rgba(0, 200, 255, 0.15);
+    border-radius: 999px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 200, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 12px 18px;
+  }
+
+  .brand {
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 16px rgba(0, 200, 255, 0.5);
+    font-family: "Cascadia Code", "Consolas", monospace;
+  }
+
+  .brand span {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nav a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 0.88rem;
+    padding: 8px 12px;
+    border-radius: 999px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .nav a:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(0, 200, 255, 0.4);
+  }
+
+  /* HERO */
+  .hero {
+    padding: 42px 0 28px;
+    display: grid;
+    grid-template-columns: 1.45fr 0.9fr;
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .hero-card,
+  .panel,
+  .step,
+  .command,
+  .path-card,
+  .review-card,
+  .tip,
+  .map-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 2rem;
-    height: 56px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-logo { font-weight: 700; font-size: 1.1rem; color: var(--accent2); letter-spacing: .05em; }
-  .nav-logo span { color: var(--muted); font-weight: 400; }
-  .nav-links { display: flex; gap: 1.5rem; }
-  .nav-links a {
-    color: var(--muted); text-decoration: none; font-size: .85rem;
-    transition: color .2s;
-  }
-  .nav-links a:hover { color: var(--text); }
-
-  /* ─── LAYOUT ──────────────────────────────────────── */
-  main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
-
-  section { padding: 5rem 0 3rem; }
-  section + section { border-top: 1px solid var(--border); }
-
-  h1 { font-size: 3rem; font-weight: 800; line-height: 1.15; }
-  h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 1.5rem; }
-  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .6rem; }
-  p  { color: #94a3b8; margin-bottom: .8rem; }
-
-  .tag {
-    display: inline-block; padding: .2rem .7rem;
-    border-radius: 99px; font-size: .72rem; font-weight: 600;
-    letter-spacing: .06em; text-transform: uppercase;
-  }
-  .tag-accent  { background: #7c6aff22; color: var(--accent2); border: 1px solid #7c6aff44; }
-  .tag-green   { background: #34d39922; color: var(--green);   border: 1px solid #34d39944; }
-  .tag-yellow  { background: #fbbf2422; color: var(--yellow);  border: 1px solid #fbbf2444; }
-  .tag-cyan    { background: #22d3ee22; color: var(--cyan);    border: 1px solid #22d3ee44; }
-
-  code {
-    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-    background: var(--bg3); color: var(--accent2);
-    padding: .1rem .45rem; border-radius: var(--radius-sm);
-    font-size: .85em;
   }
 
-  /* ─── HERO ────────────────────────────────────────── */
-  #hero { padding-top: 7rem; text-align: center; }
+  .hero-card { padding: 34px; }
 
-  .hero-kicker {
-    font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--accent); font-weight: 600; margin-bottom: 1.2rem;
-    display: flex; align-items: center; justify-content: center; gap: .5rem;
-  }
-  .hero-kicker::before, .hero-kicker::after {
-    content: ''; flex: 1; max-width: 60px;
-    height: 1px; background: var(--accent);
-  }
-
-  #hero h1 { margin-bottom: 1.2rem; }
-  #hero h1 em { font-style: normal; color: var(--accent2); }
-  #hero .subtitle {
-    font-size: 1.05rem; color: var(--muted);
-    max-width: 580px; margin: 0 auto 2.5rem;
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border: 1px solid rgba(0, 200, 255, 0.2);
   }
 
-  .hero-pills { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
-  .pill {
-    padding: .4rem 1rem; border-radius: 99px;
-    border: 1px solid var(--border); color: var(--muted);
-    font-size: .82rem;
+  h1, h2, h3 { margin: 0; }
+
+  h1 {
+    margin-top: 18px;
+    font-size: clamp(2.2rem, 4vw, 4.3rem);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--text) 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  /* ─── PROBLEM / SOLUTION ──────────────────────────── */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-
-  .card {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.75rem;
-  }
-  .card-bad  { border-color: #f8717133; }
-  .card-good { border-color: #34d39933; }
-
-  .card-icon { font-size: 1.8rem; margin-bottom: 1rem; }
-  .card h3 { font-size: 1rem; margin-bottom: .75rem; }
-  .card ul { list-style: none; display: flex; flex-direction: column; gap: .45rem; }
-  .card ul li { color: #94a3b8; font-size: .9rem; padding-left: 1.2rem; position: relative; }
-  .card ul li::before { content: attr(data-icon); position: absolute; left: 0; }
-
-  /* ─── LAYERS ──────────────────────────────────────── */
-  .layers-visual {
-    display: flex; flex-direction: column; gap: 0;
-    max-width: 700px; margin: 0 auto;
+  .hero p {
+    margin: 18px 0 0;
+    font-size: 1.03rem;
+    color: var(--muted);
+    max-width: 58ch;
   }
 
-  .layer {
-    display: grid; grid-template-columns: 220px 1fr;
-    border-radius: 0; overflow: hidden;
-    border: 1px solid var(--border);
-    transition: transform .2s;
-  }
-  .layer:hover { transform: translateX(6px); z-index: 1; }
-  .layer:first-child { border-radius: var(--radius) var(--radius) 0 0; }
-  .layer:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
-  .layer + .layer { border-top: none; }
-
-  .layer-label {
-    padding: 1.2rem 1.5rem;
-    display: flex; flex-direction: column; justify-content: center;
-    font-weight: 700; font-size: .9rem; letter-spacing: .04em;
-  }
-  .layer-label small { font-weight: 400; font-size: .75rem; margin-top: .2rem; opacity: .7; }
-  .layer-content {
-    padding: 1rem 1.5rem; background: var(--bg2);
-    display: flex; flex-direction: column; justify-content: center; gap: .35rem;
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
   }
 
-  .layer-global  .layer-label { background: #7c6aff22; color: var(--layer1); border-right: 1px solid #7c6aff33; }
-  .layer-client  .layer-label { background: #22d3ee22; color: var(--layer2); border-right: 1px solid #22d3ee33; }
-  .layer-project .layer-label { background: #34d39922; color: var(--layer3); border-right: 1px solid #34d39933; }
-
-  .file-chip {
-    display: inline-block; padding: .15rem .5rem;
-    border-radius: var(--radius-sm); font-family: monospace; font-size: .78rem;
-  }
-  .chip-1 { background: #7c6aff15; color: var(--accent2); }
-  .chip-2 { background: #22d3ee15; color: var(--cyan); }
-  .chip-3 { background: #34d39915; color: var(--green); }
-
-  .layer-arrow {
-    text-align: center; color: var(--muted); font-size: 1rem;
-    padding: .3rem 0;
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.92rem;
+    transition: opacity 0.15s, transform 0.1s;
+    cursor: pointer;
+    border: none;
   }
 
-  .context-result {
-    margin-top: 1.5rem;
-    background: var(--bg2); border: 1px solid #7c6aff33;
-    border-radius: var(--radius); padding: 1.2rem 1.5rem;
-    display: flex; align-items: center; gap: 1rem;
-  }
-  .context-result .icon { font-size: 1.5rem; }
-  .context-result .info { flex: 1; }
-  .context-result .info strong { color: var(--accent2); font-family: monospace; font-size: .9rem; }
-  .context-result .info p { font-size: .82rem; margin: 0; }
-  .token-badge {
-    background: #7c6aff22; color: var(--accent2);
-    border: 1px solid #7c6aff44;
-    padding: .3rem .8rem; border-radius: 99px; font-size: .78rem; white-space: nowrap;
-  }
+  .btn:hover { opacity: 0.88; transform: translateY(-1px); }
 
-  /* ─── COMMANDS ────────────────────────────────────── */
-  .cmd-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .cmd-tab {
-    padding: .5rem 1.2rem; border-radius: 99px;
-    border: 1px solid var(--border); background: transparent;
-    color: var(--muted); font-size: .85rem; cursor: pointer;
-    transition: all .2s; font-family: inherit;
+  .btn-primary {
+    background: linear-gradient(135deg, #007aaa, #00c8ff);
+    color: #000d1a;
+    box-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
   }
-  .cmd-tab:hover { border-color: var(--accent); color: var(--accent2); }
-  .cmd-tab.active {
-    background: #7c6aff22; border-color: var(--accent);
-    color: var(--accent2);
+  .btn-primary:hover { box-shadow: 0 0 32px rgba(0, 200, 255, 0.5); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .hero-side {
+    padding: 22px;
+    display: grid;
+    gap: 14px;
   }
 
-  .cmd-panel { display: none; }
-  .cmd-panel.active { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; }
+  .mini-card {
+    background: var(--panel-strong);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    transition: border-color 0.2s;
+  }
+  .mini-card:hover { border-color: rgba(0, 200, 255, 0.3); }
 
-  .cmd-info h3 { font-size: 1rem; color: var(--text); margin-bottom: .5rem; }
-  .cmd-info .cmd-desc { font-size: .9rem; color: #94a3b8; margin-bottom: 1.2rem; }
+  .mini-label {
+    color: var(--accent);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
 
-  .steps { display: flex; flex-direction: column; gap: 0; }
+  .mini-title {
+    margin-top: 8px;
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+
+  .mini-card p {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  main section { margin-top: 32px; }
+
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .section-head h2 {
+    background: linear-gradient(90deg, var(--text) 60%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .section-head p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    max-width: 64ch;
+  }
+
+  .panel { padding: 26px; }
+
+  .quick-grid,
+  .steps-grid,
+  .commands-grid,
+  .paths-grid,
+  .review-grid,
+  .map-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .tip { padding: 20px; }
+  .tip h3 { font-size: 1rem; margin-bottom: 8px; color: var(--accent); }
+  .tip p { margin: 0; color: var(--muted); font-size: 0.94rem; }
+
+  .steps-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
   .step {
-    display: flex; gap: 1rem; padding: .9rem 0;
-    border-bottom: 1px solid var(--border);
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
   }
-  .step:last-child { border-bottom: none; }
+
+  .step::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--purple), var(--teal));
+    box-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+  }
+
   .step-num {
-    width: 24px; height: 24px; min-width: 24px;
-    border-radius: 99px; display: flex; align-items: center; justify-content: center;
-    font-size: .72rem; font-weight: 700;
-    background: #7c6aff22; color: var(--accent2); border: 1px solid #7c6aff44;
-  }
-  .step-body { flex: 1; }
-  .step-body strong { display: block; font-size: .88rem; color: var(--text); margin-bottom: .2rem; }
-  .step-body span { font-size: .82rem; color: var(--muted); }
-
-  .cmd-terminal {
-    background: #0a0c10; border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden;
-  }
-  .terminal-header {
-    padding: .7rem 1rem; background: var(--bg3); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: .5rem;
-  }
-  .dot { width: 10px; height: 10px; border-radius: 99px; }
-  .dot-r { background: #f87171; }
-  .dot-y { background: #fbbf24; }
-  .dot-g { background: #34d399; }
-  .terminal-title { font-size: .78rem; color: var(--muted); margin-left: .3rem; }
-  .terminal-body { padding: 1.2rem; font-family: monospace; font-size: .82rem; line-height: 1.8; }
-  .t-prompt { color: var(--accent); }
-  .t-cmd    { color: var(--text); }
-  .t-out    { color: var(--muted); }
-  .t-q      { color: var(--yellow); }
-  .t-ans    { color: var(--cyan); }
-  .t-ok     { color: var(--green); }
-  .t-branch { color: var(--pink); }
-
-  /* ─── FLOW ────────────────────────────────────────── */
-  .flow-timeline { position: relative; padding-left: 2rem; }
-  .flow-timeline::before {
-    content: ''; position: absolute; left: .45rem; top: 0; bottom: 0;
-    width: 2px; background: linear-gradient(to bottom, var(--accent), var(--green));
-    border-radius: 2px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid rgba(0, 200, 255, 0.3);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    margin-bottom: 14px;
+    font-family: "Cascadia Code", "Consolas", monospace;
   }
 
-  .flow-step {
-    position: relative; margin-bottom: 2rem;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.25rem 1.5rem;
-    transition: border-color .2s;
-  }
-  .flow-step:hover { border-color: var(--accent); }
-  .flow-step::before {
-    content: ''; position: absolute;
-    left: -2.45rem; top: 1.5rem;
-    width: 12px; height: 12px; border-radius: 99px;
-    background: var(--accent); border: 2px solid var(--bg);
-    box-shadow: 0 0 8px var(--accent);
+  .step p,
+  .command p,
+  .path-card p,
+  .review-card p,
+  .map-card p {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 0.93rem;
   }
 
-  .flow-step-header {
-    display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem;
-  }
-  .flow-cmd {
-    font-family: monospace; font-size: .88rem;
-    background: #7c6aff22; color: var(--accent2);
-    border: 1px solid #7c6aff33; border-radius: var(--radius-sm);
-    padding: .2rem .6rem;
-  }
-  .flow-step p { font-size: .88rem; margin: 0; }
+  /* COMMANDS */
+  .commands-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-  .flow-substeps {
-    margin-top: .75rem;
-    display: flex; flex-direction: column; gap: .4rem;
+  .command { padding: 24px; }
+
+  .command-top {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
   }
-  .flow-sub {
-    display: flex; align-items: flex-start; gap: .6rem;
-    font-size: .83rem; color: #94a3b8;
+
+  .chip {
+    white-space: nowrap;
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 7px 10px;
+    border-radius: 999px;
   }
-  .flow-sub-icon { font-size: .8rem; margin-top: .1rem; opacity: .7; }
 
-  .flow-output {
-    margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--border);
-    display: flex; align-items: center; gap: .75rem;
+  .chip-ai   { background: var(--purple-soft); color: var(--purple); border: 1px solid rgba(157,110,255,0.25); }
+  .chip-no   { background: var(--teal-soft); color: var(--teal); border: 1px solid rgba(0,229,192,0.25); }
+  .chip-mix  { background: rgba(245,166,35,0.1); color: var(--yellow); border: 1px solid rgba(245,166,35,0.25); }
+
+  code, pre {
+    font-family: "Cascadia Code", "Consolas", monospace;
   }
-  .flow-output-label { font-size: .75rem; color: var(--muted); text-transform: uppercase;
-    letter-spacing: .06em; white-space: nowrap; }
-  .flow-output-files { display: flex; flex-wrap: wrap; gap: .4rem; }
 
-  /* ─── BRANCH FORMAT ───────────────────────────────── */
-  .branch-demo {
-    background: #0a0c10; border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 2rem; text-align: center;
+  code { color: var(--accent); font-size: 0.9em; }
+
+  .cmd {
+    display: inline-block;
+    margin-top: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--terminal-green);
+    border: 1px solid rgba(0, 200, 255, 0.12);
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    overflow-x: auto;
+    width: 100%;
+    font-family: "Cascadia Code", "Consolas", monospace;
   }
-  .branch-name {
-    font-family: monospace; font-size: 1.4rem; font-weight: 700;
-    letter-spacing: .04em; margin: 1rem 0;
+
+  /* FLAGS TABLE */
+  .flags-table {
+    margin-top: 14px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
   }
-  .branch-part { display: inline-block; }
-  .bp-type   { color: var(--pink); }
-  .bp-sep    { color: var(--muted); }
-  .bp-num    { color: var(--yellow); }
-  .bp-title  { color: var(--cyan); }
 
-  .branch-types { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
-  .btype {
-    padding: .5rem 1.2rem; border-radius: var(--radius-sm);
-    font-family: monospace; font-size: .85rem; font-weight: 600;
-    border: 1px solid; cursor: default;
+  .flags-table th {
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
   }
-  .btype-feature { background: #7c6aff15; color: var(--accent2); border-color: #7c6aff33; }
-  .btype-task    { background: #22d3ee15; color: var(--cyan);    border-color: #22d3ee33; }
-  .btype-error   { background: #f8717115; color: var(--red);     border-color: #f8717133; }
-  .btype-hotfix  { background: #fbbf2415; color: var(--yellow);  border-color: #fbbf2433; }
 
-  /* ─── PROVIDERS ───────────────────────────────────── */
-  .providers-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-
-  .provider-card {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.5rem;
-    transition: transform .2s, border-color .2s;
+  .flags-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid rgba(80, 140, 230, 0.08);
+    vertical-align: top;
   }
-  .provider-card:hover { transform: translateY(-3px); }
-  .provider-card.p-claude { border-color: #7c6aff44; }
-  .provider-card.p-gemini { border-color: #22d3ee44; }
-  .provider-card.p-openai { border-color: #34d39944; }
-  .provider-card.p-aider  { border-color: #fbbf2444; }
 
-  .provider-icon { font-size: 1.8rem; margin-bottom: .8rem; }
-  .provider-name { font-weight: 700; font-size: .95rem; margin-bottom: .3rem; }
-  .provider-model { font-family: monospace; font-size: .75rem; color: var(--muted); margin-bottom: .8rem; }
-  .provider-ctx { font-size: .78rem; color: var(--muted); }
-  .provider-ctx strong { color: var(--text); }
-
-  /* ─── ISOLATION ───────────────────────────────────── */
-  .isolation-visual { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-
-  .fs-tree {
-    background: #0a0c10; border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.5rem;
-    font-family: monospace; font-size: .83rem; line-height: 1.9;
+  .flags-table td:first-child {
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+    white-space: nowrap;
   }
-  .fs-title { font-size: .75rem; color: var(--muted); text-transform: uppercase;
-    letter-spacing: .08em; margin-bottom: 1rem; font-family: inherit; }
-  .fs-dir  { color: var(--accent2); }
-  .fs-file { color: var(--text); }
-  .fs-generated { color: var(--green); }
-  .fs-temp { color: var(--yellow); }
-  .fs-never { color: var(--muted); text-decoration: line-through; }
-  .fs-note { color: var(--muted); font-size: .75rem; }
 
-  .isolation-rules { display: flex; flex-direction: column; gap: .75rem; }
-  .i-rule {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: .9rem 1rem;
-    display: flex; gap: .75rem; align-items: flex-start;
+  .flags-table td:last-child {
+    color: var(--muted);
   }
-  .i-rule-icon { font-size: 1.1rem; }
-  .i-rule-body strong { display: block; font-size: .88rem; margin-bottom: .15rem; }
-  .i-rule-body span { font-size: .82rem; color: var(--muted); }
 
-  /* ─── FOOTER ──────────────────────────────────────── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 2.5rem 1.5rem; text-align: center;
-    color: var(--muted); font-size: .82rem;
+  /* STEPS DETAIL */
+  .steps-detail {
+    margin-top: 14px;
+    padding-left: 0;
+    list-style: none;
+    counter-reset: step-counter;
   }
-  footer a { color: var(--accent2); text-decoration: none; }
 
-  /* ─── RESPONSIVE ──────────────────────────────────── */
-  @media (max-width: 768px) {
-    h1 { font-size: 2rem; }
-    .two-col { grid-template-columns: 1fr; }
-    .cmd-panel.active { grid-template-columns: 1fr; }
-    .providers-grid { grid-template-columns: 1fr 1fr; }
-    .isolation-visual { grid-template-columns: 1fr; }
-    .layer { grid-template-columns: 1fr; }
-    .layer-label { padding: .8rem 1rem; }
-    .nav-links { display: none; }
+  .steps-detail li {
+    counter-increment: step-counter;
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 0.91rem;
+    color: var(--muted);
+  }
+
+  .steps-detail li::before {
+    content: counter(step-counter);
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid rgba(0, 200, 255, 0.25);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    margin-top: 1px;
+    font-family: "Cascadia Code", "Consolas", monospace;
+  }
+
+  .output-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .output-pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--teal-soft);
+    color: var(--teal);
+    border: 1px solid rgba(0, 229, 192, 0.2);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: "Cascadia Code", "Consolas", monospace;
+  }
+
+  /* PATHS */
+  .path-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .path-tag {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  .paths-grid,
+  .review-grid,
+  .map-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .path-card,
+  .review-card,
+  .map-card {
+    padding: 22px;
+  }
+
+  .path-label,
+  .review-label {
+    color: var(--accent);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 800;
+  }
+
+  .path {
+    display: block;
+    margin-top: 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px dashed rgba(0, 200, 255, 0.2);
+    border-radius: 14px;
+    padding: 12px 14px;
+    color: var(--teal);
+    font-size: 0.89rem;
+    overflow-x: auto;
+    font-family: "Cascadia Code", "Consolas", monospace;
+  }
+
+  .command ul,
+  .path-card ul,
+  .review-card ul {
+    margin: 14px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+  }
+
+  .command li,
+  .path-card li,
+  .review-card li {
+    margin-top: 8px;
+    font-size: 0.91rem;
+  }
+
+  .status-good { color: var(--teal); font-weight: 700; }
+  .status-warn { color: var(--yellow); font-weight: 700; }
+  .status-risk { color: var(--red); font-weight: 700; }
+
+  .map-card strong {
+    display: block;
+    font-size: 1rem;
+    color: var(--accent);
+  }
+
+  .footer-note {
+    margin-top: 18px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  /* ---- INTERACTIVE DEMO ---- */
+  #demo {
+    margin-top: 32px;
+  }
+
+  .terminal-wrapper {
+    background: var(--terminal-bg);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,200,255,0.1), 0 0 40px rgba(0,200,255,0.05);
+    overflow: hidden;
+    border: 1px solid rgba(0, 200, 255, 0.15);
+  }
+
+  .terminal-titlebar {
+    background: #080a14;
+    border-bottom: 1px solid rgba(0, 200, 255, 0.1);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .term-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .term-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .term-dot-red   { background: #ff5f57; }
+  .term-dot-yellow{ background: #febc2e; }
+  .term-dot-green { background: #28c840; }
+
+  .term-title {
+    color: var(--terminal-muted);
+    font-size: 0.82rem;
+    font-family: "Cascadia Code","Consolas",monospace;
+    flex: 1;
+    text-align: center;
+  }
+
+  .terminal-body {
+    padding: 18px;
+    min-height: 340px;
+    max-height: 480px;
+    overflow-y: auto;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--terminal-text);
+  }
+
+  .terminal-body::-webkit-scrollbar { width: 6px; }
+  .terminal-body::-webkit-scrollbar-track { background: transparent; }
+  .terminal-body::-webkit-scrollbar-thumb { background: rgba(0,200,255,0.2); border-radius: 3px; }
+
+  .term-line { display: flex; gap: 6px; margin-bottom: 2px; }
+  .term-prompt { color: var(--terminal-green); user-select: none; }
+  .term-cmd { color: var(--terminal-text); }
+  .term-out { color: var(--terminal-muted); white-space: pre-wrap; padding-left: 2px; }
+  .term-out.green  { color: var(--terminal-green); }
+  .term-out.yellow { color: var(--terminal-yellow); }
+  .term-out.blue   { color: var(--terminal-blue); }
+  .term-out.purple { color: var(--terminal-purple); }
+  .term-out.red    { color: var(--terminal-red); }
+  .term-out.bold   { font-weight: 700; }
+  .term-out.dim    { color: #2d3a52; }
+
+  .terminal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px 14px;
+    border-top: 1px solid rgba(0, 200, 255, 0.1);
+    background: #060810;
+  }
+
+  .term-input-prompt {
+    color: var(--terminal-green);
+    font-family: "Cascadia Code","Consolas",monospace;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .term-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--terminal-text);
+    font-family: "Cascadia Code","Consolas",monospace;
+    font-size: 0.9rem;
+    caret-color: var(--terminal-green);
+  }
+
+  .term-run-btn {
+    background: rgba(0, 200, 255, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(0, 200, 255, 0.3);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Cascadia Code","Consolas",monospace;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+
+  .term-run-btn:hover {
+    background: rgba(0, 200, 255, 0.25);
+    box-shadow: 0 0 12px rgba(0, 200, 255, 0.3);
+  }
+
+  .demo-quick-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .demo-btn {
+    background: rgba(10, 14, 28, 0.8);
+    border: 1px solid rgba(80, 130, 220, 0.2);
+    color: var(--muted);
+    font-family: "Cascadia Code","Consolas",monospace;
+    font-size: 0.82rem;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+
+  .demo-btn:hover {
+    background: rgba(0, 200, 255, 0.08);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .demo-hint {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+
+  /* SCORING TABLE */
+  .score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.87rem;
+    margin-top: 12px;
+  }
+
+  .score-table th {
+    text-align: left;
+    padding: 8px 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    border-bottom: 1px solid rgba(0, 200, 255, 0.15);
+  }
+
+  .score-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(80, 140, 230, 0.08);
+    color: var(--muted);
+    vertical-align: top;
+  }
+
+  .score-table td:nth-child(2) {
+    font-family: "Cascadia Code","Consolas",monospace;
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  /* ALERT CARD */
+  .alert-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    border-left: 4px solid var(--accent);
+    margin-top: 16px;
+  }
+
+  .alert-card.teal { border-left-color: var(--teal); }
+  .alert-card.red  { border-left-color: var(--red); }
+
+  .alert-card h4 {
+    margin: 0 0 6px;
+    font-size: 0.95rem;
+  }
+
+  .alert-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  /* RISK BADGES */
+  .risk-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .risk-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .risk-badge .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .risk-none   { background: var(--teal-soft); color: var(--teal); border: 1px solid rgba(0,229,192,0.2); }
+  .risk-none .dot { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
+  .risk-low    { background: rgba(0, 255, 157, 0.08); color: #00ff9d; border: 1px solid rgba(0,255,157,0.2); }
+  .risk-low .dot { background: #00ff9d; box-shadow: 0 0 6px #00ff9d; }
+  .risk-med    { background: rgba(245, 166, 35, 0.08); color: var(--yellow); border: 1px solid rgba(245,166,35,0.2); }
+  .risk-med .dot { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+  .risk-high   { background: rgba(255, 120, 50, 0.08); color: #ff7832; border: 1px solid rgba(255,120,50,0.2); }
+  .risk-high .dot { background: #ff7832; box-shadow: 0 0 6px #ff7832; }
+  .risk-crit   { background: rgba(255, 74, 110, 0.08); color: var(--red); border: 1px solid rgba(255,74,110,0.2); }
+  .risk-crit .dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  /* STATUS FLOW */
+  .status-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .status-node {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: 1.5px solid transparent;
+    font-family: "Cascadia Code", "Consolas", monospace;
+  }
+
+  .sn-pending  { background: rgba(245,166,35,0.1); color: var(--yellow); border-color: rgba(245,166,35,0.4); }
+  .sn-progress { background: rgba(0,200,255,0.1); color: var(--accent); border-color: rgba(0,200,255,0.4); }
+  .sn-done     { background: var(--teal-soft); color: var(--teal); border-color: rgba(0,229,192,0.4); }
+  .sn-failed   { background: rgba(255,74,110,0.1); color: var(--red); border-color: rgba(255,74,110,0.4); }
+
+  .status-arrow {
+    color: var(--muted);
+    margin: 0 4px;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 980px) {
+    .hero,
+    .quick-grid,
+    .steps-grid,
+    .commands-grid,
+    .paths-grid,
+    .review-grid,
+    .map-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .topbar {
+      border-radius: 26px;
+      align-items: start;
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .shell { width: min(var(--max), calc(100% - 20px)); }
+
+    .hero-card,
+    .panel,
+    .step,
+    .command,
+    .path-card,
+    .review-card,
+    .tip,
+    .map-card,
+    .hero-side {
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    h1 { font-size: 2.3rem; }
+  }
+
+  /* CAPAS DEL PROYECTO */
+  .layers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .layer-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left-width: 3px;
+    border-left-style: solid;
+    border-radius: var(--radius-md);
+    padding: 22px;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
+  }
+
+  .layer-card.global  { border-left-color: var(--accent); }
+  .layer-card.client  { border-left-color: var(--purple); }
+  .layer-card.project { border-left-color: var(--teal); }
+  .layer-card.output  { border-left-color: var(--yellow); background: rgba(245,166,35,0.03); }
+
+  .layer-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .layer-badge.global  { background: var(--accent-soft);  color: var(--accent);  border: 1px solid rgba(0,200,255,0.2); }
+  .layer-badge.client  { background: var(--purple-soft);  color: var(--purple);  border: 1px solid rgba(157,110,255,0.2); }
+  .layer-badge.project { background: var(--teal-soft);    color: var(--teal);    border: 1px solid rgba(0,229,192,0.2); }
+  .layer-badge.output  { background: rgba(245,166,35,0.08); color: var(--yellow); border: 1px solid rgba(245,166,35,0.2); }
+
+  .layer-card h3 { font-size: 1.05rem; font-weight: 800; margin: 0 0 8px; }
+  .layer-card p  { color: var(--muted); font-size: 0.9rem; margin: 0 0 14px; }
+
+  .layer-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .layer-file {
+    font-family: "Cascadia Code","Consolas",monospace;
+    font-size: 0.79rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--muted);
+  }
+
+  .layers-flow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 14px 20px;
+    background: var(--panel-strong);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-family: "Cascadia Code","Consolas",monospace;
+  }
+
+  .layers-flow .flow-sep { color: var(--muted); font-weight: 400; }
+
+  .layer-note {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(0,200,255,0.15);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+
+  .layer-note strong { color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .layers-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">cipher <span>/ guia visual</span></div>
+      <nav class="nav">
+        <a href="#inicio">Inicio</a>
+        <a href="#flujo">Flujo</a>
+        <a href="#comandos">Comandos</a>
+        <a href="#demo">Demo</a>
+        <a href="#archivos">Archivos</a>
+        <a href="#revisar">Que revisar</a>
+        <a href="#capas">Capas</a>
+      </nav>
+    </header>
 
-<!-- NAV -->
-<nav>
-  <span class="nav-logo">cipher <span>/ docs</span></span>
-  <div class="nav-links">
-    <a href="#problema">Problema</a>
-    <a href="#capas">Capas</a>
-    <a href="#comandos">Comandos</a>
-    <a href="#flujo">Flujo</a>
-    <a href="#branch">Branches</a>
-    <a href="#providers">Providers</a>
-    <a href="#aislamiento">Aislamiento</a>
+    <section class="hero" id="inicio">
+      <article class="hero-card">
+        <div class="eyebrow">Version detallada e interactiva</div>
+        <h1>Como usar <br>cipher sin perderte</h1>
+        <p>
+          Guia completa: que hace cada comando internamente, todos sus flags,
+          que archivos genera y una terminal interactiva para probarlo sin instalar nada.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#demo">Probar demo interactivo</a>
+          <a class="btn btn-secondary" href="#comandos">Ver comandos</a>
+        </div>
+      </article>
+
+      <aside class="hero-side hero-card">
+        <div class="mini-card">
+          <div class="mini-label">Flujo inicial</div>
+          <div class="mini-title">Orden recomendado</div>
+          <p><code>cipheria init</code> &rarr; <code>cipheria index</code> &rarr; <code>cipheria task</code></p>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">Donde estan los archivos?</div>
+          <div class="mini-title">Dos carpetas principales</div>
+          <p>Contexto editable en <code>clients/</code>. Datos del sistema en <code>.cipher/</code>.</p>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">Idea central</div>
+          <div class="mini-title">Cada comando deja rastro</div>
+          <p>Contexto, indices, packs, tareas, sesiones, auditoria y alertas quedan en disco.</p>
+        </div>
+      </aside>
+    </section>
+
+    <main>
+      <!-- QUICK TIPS -->
+      <section>
+        <div class="quick-grid">
+          <article class="tip">
+            <h3>1. <code>clients/</code></h3>
+            <p>Documentacion de contexto por cliente y repo. Archivos editables: ARCHITECTURE.md, BUSINESS_RULES.md, DEPENDENCIES.md, RISK_MATRIX.md.</p>
+          </article>
+          <article class="tip">
+            <h3>2. <code>.cipher/</code></h3>
+            <p>Datos operativos: <code>index/</code> (grafos), <code>packs/</code> (contexto), <code>tasks/</code> (tareas), <code>sessions/</code>, <code>audit/</code>, <code>alerts/</code>.</p>
+          </article>
+          <article class="tip">
+            <h3>3. Flujo diario</h3>
+            <p>Para desarrollar una tarea revisa <code>packs/</code>, <code>tasks/</code> y <code>sessions/</code>. Para trazabilidad, <code>audit/</code>.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- FLUJO RECOMENDADO -->
+      <section id="flujo">
+        <div class="section-head">
+          <div>
+            <h2>Flujo recomendado</h2>
+            <p>El camino completo desde cero hasta ejecutar una tarea con agente.</p>
+          </div>
+        </div>
+        <div class="steps-grid">
+          <article class="step">
+            <div class="step-num">1</div>
+            <h3>Registrar y analizar</h3>
+            <p>Usa <code>cipheria init</code> para escanear repos, elegir proveedor LLM y generar contexto inicial de negocio y arquitectura.</p>
+          </article>
+          <article class="step">
+            <div class="step-num">2</div>
+            <h3>Indexar estructura</h3>
+            <p>Usa <code>cipheria index</code> para extraer simbolos, imports y construir el grafo de dependencias. Sin LLM, puro parseo.</p>
+          </article>
+          <article class="step">
+            <div class="step-num">3</div>
+            <h3>Crear task file</h3>
+            <p>Crea un archivo <code>feature-4040-mi-tarea.md</code> con titulo y descripcion. El nombre define tipo, numero y rama automaticamente.</p>
+          </article>
+          <article class="step">
+            <div class="step-num">4</div>
+            <h3>Ejecutar y auditar</h3>
+            <p>Usa <code>cipheria task feature-4040-mi-tarea.md</code> para crear la tarea formal, analizar impacto y lanzar el agente.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- COMANDOS DETALLADOS -->
+      <section id="comandos">
+        <div class="section-head">
+          <div>
+            <h2>Comandos — referencia completa</h2>
+            <p>Cada bloque incluye uso, todos los flags, proceso interno paso a paso y archivos generados.</p>
+          </div>
+        </div>
+        <div class="commands-grid">
+
+          <!-- INIT -->
+          <article class="command">
+            <div class="command-top">
+              <h3><code>cipheria init</code></h3>
+              <span class="chip chip-ai">usa IA</span>
+            </div>
+            <p>Onboarding automatico: detecta repos Git, los registra bajo un cliente, elige proveedor LLM y genera contexto de negocio y arquitectura para cada repo.</p>
+            <div class="cmd">cipheria init [--scan &lt;ruta&gt;]</div>
+
+            <table class="flags-table">
+              <thead><tr><th>Flag</th><th>Descripcion</th></tr></thead>
+              <tbody>
+                <tr><td>--scan &lt;ruta&gt;</td><td>Directorio donde buscar repos .git (default: directorio actual)</td></tr>
+              </tbody>
+            </table>
+
+            <ol class="steps-detail">
+              <li>Escanea recursivamente buscando carpetas <code>.git</code>.</li>
+              <li>Muestra repos encontrados y pide seleccion interactiva.</li>
+              <li>Solicita nombre del cliente (default: nombre del directorio).</li>
+              <li>Ofrece eleccion de proveedor: Gemini (contexto 400k) o Claude (contexto 60k).</li>
+              <li>Por cada repo seleccionado: genera ARCHITECTURE.md, BUSINESS_RULES.md, DEPENDENCIES.md y RISK_MATRIX.md con IA.</li>
+              <li>Crea index estructural inicial (simbolos e imports).</li>
+              <li>Detecta dependencias cruzadas entre repos.</li>
+              <li>Actualiza <code>.cipher/config.json</code> y agrega entradas a <code>.gitignore</code>.</li>
+            </ol>
+
+            <div class="output-pills">
+              <span class="output-pill">clients/&lt;cliente&gt;/&lt;repo&gt;/ARCHITECTURE.md</span>
+              <span class="output-pill">clients/&lt;cliente&gt;/&lt;repo&gt;/BUSINESS_RULES.md</span>
+              <span class="output-pill">clients/&lt;cliente&gt;/&lt;repo&gt;/RISK_MATRIX.md</span>
+              <span class="output-pill">.cipher/config.json</span>
+            </div>
+          </article>
+
+          <!-- INDEX -->
+          <article class="command">
+            <div class="command-top">
+              <h3><code>cipheria index</code></h3>
+              <span class="chip chip-no">sin IA</span>
+            </div>
+            <p>Parseo estructural del codigo: extrae simbolos (funciones, clases, metodos), imports y construye el grafo de dependencias entre archivos.</p>
+            <div class="cmd">cipheria index [--repo &lt;ruta-o-nombre&gt;]</div>
+
+            <table class="flags-table">
+              <thead><tr><th>Flag</th><th>Descripcion</th></tr></thead>
+              <tbody>
+                <tr><td>--repo &lt;ruta&gt;</td><td>Ruta o nombre del repo a indexar (default: CWD)</td></tr>
+              </tbody>
+            </table>
+
+            <ol class="steps-detail">
+              <li>Detecta o recibe ruta del repo.</li>
+              <li>Recorre todos los archivos fuente soportados (Python, JS, TS, Go, Java, etc.).</li>
+              <li>Extrae por archivo: nombre, lenguaje, simbolos, imports, hash SHA-256.</li>
+              <li>Usa <code>ImportResolver</code> para mapear imports a rutas reales de archivo.</li>
+              <li>Construye grafo: nodos = archivos, aristas = importacion.</li>
+              <li>Registra modulos externos (npm, pip, etc.) por separado.</li>
+              <li>Guarda <code>index.json</code> y <code>graph.json</code> en disco.</li>
+              <li>Muestra estadisticas: archivos, simbolos, imports, lenguajes, nodos, aristas.</li>
+            </ol>
+
+            <div class="output-pills">
+              <span class="output-pill">.cipher/index/&lt;repo&gt;/index.json</span>
+              <span class="output-pill">.cipher/index/&lt;repo&gt;/graph.json</span>
+            </div>
+          </article>
+
+          <!-- TASK FILE FORMAT -->
+          <article class="command">
+            <div class="command-top">
+              <h3>Formato <code>task.md</code></h3>
+              <span class="chip chip-no">sin IA</span>
+            </div>
+            <p>En vez del prompt interactivo, crea un archivo <code>.md</code> con los datos de la tarea y pasalo directo a <code>cipheria task</code>.</p>
+            <div class="cmd">cipheria task feature-4040-login-oauth.md</div>
+
+            <p style="margin-top:14px; font-size:0.88rem;"><strong>El nombre del archivo define tipo, numero y rama automaticamente:</strong></p>
+            <table class="flags-table">
+              <thead><tr><th>Nombre de archivo</th><th>Tipo</th><th>Numero</th></tr></thead>
+              <tbody>
+                <tr><td>feature-4040-login-oauth.md</td><td>FEATURE</td><td>4040</td></tr>
+                <tr><td>bug-123-fix-timeout.md</td><td>BUG</td><td>123</td></tr>
+                <tr><td>hotfix-7-crash-mobile.md</td><td>HOTFIX</td><td>7</td></tr>
+                <tr><td>task-99-refactor-auth.md</td><td>TASK</td><td>99</td></tr>
+              </tbody>
+            </table>
+
+            <p style="margin-top:14px; font-size:0.88rem;"><strong>Contenido del archivo (todo opcional salvo existir):</strong></p>
+            <div class="cmd"># Agregar autenticacion OAuth con Google
+
+Implementar flujo OAuth2 con Google como proveedor de identidad.
+Debe integrarse con el sistema de usuarios existente sin romper el login por email.
+
+Link: https://linear.app/acme/issue/ENG-4040</div>
+
+            <ol class="steps-detail">
+              <li>El <code># Titulo</code> (H1) se usa como titulo de la tarea. Si no hay H1, se genera del nombre del archivo.</li>
+              <li>El cuerpo del archivo es la descripcion. Todo lo que no sea H1 ni <code>Link:</code>.</li>
+              <li>La linea <code>Link: &lt;url&gt;</code> se guarda como <code>source_ref</code> en la tarea.</li>
+              <li>La rama se genera automaticamente: <code>feature-4040-agregar-autenticacion-oauth-con-google</code>.</li>
+            </ol>
+
+            <p style="margin-top:12px; font-size:0.88rem;"><strong>Algoritmo de scoring interno (context pack):</strong></p>
+            <table class="score-table">
+              <thead><tr><th>Criterio</th><th>Puntos</th><th>Descripcion</th></tr></thead>
+              <tbody>
+                <tr><td>Keyword en ruta</td><td>+2.0</td><td>Por cada keyword de la tarea en el path del archivo</td></tr>
+                <tr><td>Keyword en simbolo</td><td>+1.0</td><td>Por cada keyword en nombres de funciones/clases</td></tr>
+                <tr><td>Alta demanda</td><td>+0.5</td><td>Archivo en top 20% de archivos mas importados</td></tr>
+                <tr><td>Tiene exports</td><td>+0.3</td><td>Archivo que exporta simbolos (no solo importa)</td></tr>
+                <tr><td>Nombre exacto</td><td>+5.0</td><td>Basename mencionado explicitamente en la tarea</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <!-- TASK -->
+          <article class="command">
+            <div class="command-top">
+              <h3><code>cipheria task</code></h3>
+              <span class="chip chip-mix">pack + alert + agente</span>
+            </div>
+            <p>Comando principal de trabajo diario. Acepta descripcion libre, archivo <code>.md</code>, ticket de GitHub o Linear. Indexa repos, construye contexto, analiza impacto y lanza el agente.</p>
+            <div class="cmd">cipheria task feature-4040-login.md
+cipheria task "&lt;descripcion libre&gt;"
+cipheria task --from-gh owner/repo#123
+cipheria task --from-linear ENG-456
+cipheria task --list [--status PENDING]
+cipheria task feature-4040.md --dry-run</div>
+
+            <table class="flags-table">
+              <thead><tr><th>Flag / Argumento</th><th>Descripcion</th></tr></thead>
+              <tbody>
+                <tr><td>feature-4040.md</td><td>Lee la tarea desde un archivo markdown local</td></tr>
+                <tr><td>"descripcion"</td><td>Texto libre (abre prompt interactivo si no se pasa nada)</td></tr>
+                <tr><td>--from-gh &lt;owner/repo#N&gt;</td><td>Importa issue real desde GitHub (requiere gh CLI)</td></tr>
+                <tr><td>--from-linear &lt;ID&gt;</td><td>Importa ticket real desde Linear API</td></tr>
+                <tr><td>--repo &lt;nombre&gt;</td><td>Especifica el repo destino</td></tr>
+                <tr><td>--provider</td><td>Proveedor LLM: claude (150k) o gemini (400k)</td></tr>
+                <tr><td>--dry-run</td><td>Genera intent y CIPHER_ALERT.md pero NO lanza el agente</td></tr>
+                <tr><td>--list</td><td>Lista todas las tareas registradas</td></tr>
+                <tr><td>--status &lt;val&gt;</td><td>Filtra lista por PENDING, IN_PROGRESS, DONE, FAILED</td></tr>
+              </tbody>
+            </table>
+
+            <ol class="steps-detail">
+              <li>Resuelve la fuente de la tarea: archivo <code>.md</code>, texto libre, prompt interactivo, GitHub o Linear.</li>
+              <li>Detecta el repo por CWD o muestra menu de seleccion interactivo.</li>
+              <li>Indexa todos los repos del cliente de forma incremental (SHA-256 por archivo, solo re-parsea cambios).</li>
+              <li>Construye y fusiona grafos de dependencia de todos los repos.</li>
+              <li>Crea objeto Task con tipo detectado automaticamente, status PENDING.</li>
+              <li>Construye context pack: scoring, seleccion de targets y dependencias, presupuesto de tokens.</li>
+              <li>Genera ContextManifest con auditoria del contexto usado.</li>
+              <li>Analiza impacto cross-repo con Gemini: escribe <code>CIPHER_ALERT.md</code> en la raiz del repo del cliente y lo agrega al <code>.gitignore</code> automaticamente.</li>
+              <li>Genera TaskIntent: archivos a modificar, archivos a leer, restricciones detectadas.</li>
+              <li>Lanza agente Claude inyectando contexto en CLAUDE.md temporal.</li>
+              <li>Actualiza status de la tarea a DONE o FAILED. Loguea en <code>audit_log.jsonl</code>.</li>
+            </ol>
+
+            <p style="margin-top:12px; font-size:0.88rem;"><strong>Ciclo de vida de una tarea:</strong></p>
+            <div class="status-flow">
+              <span class="status-node sn-pending">PENDING</span>
+              <span class="status-arrow">&#8594;</span>
+              <span class="status-node sn-progress">IN_PROGRESS</span>
+              <span class="status-arrow">&#8594;</span>
+              <span class="status-node sn-done">DONE</span>
+              <span class="status-arrow"> / </span>
+              <span class="status-node sn-failed">FAILED</span>
+            </div>
+
+            <div class="output-pills" style="margin-top:14px;">
+              <span class="output-pill">&lt;repo-cliente&gt;/CIPHER_ALERT.md</span>
+              <span class="output-pill">.cipher/tasks/&lt;cliente&gt;/&lt;repo&gt;/&lt;task_id&gt;/task.json</span>
+              <span class="output-pill">.cipher/tasks/.../task_intent.json</span>
+              <span class="output-pill">.cipher/packs/.../context_pack.md</span>
+              <span class="output-pill">.cipher/alerts/&lt;cliente&gt;/alert-{TYPE}-{id}.md</span>
+              <span class="output-pill">.cipher/audit/audit_log.jsonl</span>
+            </div>
+          </article>
+
+          <!-- AUDIT -->
+          <article class="command">
+            <div class="command-top">
+              <h3><code>cipheria audit</code></h3>
+              <span class="chip chip-no">lectura</span>
+            </div>
+            <p>Visualiza el historial append-only de sesiones de IA. Filtra, muestra estadisticas y permite registrar la URL del PR asociado a cada tarea.</p>
+            <div class="cmd">cipheria audit [&lt;task_id&gt;] [--repo &lt;n&gt;] [--client &lt;n&gt;]
+              [--since YYYY-MM] [--result done|failed|pending]
+              [--pr &lt;task_id&gt; &lt;url&gt;] [--stats] [--limit N]</div>
+
+            <table class="flags-table">
+              <thead><tr><th>Flag</th><th>Descripcion</th></tr></thead>
+              <tbody>
+                <tr><td>&lt;task_id&gt;</td><td>Muestra detalle completo de una tarea (posicional)</td></tr>
+                <tr><td>--repo &lt;nombre&gt;</td><td>Filtra entradas por repo</td></tr>
+                <tr><td>--client &lt;nombre&gt;</td><td>Filtra por cliente</td></tr>
+                <tr><td>--since YYYY-MM</td><td>Filtra desde una fecha (e.g., 2024-03)</td></tr>
+                <tr><td>--result &lt;val&gt;</td><td>Filtra por resultado: pending, done, failed</td></tr>
+                <tr><td>--pr &lt;id&gt; &lt;url&gt;</td><td>Registra URL del PR para una tarea</td></tr>
+                <tr><td>--stats</td><td>Muestra estadisticas globales (sesiones, tokens, por repo)</td></tr>
+                <tr><td>--limit N</td><td>Maximo de entradas a mostrar (default 50)</td></tr>
+              </tbody>
+            </table>
+
+            <ol class="steps-detail">
+              <li>Lee <code>.cipher/audit/audit_log.jsonl</code> (append-only, nunca se sobreescribe).</li>
+              <li>Aplica filtros combinables en memoria.</li>
+              <li>En modo lista: muestra tabla con timestamp, task_id, repo, tokens, resultado.</li>
+              <li>En modo detalle: carga el <code>CONTEXT_MANIFEST.json</code> completo del disco.</li>
+              <li>En modo PR: actualiza el campo pr_url en manifest y log.</li>
+              <li>En modo stats: agrega totales, por resultado y top repos.</li>
+            </ol>
+          </article>
+
+          <!-- IMPACT -->
+          <article class="command">
+            <div class="command-top">
+              <h3><code>cipheria impact</code></h3>
+              <span class="chip chip-no">sin IA</span>
+            </div>
+            <p>Analiza que archivos se veerian afectados al modificar un archivo dado. Usa el grafo de dependencias para recorrido inverso por profundidad.</p>
+            <div class="cmd">cipheria impact &lt;archivo&gt; [--repo &lt;nombre&gt;] [--depth N]
+cipheria impact                    # modo interactivo</div>
+
+            <table class="flags-table">
+              <thead><tr><th>Flag</th><th>Descripcion</th></tr></thead>
+              <tbody>
+                <tr><td>&lt;archivo&gt;</td><td>Ruta relativa o sufijo del archivo a analizar</td></tr>
+                <tr><td>--repo &lt;nombre&gt;</td><td>Repo a usar (auto-detectado desde CWD)</td></tr>
+                <tr><td>--depth N</td><td>Profundidad maxima de recorrido (default: 10)</td></tr>
+              </tbody>
+            </table>
+
+            <ol class="steps-detail">
+              <li>Carga <code>graph.json</code> del repo.</li>
+              <li>Resuelve el archivo destino (exacto, por sufijo o fuzzy match).</li>
+              <li>Recorre el grafo de dependencias en sentido inverso hasta <code>depth</code> niveles.</li>
+              <li>Agrupa resultados por profundidad (depth 1 = importadores directos, depth 2 = transitivos, etc.).</li>
+              <li>Calcula nivel de riesgo segun cantidad de archivos afectados.</li>
+              <li>Identifica archivos de test y config en el conjunto de impacto.</li>
+            </ol>
+
+            <p style="margin-top:12px; font-size:0.88rem;"><strong>Niveles de riesgo por cantidad de archivos afectados:</strong></p>
+            <div class="risk-row">
+              <span class="risk-badge risk-none"><span class="dot"></span>Ninguno (0)</span>
+              <span class="risk-badge risk-low"><span class="dot"></span>Bajo (1-3)</span>
+              <span class="risk-badge risk-med"><span class="dot"></span>Medio (4-10)</span>
+              <span class="risk-badge risk-high"><span class="dot"></span>Alto (11-30)</span>
+              <span class="risk-badge risk-crit"><span class="dot"></span>Critico (31+)</span>
+            </div>
+          </article>
+
+          <!-- SESSION -->
+          <article class="command">
+            <div class="command-top">
+              <h3><code>cipheria session</code></h3>
+              <span class="chip chip-mix">interactivo</span>
+            </div>
+            <p>Abre una sesion de desarrollo completa: ensambla contexto por capas, crea la descripcion de la tarea para el agente y lanza Claude Code.</p>
+            <div class="cmd">cipheria session claude</div>
+
+            <ol class="steps-detail">
+              <li>Detecta cliente y repo desde CWD o muestra menu de seleccion.</li>
+              <li>Crea entrada en SessionStore con session_id y timestamp de inicio.</li>
+              <li>Ensambla ACTIVE_CONTEXT.md combinando: CONVENTIONS.md (global) + BUSINESS_RULES.md (cliente) + ARCHITECTURE.md (repo).</li>
+              <li>Abre prompt interactivo para: tipo de trabajo, numero de ticket, titulo, descripcion y link.</li>
+              <li>Genera <code>task-agent.md</code> con instrucciones paso a paso para el agente, nombre de rama sugerido y checklist.</li>
+              <li>Inyecta contexto en CLAUDE.md temporal antes de lanzar el agente.</li>
+              <li>Al terminar: restaura o elimina CLAUDE.md, registra fin de sesion.</li>
+            </ol>
+
+            <div class="output-pills">
+              <span class="output-pill">.cipher/sessions/&lt;cliente&gt;/&lt;repo&gt;/ACTIVE_CONTEXT.md</span>
+              <span class="output-pill">.cipher/sessions/.../task-agent.md</span>
+              <span class="output-pill">.cipher/sessions/.../session_&lt;id&gt;.json</span>
+            </div>
+          </article>
+
+          <!-- STATUS -->
+          <article class="command">
+            <div class="command-top">
+              <h3><code>cipheria status</code></h3>
+              <span class="chip chip-no">lectura</span>
+            </div>
+            <p>Vista rapida del estado del repo actual: cliente registrado, archivos de contexto disponibles y su antigüedad.</p>
+            <div class="cmd">cipheria status</div>
+
+            <ol class="steps-detail">
+              <li>Lee <code>.cipher/config.json</code> y detecta el repo actual por <code>git rev-parse</code>.</li>
+              <li>Muestra: nombre del repo, cliente, ruta y archivos de contexto con fecha de ultima modificacion.</li>
+              <li>Lista todos los repos del mismo cliente.</li>
+            </ol>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- DEMO INTERACTIVO -->
+      <section id="demo">
+        <div class="section-head">
+          <div>
+            <h2>Terminal interactiva</h2>
+            <p>Proba los comandos sin instalar nada. Escribe un comando o hace clic en un ejemplo.</p>
+          </div>
+        </div>
+
+        <div class="terminal-wrapper">
+          <div class="terminal-titlebar">
+            <div class="term-dots">
+              <div class="term-dot term-dot-red"></div>
+              <div class="term-dot term-dot-yellow"></div>
+              <div class="term-dot term-dot-green"></div>
+            </div>
+            <span class="term-title">cipher — demo interactivo</span>
+          </div>
+          <div class="terminal-body" id="termOutput">
+            <div class="term-out green bold">cipheria v1.0  — Sistema de contexto para agentes de codigo</div>
+            <div class="term-out dim">Escribe un comando o selecciona un ejemplo abajo.</div>
+            <div class="term-out dim">Comandos disponibles: init, claude, task, audit, impact, index, update, status</div>
+            <div class="term-out dim">Tip: prueba  cipheria task feature-4040-login-oauth.md</div>
+            <div class="term-out dim">&nbsp;</div>
+          </div>
+          <div class="terminal-input-row">
+            <span class="term-input-prompt">$ </span>
+            <input class="term-input" id="termInput" type="text" placeholder="cipheria task feature-4040-login.md" autocomplete="off" spellcheck="false" />
+            <button class="term-run-btn" onclick="runTermCmd()">&#x23CE; Enter</button>
+          </div>
+        </div>
+
+        <div class="demo-quick-btns" id="demoButtons"></div>
+        <p class="demo-hint">Los resultados son simulados para ilustrar el comportamiento del sistema.</p>
+      </section>
+
+      <!-- ARCHIVOS GENERADOS -->
+      <section id="archivos">
+        <div class="section-head">
+          <div>
+            <h2>Donde quedan los archivos generados</h2>
+            <p>Si tu pregunta es "que reviso despues de correr un comando", esta es la seccion.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="path-tabs">
+            <span class="path-tag">Todo parte desde la raiz del proyecto</span>
+            <span class="path-tag">Carpetas principales: <code>clients/</code> y <code>.cipher/</code></span>
+            <span class="path-tag">Cada comando deja salidas distintas</span>
+          </div>
+        </div>
+
+        <div class="paths-grid">
+          <article class="path-card">
+            <div class="path-label">Despues de <code>cipheria init</code></div>
+            <h3>Contexto por cliente y repo</h3>
+            <span class="path">clients/&lt;cliente&gt;/&lt;repo&gt;/</span>
+            <ul>
+              <li><code>ARCHITECTURE.md</code> — vision de arquitectura generada con IA</li>
+              <li><code>BUSINESS_RULES.md</code> — reglas de negocio detectadas</li>
+              <li><code>DEPENDENCIES.md</code> — dependencias externas y su proposito</li>
+              <li><code>RISK_MATRIX.md</code> — matriz de riesgos del proyecto</li>
+            </ul>
+            <p><span class="status-warn">Revisar primero:</span> estos archivos son borrador de IA. Valida y edita segun corresponda.</p>
+          </article>
+
+          <article class="path-card">
+            <div class="path-label">Despues de <code>cipheria index</code></div>
+            <h3>Indices y grafo de dependencias</h3>
+            <span class="path">.cipher/index/&lt;repo&gt;/</span>
+            <ul>
+              <li><code>index.json</code> — archivos, lenguaje, simbolos (funciones/clases), imports, hash</li>
+              <li><code>graph.json</code> — nodos (archivos), aristas (imports), modulos externos</li>
+            </ul>
+            <p><span class="status-good">Revisar si:</span> queres entender la estructura real del codigo o diagnosticar impacto antes de cambiar algo.</p>
+          </article>
+
+          <article class="path-card">
+            <div class="path-label">Despues de <code>cipheria pack</code></div>
+            <h3>Pack de contexto para el agente</h3>
+            <span class="path">.cipher/packs/&lt;repo&gt;/&lt;task_id&gt;_&lt;slug&gt;/</span>
+            <ul>
+              <li><code>context_pack.md</code> — markdown con archivos seleccionados, reglas y arquitectura</li>
+              <li><code>context_manifest.json</code> — metadata: archivos, roles (target/dependency), tokens usados, hash SHA-256</li>
+            </ul>
+            <p><span class="status-good">Revisar primero:</span> si queres ver exactamente que contexto recibe el agente antes de ejecutar.</p>
+          </article>
+
+          <article class="path-card">
+            <div class="path-label">Despues de <code>cipheria task</code></div>
+            <h3>Tarea formal e intent</h3>
+            <span class="path">.cipher/tasks/&lt;cliente&gt;/&lt;repo&gt;/&lt;task_id&gt;/</span>
+            <ul>
+              <li><code>task.json</code> — tipo, titulo, descripcion, repo, status, fuente (manual/gh/linear), timestamps</li>
+              <li><code>task_intent.json</code> — archivos a modificar, archivos a leer, restricciones detectadas</li>
+            </ul>
+            <p><span class="status-good">Revisar si:</span> queres confirmar objetivo, alcance, archivos involucrados y restricciones antes de que el agente actue.</p>
+          </article>
+
+          <article class="path-card">
+            <div class="path-label">Despues de <code>cipheria task</code> o <code>cipheria session</code></div>
+            <h3>Manifest y contexto de sesion</h3>
+            <span class="path">.cipher/sessions/&lt;cliente&gt;/&lt;repo&gt;/&lt;task_id&gt;/</span>
+            <ul>
+              <li><code>CONTEXT_MANIFEST.json</code> — evidencia de que archivos vio el agente</li>
+              <li><code>ACTIVE_CONTEXT.md</code> — contexto ensamblado por capas (global + cliente + repo)</li>
+              <li><code>task-agent.md</code> — instrucciones generadas para el agente</li>
+            </ul>
+            <p><span class="status-good">Revisar si:</span> queres auditar exactamente que informacion tuvo disponible el agente en una ejecucion.</p>
+          </article>
+
+          <article class="path-card">
+            <div class="path-label">Despues de <code>cipheria task</code> — analisis de riesgo</div>
+            <h3>Alertas de impacto cross-repo</h3>
+            <span class="path">.cipher/alerts/&lt;task_id&gt;/</span>
+            <ul>
+              <li><code>ALERT.md</code> — archivos afectados por profundidad, tests en riesgo, configs impactadas</li>
+            </ul>
+            <span class="path" style="margin-top:10px;">.cipher/audit/audit_log.jsonl</span>
+            <ul>
+              <li>Log append-only con todas las sesiones: timestamp, tokens, resultado, hash de contexto.</li>
+            </ul>
+            <p><span class="status-risk">Revisar si:</span> queres trazabilidad completa, estadisticas de uso o detectar impacto entre repos.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- QUE REVISAR -->
+      <section id="revisar">
+        <div class="section-head">
+          <div>
+            <h2>Que deberias revisar segun tu objetivo</h2>
+            <p>En vez de abrir todo, revisa solo la carpeta que corresponde al tipo de validacion que queres hacer.</p>
+          </div>
+        </div>
+        <div class="review-grid">
+          <article class="review-card">
+            <div class="review-label">Quiero validar contexto de negocio</div>
+            <h3>Abri <code>clients/</code></h3>
+            <p>La mejor carpeta para revisar si la documentacion generada tiene sentido funcional y arquitectonico. Editable directamente.</p>
+            <ul>
+              <li><code>ARCHITECTURE.md</code></li>
+              <li><code>BUSINESS_RULES.md</code></li>
+              <li><code>DEPENDENCIES.md</code></li>
+            </ul>
+          </article>
+
+          <article class="review-card">
+            <div class="review-label">Quiero entender dependencias reales</div>
+            <h3>Abri <code>.cipher/index/</code></h3>
+            <p>Datos estructurales del codigo, no interpretaciones. La fuente mas confiable para analisis de impacto tecnico.</p>
+            <ul>
+              <li><code>index.json</code> — simbolos e imports por archivo</li>
+              <li><code>graph.json</code> — grafo de dependencias</li>
+            </ul>
+          </article>
+
+          <article class="review-card">
+            <div class="review-label">Quiero ver que le pasaron al agente</div>
+            <h3>Abri <code>.cipher/packs/</code> y <code>.cipher/sessions/</code></h3>
+            <p>Si necesitas verificar el contexto exacto usado en una tarea, estas dos carpetas son las correctas.</p>
+            <ul>
+              <li><code>context_pack.md</code></li>
+              <li><code>CONTEXT_MANIFEST.json</code></li>
+              <li><code>ACTIVE_CONTEXT.md</code></li>
+            </ul>
+          </article>
+
+          <article class="review-card">
+            <div class="review-label">Quiero saber que tarea se creo</div>
+            <h3>Abri <code>.cipher/tasks/</code></h3>
+            <p>Muestra la tarea formal, el tipo detectado, el intent y el status actual.</p>
+            <ul>
+              <li><code>task.json</code> — metadata de la tarea</li>
+              <li><code>task_intent.json</code> — que archivos tocar y restricciones</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <!-- CAPAS DEL PROYECTO -->
+      <section id="capas">
+        <div class="section-head">
+          <div>
+            <h2>Capas del proyecto</h2>
+            <p>El contexto que recibe el agente se ensambla combinando tres fuentes en orden fijo. Cada capa agrega especificidad.</p>
+          </div>
+        </div>
+
+        <div class="layers-flow">
+          <span style="color:var(--accent); font-weight:700;">Capa Global</span>
+          <span class="flow-sep">+</span>
+          <span style="color:var(--purple); font-weight:700;">Capa Cliente</span>
+          <span class="flow-sep">+</span>
+          <span style="color:var(--teal); font-weight:700;">Capa Proyecto</span>
+          <span class="flow-sep">→</span>
+          <span style="color:var(--yellow); font-weight:700;">ACTIVE_CONTEXT.md</span>
+        </div>
+
+        <div class="layers-grid">
+          <article class="layer-card global">
+            <div class="layer-badge global">Capa 1 — Global</div>
+            <h3>Reglas de la consultora</h3>
+            <p>Convenciones universales de codigo que aplican a todos los proyectos y clientes. Se leen desde <code>global/</code>.</p>
+            <div class="layer-files">
+              <span class="layer-file">CONVENTIONS.md</span>
+              <span class="layer-file">WORKFLOW.md</span>
+              <span class="layer-file">AGENT.md</span>
+            </div>
+          </article>
+
+          <article class="layer-card client">
+            <div class="layer-badge client">Capa 2 — Cliente</div>
+            <h3>Contexto del cliente</h3>
+            <p>Reglas de negocio compartidas entre todos los repos del mismo cliente. Se leen desde <code>clients/&lt;cliente&gt;/</code>.</p>
+            <div class="layer-files">
+              <span class="layer-file">BUSINESS_RULES.md</span>
+              <span class="layer-file">ARCHITECTURE.md</span>
+            </div>
+          </article>
+
+          <article class="layer-card project">
+            <div class="layer-badge project">Capa 3 — Proyecto</div>
+            <h3>Contexto del repo</h3>
+            <p>Arquitectura, dependencias y riesgos especificos del repo activo. Se leen desde <code>clients/&lt;cliente&gt;/&lt;repo&gt;/</code>.</p>
+            <div class="layer-files">
+              <span class="layer-file">BUSINESS_RULES.md</span>
+              <span class="layer-file">ARCHITECTURE.md</span>
+              <span class="layer-file">DEPENDENCIES.md</span>
+              <span class="layer-file">RISK_MATRIX.md</span>
+            </div>
+          </article>
+
+          <article class="layer-card output">
+            <div class="layer-badge output">Salida ensamblada</div>
+            <h3>ACTIVE_CONTEXT.md</h3>
+            <p>Markdown final generado por <code>cipheria session</code>. Combina las 3 capas y se inyecta al agente antes de lanzarlo.</p>
+            <div class="layer-files">
+              <span class="layer-file">.cipher/sessions/&lt;cliente&gt;/&lt;repo&gt;/ACTIVE_CONTEXT.md</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="layer-note">
+          <strong>Modo summary:</strong> por defecto cada archivo se trunca a 30 lineas (o usa un <code>.summary.md</code> si existe) para no exceder el budget de tokens del agente.
+        </div>
+      </section>
+
+      <!-- MAPA MENTAL -->
+      <section>
+        <div class="section-head">
+          <div>
+            <h2>Mapa mental rapido</h2>
+            <p>Resumen para recordar donde buscar sin pensar demasiado.</p>
+          </div>
+        </div>
+        <div class="map-grid">
+          <article class="map-card">
+            <strong><code>clients/</code> = contexto humano</strong>
+            <p>Documentacion editable y revisable. La genera la IA pero la valida la persona.</p>
+          </article>
+          <article class="map-card">
+            <strong><code>.cipher/index/</code> = estructura tecnica</strong>
+            <p>Simbolos, imports y dependencias reales extraidos del codigo. Sin interpretacion.</p>
+          </article>
+          <article class="map-card">
+            <strong><code>.cipher/packs/</code> = contexto minimo</strong>
+            <p>Los archivos seleccionados y el presupuesto de tokens para una tarea concreta.</p>
+          </article>
+          <article class="map-card">
+            <strong><code>.cipher/tasks/</code> = definicion de trabajo</strong>
+            <p>Objetivo, tipo detectado, intent y archivos a considerar para el agente.</p>
+          </article>
+          <article class="map-card">
+            <strong><code>.cipher/sessions/</code> = evidencia de ejecucion</strong>
+            <p>Manifest, contexto activo y task-agent.md de cada sesion de agente.</p>
+          </article>
+          <article class="map-card">
+            <strong><code>.cipher/audit/</code> = historial append-only</strong>
+            <p>Log de trazabilidad, tokens usados y base para PR comments y estadisticas.</p>
+          </article>
+        </div>
+        <p class="footer-note">
+          Regla practica: si queres revisar <strong>documentacion</strong>, entra a <code>clients/</code>.
+          Si queres revisar <strong>datos generados por el sistema</strong>, entra a <code>.cipher/</code>.
+        </p>
+      </section>
+    </main>
   </div>
-</nav>
-
-<main>
-
-  <!-- HERO -->
-  <section id="hero">
-    <div class="hero-kicker">sistema de contexto para agentes IA</div>
-    <h1>La <em>memoria</em> que<br>cualquier agente consume.</h1>
-    <p class="subtitle">
-      cipher centraliza el conocimiento de tus proyectos y lo inyecta automáticamente
-      en Claude, Gemini o Codex al iniciar cada sesión.
-    </p>
-    <div class="hero-pills">
-      <span class="pill">✨ Gemini — análisis de repos</span>
-      <span class="pill">🤖 Claude — agente de código</span>
-      <span class="pill">🏢 Multi-cliente</span>
-      <span class="pill">🔒 Aislamiento total</span>
-      <span class="pill">⚡ Branch automation</span>
-    </div>
-  </section>
-
-  <!-- PROBLEMA -->
-  <section id="problema">
-    <div class="tag tag-accent" style="margin-bottom:1.2rem">El problema</div>
-    <h2>Sin cipher, cada sesión empieza desde cero.</h2>
-    <div class="two-col">
-      <div class="card card-bad">
-        <div class="card-icon">😓</div>
-        <h3 style="color:var(--red)">Sin cipher</h3>
-        <ul>
-          <li data-icon="✗ ">El dev re-explica el proyecto cada vez</li>
-          <li data-icon="✗ ">El agente desconoce reglas de negocio</li>
-          <li data-icon="✗ ">No sabe el stack ni las dependencias</li>
-          <li data-icon="✗ ">Cambiás de herramienta y empezás de cero</li>
-          <li data-icon="✗ ">El conocimiento vive en la cabeza del dev</li>
-        </ul>
-      </div>
-      <div class="card card-good">
-        <div class="card-icon">🚀</div>
-        <h3 style="color:var(--green)">Con cipher</h3>
-        <ul>
-          <li data-icon="✓ ">El contexto se carga automáticamente</li>
-          <li data-icon="✓ ">Todos los devs comparten la misma memoria</li>
-          <li data-icon="✓ ">Funciona con Claude, Gemini, Codex o Aider</li>
-          <li data-icon="✓ ">El agente crea branches y PRs automáticamente</li>
-          <li data-icon="✓ ">El conocimiento vive en el repo, versionado</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- CAPAS -->
-  <section id="capas">
-    <div class="tag tag-cyan" style="margin-bottom:1.2rem">Arquitectura de contexto</div>
-    <h2>El contexto se ensambla en tres capas.</h2>
-    <p>Cada sesión combina reglas globales, datos del cliente y detalles del repo en un único archivo <code>ACTIVE_CONTEXT.md</code>.</p>
-
-    <br>
-    <div class="layers-visual">
-
-      <div class="layer layer-global">
-        <div class="layer-label">
-          🌐 GLOBAL
-          <small>Todos los proyectos</small>
-        </div>
-        <div class="layer-content">
-          <span class="file-chip chip-1">CONVENTIONS.md</span>
-          <span class="file-chip chip-1">WORKFLOW.md</span>
-          <span class="file-chip chip-1">AGENT.md</span>
-        </div>
-      </div>
-
-      <div class="layer layer-client">
-        <div class="layer-label">
-          🏢 CLIENTE
-          <small>Por empresa / cliente</small>
-        </div>
-        <div class="layer-content">
-          <span class="file-chip chip-2">BUSINESS_RULES.md</span>
-          <span class="file-chip chip-2">ARCHITECTURE.md</span>
-        </div>
-      </div>
-
-      <div class="layer layer-project">
-        <div class="layer-label">
-          📦 PROYECTO
-          <small>Por repo específico</small>
-        </div>
-        <div class="layer-content">
-          <span class="file-chip chip-3">DEPENDENCIES.md</span>
-          <span class="file-chip chip-3">RISK_MATRIX.md</span>
-          <span class="file-chip chip-3">IMPACT_RULES.md</span>
-          <span class="file-chip chip-3">TASK_FLOW.md</span>
-          <span class="file-chip chip-3">TEST_STRATEGY.md</span>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="context-result">
-      <div class="icon">📄</div>
-      <div class="info">
-        <strong>.cipher/sessions/&lt;cliente&gt;/&lt;repo&gt;/ACTIVE_CONTEXT.md</strong>
-        <p>Contexto ensamblado — solo vive en el repo cipher, nunca en el repo del cliente.</p>
-      </div>
-      <div class="token-badge">~900 tokens (modo summary)</div>
-    </div>
-  </section>
-
-  <!-- COMANDOS -->
-  <section id="comandos">
-    <div class="tag tag-green" style="margin-bottom:1.2rem">Comandos</div>
-    <h2>Cuatro comandos para el flujo completo.</h2>
-
-    <div class="cmd-tabs">
-      <button class="cmd-tab active" onclick="showCmd('init')">cipher init</button>
-      <button class="cmd-tab" onclick="showCmd('session')">cipher claude / gemini / codex</button>
-      <button class="cmd-tab" onclick="showCmd('update')">cipher update</button>
-      <button class="cmd-tab" onclick="showCmd('status')">cipher status</button>
-    </div>
-
-    <!-- INIT -->
-    <div class="cmd-panel active" id="cmd-init">
-      <div class="cmd-info">
-        <h3>Registrar un cliente nuevo</h3>
-        <p class="cmd-desc">Escanea los repos de una carpeta, analiza el código fuente con IA y genera toda la documentación de contexto automáticamente.</p>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <strong>Detectar repos</strong>
-              <span>Escanea subdirectorios con <code>.git</code> en el directorio actual</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <strong>Elegir agente de análisis</strong>
-              <span>Claude, Gemini o OpenAI — verifica y configura la API key si es necesario</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <strong>Leer código fuente real</strong>
-              <span>Lee archivos .py .ts .js .go .env etc. hasta el límite del provider</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-body">
-              <strong>Generar contexto con IA</strong>
-              <span>Un request por repo genera los 4 archivos .md usando delimitadores</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">5</div>
-            <div class="step-body">
-              <strong>Guardar y registrar</strong>
-              <span>Guarda en <code>clients/&lt;cliente&gt;/&lt;repo&gt;/</code> y actualiza <code>config.json</code></span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="cmd-terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-          <span class="terminal-title">terminal</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cd /proyectos/acme-corp</span></div>
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher init</span></div>
-          <br>
-          <div class="t-out">  Repos encontrados:</div>
-          <div class="t-out">    1. acme-api   (.git ✓)</div>
-          <div class="t-out">    2. acme-web   (.git ✓)</div>
-          <div class="t-out">    3. acme-admin (.git ✓)</div>
-          <br>
-          <div class="t-q">  ¿Registrar todos? [S/n]:</div>
-          <div><span class="t-ans">  S</span></div>
-          <br>
-          <div class="t-q">  Agente de análisis [1=Claude 2=Gemini 3=OpenAI]:</div>
-          <div><span class="t-ans">  2</span></div>
-          <br>
-          <div class="t-out">  Analizando acme-api...</div>
-          <div class="t-ok">  ✓ ARCHITECTURE.md generado</div>
-          <div class="t-ok">  ✓ BUSINESS_RULES.md generado</div>
-          <div class="t-ok">  ✓ DEPENDENCIES.md generado</div>
-          <div class="t-ok">  ✓ RISK_MATRIX.md generado</div>
-          <br>
-          <div class="t-ok">  ✓ Cliente registrado en config.json</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SESSION -->
-    <div class="cmd-panel" id="cmd-session">
-      <div class="cmd-info">
-        <h3>Abrir una sesión de desarrollo</h3>
-        <p class="cmd-desc">Carga el contexto, crea el ticket, genera el nombre de branch y lanza el agente con todo inyectado.</p>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <strong>Resolver cliente</strong>
-              <span>Detecta el repo actual via <code>git rev-parse</code> y busca en <code>config.json</code></span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <strong>Seleccionar repo de trabajo</strong>
-              <span>Muestra todos los repos del cliente y permite elegir en cuál trabajar</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <strong>Cargar contexto</strong>
-              <span>Usa <code>ACTIVE_CONTEXT.md</code> existente o lo genera ensamblando las 3 capas</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-body">
-              <strong>Crear ticket</strong>
-              <span>Tipo (FEATURE/TASK/ERROR/HOTFIX), número, título y descripción</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">5</div>
-            <div class="step-body">
-              <strong>Lanzar agente</strong>
-              <span>Inyecta contexto + ticket y arranca el agente en el repo seleccionado</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="cmd-terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-          <span class="terminal-title">terminal</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher claude</span></div>
-          <br>
-          <div class="t-out">  Cliente: acme-corp</div>
-          <br>
-          <div class="t-q">  ▸ Repos disponibles:</div>
-          <div class="t-out">    1. acme-api   (C:\...\acme-api)</div>
-          <div class="t-out">    2. acme-web   (C:\...\acme-web)</div>
-          <div class="t-q">  Seleccioná el repo [1-2]:</div>
-          <div><span class="t-ans">  1</span></div>
-          <br>
-          <div class="t-q">  ▸ Tipo de work item:</div>
-          <div class="t-out">    1. FEATURE  2. TASK  3. ERROR  4. HOTFIX</div>
-          <div class="t-q">  Seleccioná [1-4]:</div>
-          <div><span class="t-ans">  1</span></div>
-          <br>
-          <div class="t-q">  Número de ticket:</div>
-          <div><span class="t-ans">  142</span></div>
-          <div class="t-q">  Título breve:</div>
-          <div><span class="t-ans">  agregar login con google</span></div>
-          <br>
-          <div class="t-ok">  ✓ Task creada</div>
-          <div class="t-branch">  ✓ Branch: FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</div>
-          <div class="t-ok">  ✓ Contexto inyectado (CLAUDE.md temporal)</div>
-          <br>
-          <div class="t-out">  Iniciando Claude Code...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- UPDATE -->
-    <div class="cmd-panel" id="cmd-update">
-      <div class="cmd-info">
-        <h3>Actualizar contexto post-tarea</h3>
-        <p class="cmd-desc">Analiza el git diff, detecta cambios arquitecturales y propone actualizaciones a los archivos de contexto.</p>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <strong>Obtener git diff</strong>
-              <span>Lee <code>git diff HEAD</code> (staged + unstaged)</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <strong>Analizar con IA</strong>
-              <span>Envía diff + task al agente, pide: summary, impact_level, affected_files</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <strong>Confirmar y aplicar</strong>
-              <span>Muestra propuesta al dev y actualiza los archivos .md confirmados</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-body">
-              <strong>Impacto cruzado</strong>
-              <span>Si afecta otros repos, genera <code>ALERT.md</code> automáticamente</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="cmd-terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-          <span class="terminal-title">terminal</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher update</span></div>
-          <br>
-          <div class="t-out">  Analizando git diff...</div>
-          <div class="t-out">  → 3 archivos modificados</div>
-          <br>
-          <div class="t-out">  Impacto: <span style="color:var(--yellow)">MEDIO</span></div>
-          <div class="t-out">  Resumen: Se agregó OAuth2 via Google.</div>
-          <div class="t-out">  Nuevo endpoint: POST /auth/google</div>
-          <br>
-          <div class="t-q">  Actualizar ARCHITECTURE.md? [S/n]:</div>
-          <div><span class="t-ans">  S</span></div>
-          <div class="t-ok">  ✓ ARCHITECTURE.md actualizado</div>
-          <br>
-          <div class="t-q">  ¿Generar ALERT en acme-web? [S/n]:</div>
-          <div><span class="t-ans">  S</span></div>
-          <div class="t-ok">  ✓ ALERT.md generado en acme-web</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STATUS -->
-    <div class="cmd-panel" id="cmd-status">
-      <div class="cmd-info">
-        <h3>Ver estado del proyecto</h3>
-        <p class="cmd-desc">Muestra un snapshot del contexto activo, archivos de cipher y alertas pendientes del cliente.</p>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <strong>Resolver contexto</strong>
-              <span>Cliente, repo y última fecha de actualización del contexto</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <strong>Estado de archivos</strong>
-              <span>Lista qué archivos .md existen y si están desactualizados</span>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <strong>Alertas pendientes</strong>
-              <span>Muestra ALERT.md de otros repos del mismo cliente si existen</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="cmd-terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-          <span class="terminal-title">terminal</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="t-prompt">$</span> <span class="t-cmd">cipher status</span></div>
-          <br>
-          <div class="t-out">  ── Proyecto ──────────────────</div>
-          <div class="t-out">  Cliente  : acme-corp</div>
-          <div class="t-out">  Repo     : acme-api</div>
-          <div class="t-out">  Contexto : <span class="t-ok">✓ activo</span> (hace 2 días)</div>
-          <br>
-          <div class="t-out">  ── Archivos de contexto ──────</div>
-          <div class="t-ok">  ✓ ARCHITECTURE.md</div>
-          <div class="t-ok">  ✓ BUSINESS_RULES.md</div>
-          <div class="t-ok">  ✓ DEPENDENCIES.md</div>
-          <div class="t-ok">  ✓ RISK_MATRIX.md</div>
-          <br>
-          <div class="t-out">  ── Alertas ───────────────────</div>
-          <div style="color:var(--yellow)">  ⚠ acme-web: ALERT.md pendiente</div>
-          <div class="t-out">    → Cambio en /auth/google</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FLUJO COMPLETO -->
-  <section id="flujo">
-    <div class="tag tag-yellow" style="margin-bottom:1.2rem">Flujo operacional</div>
-    <h2>El ciclo completo de una tarea.</h2>
-    <p>Desde registrar el proyecto hasta mergear el PR, cipher acompaña cada paso.</p>
-    <br>
-
-    <div class="flow-timeline">
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">cipher init</span>
-          <span class="tag tag-accent">Una vez por cliente</span>
-        </div>
-        <p>El dev escanea la carpeta del cliente. cipher detecta los repos, analiza el código fuente con IA y genera toda la documentación base.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Lee estructura de directorios (4 niveles) y archivos fuente</div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Un solo request al agente por repo (no 4 llamadas separadas)</div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Parsea la respuesta con delimitadores <code>&lt;&lt;&lt;FILE:nombre&gt;&gt;&gt;</code></div>
-        </div>
-        <div class="flow-output">
-          <span class="flow-output-label">Genera →</span>
-          <div class="flow-output-files">
-            <span class="file-chip chip-3">clients/&lt;c&gt;/&lt;r&gt;/ARCHITECTURE.md</span>
-            <span class="file-chip chip-3">BUSINESS_RULES.md</span>
-            <span class="file-chip chip-3">DEPENDENCIES.md</span>
-            <span class="file-chip chip-3">RISK_MATRIX.md</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">cipher claude</span>
-          <span class="tag tag-green">Inicio de tarea</span>
-        </div>
-        <p>El dev abre sesión. cipher pregunta en qué repo trabajar, qué tipo de ticket es, y lanza el agente con el contexto y el ticket ya cargados.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> El dev selecciona repo: <code>acme-api</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Tipo: <code>FEATURE</code> · Número: <code>142</code> · Título: <code>agregar login con google</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Branch generada: <code style="color:var(--pink)">FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Se escribe <code>CLAUDE.md</code> temporal en el repo del cliente</div>
-        </div>
-        <div class="flow-output">
-          <span class="flow-output-label">Genera →</span>
-          <div class="flow-output-files">
-            <span class="file-chip chip-2">sessions/&lt;c&gt;/&lt;r&gt;/ACTIVE_CONTEXT.md</span>
-            <span class="file-chip chip-2">sessions/&lt;c&gt;/&lt;r&gt;/task-agent.md</span>
-            <span class="file-chip" style="background:#fbbf2415;color:var(--yellow)">&lt;repo&gt;/CLAUDE.md ⏱ temporal</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">Agente IA trabaja</span>
-          <span class="tag tag-cyan">Automático</span>
-        </div>
-        <p>El agente recibe instrucciones en el <code>task-agent.md</code> y ejecuta el workflow completo sin intervención manual.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">1.</span> <code>git checkout -b FEATURE-142-AGREGAR-LOGIN-CON-GOOGLE</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">2.</span> Implementa la tarea según el contexto del proyecto</div>
-          <div class="flow-sub"><span class="flow-sub-icon">3.</span> <code>git add -p</code> · <code>git commit -m "FEATURE-142: ..."</code> · <code>git push -u origin &lt;branch&gt;</code></div>
-          <div class="flow-sub"><span class="flow-sub-icon">4.</span> <code>gh pr create --title "[FEATURE-142] ..." --base main</code></div>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">Sesión finalizada</span>
-          <span class="tag tag-accent">Limpieza automática</span>
-        </div>
-        <p>Al salir del agente (con éxito o con error), el bloque <code>finally</code> elimina <code>CLAUDE.md</code> del repo del cliente.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si <code>CLAUDE.md</code> no existía antes: se elimina</div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si ya existía: se restaura el contenido original</div>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <div class="flow-step-header">
-          <span class="flow-cmd">cipher update</span>
-          <span class="tag tag-green">Cerrar sesión</span>
-        </div>
-        <p>El dev ejecuta <code>cipher update</code> para que cipher analice qué cambió y actualice la documentación de contexto.</p>
-        <div class="flow-substeps">
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Si el cambio rompe una interfaz pública: genera <code>ALERT.md</code> en repos que la consumen</div>
-          <div class="flow-sub"><span class="flow-sub-icon">→</span> Los devs de esos repos verán la alerta al abrir su próxima sesión</div>
-        </div>
-        <div class="flow-output">
-          <span class="flow-output-label">Actualiza →</span>
-          <div class="flow-output-files">
-            <span class="file-chip chip-3">clients/&lt;c&gt;/&lt;r&gt;/*.md</span>
-            <span class="file-chip" style="background:#f8717115;color:var(--red)">&lt;repo-afectado&gt;/.cipher/ALERT.md</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- BRANCH FORMAT -->
-  <section id="branch">
-    <div class="tag tag-accent" style="margin-bottom:1.2rem">Branches</div>
-    <h2>Naming convention automático.</h2>
-    <p>El nombre de branch se genera a partir del tipo, número y título del ticket — sin que el dev tenga que pensarlo.</p>
-    <br>
-
-    <div class="branch-demo">
-      <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem">Ejemplo de branch generada</div>
-      <div class="branch-name">
-        <span class="branch-part bp-type">FEATURE</span>
-        <span class="branch-part bp-sep">-</span>
-        <span class="branch-part bp-num">142</span>
-        <span class="branch-part bp-sep">-</span>
-        <span class="branch-part bp-title">AGREGAR-LOGIN-CON-GOOGLE</span>
-      </div>
-      <div style="color:var(--muted);font-size:.82rem;">
-        <span style="color:var(--pink)">TIPO</span> ·
-        <span style="color:var(--yellow)">NÚMERO</span> ·
-        <span style="color:var(--cyan)">TÍTULO SLUGIFICADO EN MAYÚSCULAS</span>
-      </div>
-      <div class="branch-types">
-        <div class="btype btype-feature">FEATURE</div>
-        <div class="btype btype-task">TASK</div>
-        <div class="btype btype-error">ERROR</div>
-        <div class="btype btype-hotfix">HOTFIX</div>
-      </div>
-    </div>
-
-    <br>
-    <div class="card" style="border-color:var(--border)">
-      <h3>Regla de formato</h3>
-      <p style="font-family:monospace;color:var(--text);font-size:.9rem;margin-top:.5rem">
-        {TIPO}-{NUMERO}-{TITULO-SLUGIFICADO-EN-MAYUSCULAS}
-      </p>
-      <ul style="margin-top:.75rem;list-style:none;display:flex;flex-direction:column;gap:.35rem">
-        <li style="color:#94a3b8;font-size:.88rem">✓ Solo letras, números y guiones</li>
-        <li style="color:#94a3b8;font-size:.88rem">✓ Sin espacios ni caracteres especiales</li>
-        <li style="color:#94a3b8;font-size:.88rem">✓ Todo en mayúsculas</li>
-        <li style="color:#94a3b8;font-size:.88rem">✓ Generado automáticamente — no hay que escribirlo a mano</li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- PROVIDERS -->
-  <section id="providers">
-    <div class="tag tag-green" style="margin-bottom:1.2rem">Providers</div>
-    <h2>Dos IAs, dos roles bien definidos.</h2>
-    <p>Gemini analiza y genera contexto. Claude ejecuta el desarrollo. Cada una donde rinde más.</p>
-    <br>
-    <div class="providers-grid" style="grid-template-columns:1fr 1fr">
-
-      <div class="provider-card p-gemini" style="border-width:2px">
-        <div class="provider-icon">✨</div>
-        <div class="provider-name">Gemini <span style="color:var(--muted);font-weight:400;font-size:.8rem">— análisis</span></div>
-        <div class="provider-model">gemini-2.5-flash</div>
-        <div class="provider-ctx"><strong>~400k</strong> chars de contexto</div>
-        <div class="provider-ctx" style="margin-top:.4rem;font-size:.75rem;color:var(--muted)">Lee el código fuente completo del repo y genera los 4 archivos de contexto en una sola llamada. Úsalo en <code>cipher init</code> y <code>cipher update</code>.</div>
-      </div>
-
-      <div class="provider-card p-claude" style="border-width:2px">
-        <div class="provider-icon">🤖</div>
-        <div class="provider-name">Claude <span style="color:var(--muted);font-weight:400;font-size:.8rem">— codificación</span></div>
-        <div class="provider-model">claude-sonnet-4-6</div>
-        <div class="provider-ctx"><strong>CLI agéntico</strong> real</div>
-        <div class="provider-ctx" style="margin-top:.4rem;font-size:.75rem;color:var(--muted)">Recibe el contexto vía CLAUDE.md temporal, crea la branch, implementa, hace commit y abre el PR. Úsalo con <code>cipher claude</code>.</div>
-      </div>
-
-    </div>
-
-    <br>
-    <div class="card" style="border-color:#7c6aff33">
-      <h3 style="margin-bottom:.5rem">¿Querés integrar otro provider?</h3>
-      <p style="font-size:.88rem;margin-bottom:.75rem">La arquitectura está diseñada para ser extensible. Para agregar un nuevo provider de análisis o un nuevo agente de codificación:</p>
-      <pre style="background:var(--bg3);padding:1rem;border-radius:var(--radius-sm);font-size:.82rem;overflow-x:auto;color:#94a3b8"><code style="background:transparent;color:inherit;padding:0"><span style="color:var(--muted)"># 1. Crear la clase en providers.py</span>
-<span style="color:var(--accent2)">class</span> <span style="color:var(--cyan)">MiProvider</span>:
-    <span style="color:var(--accent2)">def</span> <span style="color:var(--green)">analyze_repo</span>(self, prompt): ...
-    <span style="color:var(--accent2)">def</span> <span style="color:var(--green)">analyze_diff</span>(self, ...): ...
-
-<span style="color:var(--muted)"># 2. Registrarlo en get_analysis_provider()</span>
-<span style="color:var(--accent2)">elif</span> preferred == <span style="color:var(--green)">"mi-provider"</span>:
-    <span style="color:var(--accent2)">return</span> MiProvider(...)</code></pre>
-    </div>
-
-    <br>
-    <div class="card">
-      <h3>Configuración en <code>.cipher/config.local.json</code></h3>
-      <pre style="margin-top:.75rem;background:var(--bg3);padding:1rem;border-radius:var(--radius-sm);font-size:.82rem;overflow-x:auto;color:#94a3b8"><code style="background:transparent;color:inherit;padding:0">{
-  <span style="color:var(--accent2)">"anthropic"</span>: { <span style="color:var(--cyan)">"api_key"</span>: <span style="color:var(--green)">"sk-ant-..."</span>, <span style="color:var(--cyan)">"model"</span>: <span style="color:var(--green)">"claude-sonnet-4-6"</span> },
-  <span style="color:var(--accent2)">"google"</span>:    { <span style="color:var(--cyan)">"api_key"</span>: <span style="color:var(--green)">"AIza..."</span>,    <span style="color:var(--cyan)">"model"</span>: <span style="color:var(--green)">"gemini-2.5-flash"</span>  }
-}</code></pre>
-    </div>
-  </section>
-
-  <!-- AISLAMIENTO -->
-  <section id="aislamiento">
-    <div class="tag tag-yellow" style="margin-bottom:1.2rem">Aislamiento</div>
-    <h2>Nada permanente en repos de clientes.</h2>
-    <p>Todo el estado de cipher vive dentro del repo <code>cipher/</code>. Los repos clientes solo reciben archivos temporales durante la sesión.</p>
-    <br>
-    <div class="isolation-visual">
-
-      <div>
-        <div class="fs-tree">
-          <div class="fs-title">cipher/ — todo vive acá</div>
-          <div><span class="fs-dir">cipher/</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-dir">.cipher/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">config.json</span> <span class="fs-note">← registro de clientes</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">config.local.json</span> <span class="fs-note">← API keys (gitignored)</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">sessions/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-corp/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-api/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-generated">ACTIVE_CONTEXT.md</span> <span class="fs-note">← generado</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-generated">task-agent.md</span> <span class="fs-note">← generado</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-dir">clients/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-corp/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-dir">acme-api/</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">ARCHITECTURE.md</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">BUSINESS_RULES.md</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fs-file">...</span></div>
-        </div>
-        <br>
-        <div class="fs-tree">
-          <div class="fs-title">acme-api/ — solo archivos temporales</div>
-          <div><span class="fs-dir">acme-api/</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-temp">CLAUDE.md</span> <span class="fs-note">← existe SOLO durante sesión</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-note">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;se borra en finally block</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-never">ACTIVE_CONTEXT.md</span> <span class="fs-note">← nunca</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-never">task-agent.md</span> <span class="fs-note">← nunca</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-file">src/</span></div>
-          <div>&nbsp;&nbsp;<span class="fs-file">...</span></div>
-        </div>
-      </div>
-
-      <div class="isolation-rules">
-        <div class="i-rule">
-          <div class="i-rule-icon">🔒</div>
-          <div class="i-rule-body">
-            <strong>Sesiones en cipher, no en el cliente</strong>
-            <span>ACTIVE_CONTEXT.md y task-agent.md se guardan en <code>.cipher/sessions/</code> dentro del repo cipher, no en el repo del cliente.</span>
-          </div>
-        </div>
-        <div class="i-rule">
-          <div class="i-rule-icon">⏱</div>
-          <div class="i-rule-body">
-            <strong>CLAUDE.md es temporal</strong>
-            <span>Se crea justo antes de lanzar el agente y se elimina en el bloque <code>finally</code> al salir, sin importar si hubo error.</span>
-          </div>
-        </div>
-        <div class="i-rule">
-          <div class="i-rule-icon">♻️</div>
-          <div class="i-rule-body">
-            <strong>Restauración si ya existía</strong>
-            <span>Si el repo ya tenía <code>CLAUDE.md</code>, cipher guarda el contenido original y lo restaura al terminar la sesión.</span>
-          </div>
-        </div>
-        <div class="i-rule">
-          <div class="i-rule-icon">🚫</div>
-          <div class="i-rule-body">
-            <strong>API keys nunca al repo</strong>
-            <span><code>config.local.json</code> está en <code>.gitignore</code>. Las keys solo viven en local o en variables de entorno.</span>
-          </div>
-        </div>
-        <div class="i-rule">
-          <div class="i-rule-icon">📡</div>
-          <div class="i-rule-body">
-            <strong>Alertas cruzadas controladas</strong>
-            <span><code>ALERT.md</code> se escribe en <code>.cipher/</code> del repo afectado — carpeta ignorada por git del cliente, solo leída por cipher.</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-</main>
-
-<footer>
-  <p>cipher — sistema de contexto persistente para agentes IA</p>
-  <p style="margin-top:.4rem">MIT License · <a href="https://github.com/tu-org/cipher">github.com/tu-org/cipher</a></p>
-</footer>
 
 <script>
-  function showCmd(id) {
-    document.querySelectorAll('.cmd-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.cmd-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('cmd-' + id).classList.add('active');
-    event.target.classList.add('active');
+// ---- DEMO TERMINAL ----
+
+const PROMPT = "~/myproject $ ";
+const demos = [
+  { label: "cipheria status",            cmd: "cipheria status" },
+  { label: "cipheria init",              cmd: "cipheria init --scan ." },
+  { label: "cipheria index",             cmd: "cipheria index --repo myrepo" },
+  { label: "task desde .md",             cmd: "cipheria task feature-4040-login-oauth.md" },
+  { label: "cipheria task (texto)",      cmd: 'cipheria task "fix: timeout en login"' },
+  { label: "cipheria task --list",       cmd: "cipheria task --list" },
+  { label: "cipheria impact",            cmd: "cipheria impact auth/services.py --depth 3" },
+  { label: "cipheria audit --stats",     cmd: "cipheria audit --stats" },
+  { label: "cipheria audit",             cmd: "cipheria audit" },
+  { label: "cipheria claude",            cmd: "cipheria claude" },
+];
+
+const outputs = {
+  "cipheria status": [
+    { t: "green bold", v: "cipher  /  repo status" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Repo       myrepo" },
+    { t: "", v: "  Ruta       /home/user/projects/myrepo" },
+    { t: "", v: "  Cliente    acme-corp" },
+    { t: "", v: "  Proyecto   myrepo" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  Archivos de contexto:" },
+    { t: "green", v: "    ✓  ARCHITECTURE.md      (hace 2 dias)" },
+    { t: "green", v: "    ✓  BUSINESS_RULES.md    (hace 2 dias)" },
+    { t: "green", v: "    ✓  DEPENDENCIES.md      (hace 2 dias)" },
+    { t: "green", v: "    ✓  RISK_MATRIX.md       (hace 3 dias)" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Otros repos en acme-corp:" },
+    { t: "", v: "    · api-gateway      /home/user/projects/api-gateway" },
+    { t: "", v: "    · frontend-app     /home/user/projects/frontend-app" },
+  ],
+
+  "cipheria init --scan .": [
+    { t: "yellow bold", v: "  Escaneando repos en: /home/user/projects" },
+    { t: "", v: "" },
+    { t: "", v: "  Repos encontrados:" },
+    { t: "green", v: "    [1]  myrepo          /home/user/projects/myrepo" },
+    { t: "green", v: "    [2]  api-gateway     /home/user/projects/api-gateway" },
+    { t: "green", v: "    [3]  frontend-app    /home/user/projects/frontend-app" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Selecciona repos a registrar (e.g., 1,2,3 o all): " },
+    { t: "purple", v: "  > all" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Nombre del cliente [projects]: " },
+    { t: "purple", v: "  > acme-corp" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  Proveedor LLM:" },
+    { t: "", v: "    [1]  Gemini   (contexto 400k tokens)" },
+    { t: "", v: "    [2]  Claude   (contexto 60k tokens)" },
+    { t: "purple", v: "  > 2" },
+    { t: "", v: "" },
+    { t: "yellow", v: "  Analizando myrepo con Claude..." },
+    { t: "green", v: "    ✓  ARCHITECTURE.md generado" },
+    { t: "green", v: "    ✓  BUSINESS_RULES.md generado" },
+    { t: "green", v: "    ✓  DEPENDENCIES.md generado" },
+    { t: "green", v: "    ✓  RISK_MATRIX.md generado" },
+    { t: "yellow", v: "  Analizando api-gateway..." },
+    { t: "green", v: "    ✓  4 archivos de contexto generados" },
+    { t: "yellow", v: "  Analizando frontend-app..." },
+    { t: "green", v: "    ✓  4 archivos de contexto generados" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Dependencias cross-repo detectadas:" },
+    { t: "", v: "    myrepo  →  api-gateway  (http client)" },
+    { t: "", v: "    frontend-app  →  api-gateway  (REST API)" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  ✓  3 repos registrados bajo acme-corp" },
+    { t: "green bold", v: "  ✓  .cipher/config.json actualizado" },
+  ],
+
+  "cipheria index --repo myrepo": [
+    { t: "yellow bold", v: "  Indexando myrepo..." },
+    { t: "", v: "" },
+    { t: "", v: "  Procesando archivos fuente..." },
+    { t: "dim", v: "    src/auth/services.py          ✓  12 simbolos, 8 imports" },
+    { t: "dim", v: "    src/auth/models.py             ✓  4 simbolos, 3 imports" },
+    { t: "dim", v: "    src/auth/middleware.py         ✓  6 simbolos, 5 imports" },
+    { t: "dim", v: "    src/users/repository.py        ✓  8 simbolos, 4 imports" },
+    { t: "dim", v: "    src/users/controllers.py       ✓  7 simbolos, 6 imports" },
+    { t: "dim", v: "    src/core/database.py           ✓  3 simbolos, 2 imports" },
+    { t: "dim", v: "    src/core/config.py             ✓  2 simbolos, 1 import" },
+    { t: "dim", v: "    tests/test_auth.py             ✓  9 simbolos, 4 imports" },
+    { t: "dim", v: "    ... 34 archivos mas" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Construyendo grafo de dependencias..." },
+    { t: "dim", v: "    Resolviendo imports locales...   ✓" },
+    { t: "dim", v: "    Detectando modulos externos...   ✓" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  ✓  Indexacion completa" },
+    { t: "", v: "" },
+    { t: "", v: "  Archivos indexados:   42" },
+    { t: "", v: "  Simbolos extraidos:   187" },
+    { t: "", v: "  Imports registrados:  234" },
+    { t: "", v: "  Nodos en grafo:       42" },
+    { t: "", v: "  Aristas en grafo:     89" },
+    { t: "", v: "  Modulos externos:     14  (fastapi, sqlalchemy, pydantic...)" },
+    { t: "", v: "  Lenguajes:            Python (38), JSON (3), YAML (1)" },
+    { t: "", v: "  Duracion:             1.3s" },
+    { t: "", v: "" },
+    { t: "green", v: "  Guardado en: .cipher/index/myrepo/" },
+  ],
+
+  'cipheria pack "agregar login social"': [
+    { t: "yellow bold", v: '  Construyendo pack para: "agregar login social"' },
+    { t: "", v: "  Repo: myrepo  |  Provider: claude  |  Budget: 150,000 tokens" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Scoring de archivos..." },
+    { t: "", v: "" },
+    { t: "", v: "  Top archivos por relevancia:" },
+    { t: "green", v: "    9.3  src/auth/services.py         (keywords: login, auth, social)" },
+    { t: "green", v: "    7.5  src/auth/models.py           (keywords: login, user)" },
+    { t: "green", v: "    6.8  src/auth/middleware.py       (keywords: auth)" },
+    { t: "green", v: "    5.2  src/users/repository.py      (alta demanda + keywords)" },
+    { t: "", v: "    4.1  src/core/config.py              (keywords: social, oauth)" },
+    { t: "", v: "    3.7  src/core/database.py            (dependencia de targets)" },
+    { t: "dim", v: "    ... 4 archivos mas seleccionados" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Expandiendo dependencias..." },
+    { t: "dim", v: "    + src/core/security.py          (importado por services.py)" },
+    { t: "dim", v: "    + src/schemas/user.py           (importado por models.py)" },
+    { t: "dim", v: "    + tests/test_auth.py            (importa services.py)" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Aplicando presupuesto de tokens..." },
+    { t: "", v: "    Targets:       8 archivos  —  62,400 tokens" },
+    { t: "", v: "    Dependencias: 11 archivos  —  34,200 tokens" },
+    { t: "", v: "    Contexto:      ARCHITECTURE.md + BUSINESS_RULES.md  —  8,100 tokens" },
+    { t: "green bold", v: "    Total: 104,700 / 150,000 tokens  (69.8%)" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  ✓  Pack generado" },
+    { t: "green", v: "  .cipher/packs/myrepo/a1b2c3d4_agregar-login-social/context_pack.md" },
+    { t: "green", v: "  .cipher/packs/myrepo/a1b2c3d4_agregar-login-social/context_manifest.json" },
+  ],
+
+  'cipheria task "fix: timeout en login"': [
+    { t: "yellow bold", v: '  Nueva tarea: "fix: timeout en login"' },
+    { t: "", v: "" },
+    { t: "blue", v: "  Tipo detectado automaticamente: BUG" },
+    { t: "", v: "  Repo:   myrepo  |  Cliente: acme-corp" },
+    { t: "purple", v: "  Task ID: 7f3a9b2c" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [1/5] Indexando repos del cliente..." },
+    { t: "dim", v: "       myrepo         — incremental (3 archivos cambiados)" },
+    { t: "dim", v: "       api-gateway    — sin cambios, usando cache" },
+    { t: "dim", v: "       frontend-app   — sin cambios, usando cache" },
+    { t: "green", v: "       ✓ 3 repos indexados" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [2/5] Construyendo grafo de dependencias..." },
+    { t: "dim", v: "       myrepo: 42 nodos, 89 aristas" },
+    { t: "dim", v: "       api-gateway: 67 nodos, 134 aristas" },
+    { t: "dim", v: "       Grafo fusionado: 109 nodos" },
+    { t: "green", v: "       ✓ Grafo listo" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [3/5] Construyendo context pack..." },
+    { t: "dim", v: '       Scoring para "fix timeout login"' },
+    { t: "dim", v: "       8 targets seleccionados | 11 dependencias" },
+    { t: "green", v: "       ✓ Pack: 104,700 / 150,000 tokens" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [4/5] Analizando impacto cross-repo con Gemini..." },
+    { t: "dim", v: "       Archivos en riesgo directos: 4" },
+    { t: "dim", v: "       Transitivos: 9" },
+    { t: "dim", v: "       Tests afectados: 3  |  Configs: 1" },
+    { t: "yellow", v: "       Nivel de riesgo: MEDIO" },
+    { t: "green", v: "       ✓ myrepo/CIPHER_ALERT.md  ← en el repo del cliente" },
+    { t: "dim",   v: "       ✓ CIPHER_ALERT.md agregado al .gitignore del repo" },
+    { t: "dim",   v: "       ✓ Copia de archivo: .cipher/alerts/acme-corp/alert-BUG-7f3a9b2c.md" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [5/5] Generando TaskIntent..." },
+    { t: "dim", v: "       Archivos a modificar: src/auth/services.py, src/core/config.py" },
+    { t: "dim", v: "       Archivos a leer: src/auth/middleware.py, src/core/database.py" },
+    { t: "dim", v: "       Restricciones: no alterar interfaz publica del modulo auth" },
+    { t: "green", v: "       ✓ task_intent.json guardado" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  Lanzando agente Claude..." },
+    { t: "dim", v: "       Inyectando contexto en CLAUDE.md..." },
+    { t: "", v: "" },
+    { t: "yellow", v: "  [ agente trabajando... ]" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  ✓  Tarea completada — status: DONE" },
+    { t: "green", v: "  Tarea guardada en: .cipher/tasks/acme-corp/myrepo/7f3a9b2c/" },
+    { t: "green", v: "  Auditoria en: .cipher/audit/audit_log.jsonl" },
+  ],
+
+  "cipheria task --list": [
+    { t: "yellow bold", v: "  Tareas registradas" },
+    { t: "", v: "" },
+    { t: "blue", v: "  ID        TIPO     TITULO                          STATUS        REPO" },
+    { t: "dim", v: "  ───────────────────────────────────────────────────────────────────────────" },
+    { t: "green", v: "  7f3a9b2c  BUG      fix: timeout en login           DONE          myrepo" },
+    { t: "", v: "  4d8e1f5a  FEATURE  agregar login social             IN_PROGRESS   myrepo" },
+    { t: "dim", v: "  2c9a3b7d  TASK     actualizar dependencias npm     PENDING       frontend" },
+    { t: "dim", v: "  8b1d4e2c  HOTFIX   fix: crash en mobile header     FAILED        frontend" },
+    { t: "dim", v: "  ───────────────────────────────────────────────────────────────────────────" },
+    { t: "", v: "  Total: 4  |  Done: 1  |  In Progress: 1  |  Pending: 1  |  Failed: 1" },
+  ],
+
+  "cipheria impact auth/services.py --depth 3": [
+    { t: "yellow bold", v: "  Analizando impacto: src/auth/services.py" },
+    { t: "", v: "  Repo: myrepo  |  Profundidad maxima: 3" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Dependientes encontrados:" },
+    { t: "", v: "" },
+    { t: "yellow", v: "  Depth 1 — importadores directos (3 archivos):" },
+    { t: "", v: "    src/auth/middleware.py" },
+    { t: "", v: "    src/users/controllers.py" },
+    { t: "", v: "    tests/test_auth.py" },
+    { t: "", v: "" },
+    { t: "yellow", v: "  Depth 2 — transitivos (5 archivos):" },
+    { t: "", v: "    src/api/routes.py              (via controllers.py)" },
+    { t: "", v: "    src/api/dependencies.py        (via middleware.py)" },
+    { t: "", v: "    tests/test_users.py            (via controllers.py)" },
+    { t: "", v: "    tests/integration/test_api.py  (via routes.py)" },
+    { t: "", v: "    src/core/app.py                (via routes.py)" },
+    { t: "", v: "" },
+    { t: "yellow", v: "  Depth 3 — transitivos adicionales (3 archivos):" },
+    { t: "dim", v: "    main.py                        (via app.py)" },
+    { t: "dim", v: "    tests/e2e/test_login.py         (via integration)" },
+    { t: "dim", v: "    docker/entrypoint.py            (via main.py)" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Resumen:" },
+    { t: "", v: "  Total archivos afectados: 11" },
+    { t: "", v: "  Tests en riesgo:           3  (test_auth.py, test_users.py, test_login.py)" },
+    { t: "", v: "  Configs en riesgo:         1  (docker/entrypoint.py)" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  Nivel de riesgo:  MEDIO  (4-10 archivos directos/transitivos)" },
+  ],
+
+  "cipheria audit --stats": [
+    { t: "yellow bold", v: "  Estadisticas globales de auditoria" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Sesiones totales:      47" },
+    { t: "", v: "  Tokens usados:         4,821,300" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Por resultado:" },
+    { t: "green", v: "    DONE         31  (65.9%)" },
+    { t: "yellow", v: "    PENDING       8  (17.0%)" },
+    { t: "red", v: "    FAILED         8  (17.0%)" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Por repo (top 5):" },
+    { t: "", v: "    myrepo         19 sesiones  —  1,987,400 tokens" },
+    { t: "", v: "    api-gateway    14 sesiones  —  1,432,100 tokens" },
+    { t: "", v: "    frontend-app   10 sesiones  —    921,500 tokens" },
+    { t: "", v: "    legacy-core     4 sesiones  —    480,300 tokens" },
+    { t: "", v: "" },
+    { t: "dim", v: "  Ultima actividad: 2026-03-20T14:32:11" },
+  ],
+
+  "cipheria audit": [
+    { t: "yellow bold", v: "  Historial de sesiones" },
+    { t: "", v: "" },
+    { t: "blue", v: "  TIMESTAMP            TASK ID   REPO          TOKENS    RESULTADO" },
+    { t: "dim", v: "  ─────────────────────────────────────────────────────────────────────" },
+    { t: "green", v: "  2026-03-20 14:32     7f3a9b2c  myrepo        104,700   DONE" },
+    { t: "yellow", v: "  2026-03-19 11:15     4d8e1f5a  myrepo         98,200   IN_PROGRESS" },
+    { t: "", v: "  2026-03-18 09:47     2c9a3b7d  frontend        87,400   PENDING" },
+    { t: "red", v: "  2026-03-17 16:23     8b1d4e2c  frontend        72,100   FAILED" },
+    { t: "green", v: "  2026-03-16 10:05     1a2b3c4d  api-gateway    115,900   DONE" },
+    { t: "dim", v: "  ─────────────────────────────────────────────────────────────────────" },
+    { t: "", v: "  Mostrando 5 de 47 entradas. Usa --limit N para ver mas." },
+  ],
+
+  "cipheria task feature-4040-login-oauth.md": [
+    { t: "yellow bold", v: "  Leyendo task desde: feature-4040-login-oauth.md" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Metadata extraida del archivo:" },
+    { t: "", v: "  Tipo    : FEATURE" },
+    { t: "", v: "  Numero  : 4040" },
+    { t: "", v: "  Titulo  : Agregar autenticacion OAuth con Google" },
+    { t: "dim",   v: "  Link    : https://linear.app/acme/issue/ENG-4040" },
+    { t: "yellow", v: "  Rama    : feature-4040-agregar-autenticacion-oauth-con-google" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Repo    : myrepo  |  Cliente: acme-corp" },
+    { t: "purple", v: "  Task ID : a3f7b1c2" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [1/5] Indexando repos del cliente..." },
+    { t: "dim", v: "       myrepo         — incremental (0 archivos cambiados)" },
+    { t: "dim", v: "       api-gateway    — sin cambios, usando cache" },
+    { t: "green", v: "       ✓ 2 repos indexados" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [2/5] Construyendo grafo de dependencias..." },
+    { t: "green", v: "       ✓ Grafo fusionado: 109 nodos, 223 aristas" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [3/5] Construyendo context pack..." },
+    { t: "dim", v: "       Scoring para 'oauth google login auth social'" },
+    { t: "dim", v: "       9 targets seleccionados | 13 dependencias" },
+    { t: "green", v: "       ✓ Pack: 118,400 / 150,000 tokens  (78.9%)" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [4/5] Analizando impacto con Gemini..." },
+    { t: "dim", v: "       Archivos en riesgo: 7  |  Tests: 4  |  Configs: 1" },
+    { t: "yellow", v: "       Nivel de riesgo: MEDIO" },
+    { t: "green", v: "       ✓ myrepo/CIPHER_ALERT.md  ← listo para revisar antes del agente" },
+    { t: "dim",   v: "       ✓ CIPHER_ALERT.md agregado al .gitignore" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  [5/5] Generando TaskIntent..." },
+    { t: "dim", v: "       Archivos a modificar: src/auth/services.py, src/core/config.py" },
+    { t: "green", v: "       ✓ task_intent.json guardado" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  Lanzando agente Claude..." },
+    { t: "yellow", v: "  [ agente trabajando en feature-4040-agregar-autenticacion-oauth... ]" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  ✓  Tarea completada — status: DONE" },
+  ],
+
+  "cipheria claude": [
+    { t: "yellow bold", v: "  cipheria claude — sesion rapida" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Cliente detectado: acme-corp  |  Repo: myrepo" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  Tipo de trabajo:" },
+    { t: "", v: "    [1]  FEATURE  — nueva funcionalidad" },
+    { t: "", v: "    [2]  TASK     — tarea tecnica o mejora" },
+    { t: "", v: "    [3]  BUG      — correccion de error" },
+    { t: "", v: "    [4]  HOTFIX   — fix urgente en produccion" },
+    { t: "purple", v: "  > 3" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Numero de ticket: " },
+    { t: "purple", v: "  > 88" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Titulo: " },
+    { t: "purple", v: "  > Fix: boton de login no responde en Safari" },
+    { t: "", v: "" },
+    { t: "yellow", v: "  Rama sugerida: bug-88-fix-boton-de-login-no-responde-en-safari" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Ensamblando contexto (3 capas)..." },
+    { t: "dim", v: "    global/CONVENTIONS.md + BUSINESS_RULES.md + ARCHITECTURE.md  ✓" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  Lanzando Claude Code..." },
+    { t: "dim", v: "  CLAUDE.md inyectado con contexto + tarea" },
+    { t: "yellow", v: "  [ sesion activa — sin analisis de impacto ni auditoria formal ]" },
+  ],
+
+  "cipheria session claude": [
+    { t: "yellow bold", v: "  cipheria session — claude" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Cliente detectado: acme-corp  |  Repo: myrepo" },
+    { t: "", v: "" },
+    { t: "yellow bold", v: "  Tipo de trabajo:" },
+    { t: "", v: "    [1]  FEATURE  — nueva funcionalidad" },
+    { t: "", v: "    [2]  TASK     — tarea tecnica o mejora" },
+    { t: "", v: "    [3]  BUG      — correccion de error" },
+    { t: "", v: "    [4]  HOTFIX   — fix urgente en produccion" },
+    { t: "purple", v: "  > 1" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Numero de ticket [auto]: " },
+    { t: "purple", v: "  > 42" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Titulo: " },
+    { t: "purple", v: "  > Agregar autenticacion OAuth con Google" },
+    { t: "", v: "" },
+    { t: "blue", v: "  Descripcion: " },
+    { t: "purple", v: "  > Implementar flujo OAuth2 con Google como proveedor de identidad." },
+    { t: "", v: "" },
+    { t: "blue", v: "  Link al ticket (opcional): " },
+    { t: "purple", v: "  > https://linear.app/acme/issue/ENG-42" },
+    { t: "", v: "" },
+    { t: "yellow", v: "  Rama sugerida: feature-42-agregar-autenticacion-oauth-con-google" },
+    { t: "", v: "" },
+    { t: "blue bold", v: "  Ensamblando contexto..." },
+    { t: "dim", v: "    Layer 1: global/CONVENTIONS.md       ✓" },
+    { t: "dim", v: "    Layer 2: clients/BUSINESS_RULES.md   ✓" },
+    { t: "dim", v: "    Layer 3: myrepo/ARCHITECTURE.md      ✓" },
+    { t: "green", v: "    ACTIVE_CONTEXT.md generado (3 capas)" },
+    { t: "", v: "" },
+    { t: "green bold", v: "  Lanzando Claude Code..." },
+    { t: "dim", v: "  CLAUDE.md inyectado con contexto + tarea" },
+    { t: "", v: "" },
+    { t: "yellow", v: "  [ sesion activa con el agente... ]" },
+  ],
+};
+
+function appendLine(cls, text) {
+  const out = document.getElementById("termOutput");
+  const div = document.createElement("div");
+  div.className = "term-out " + (cls || "");
+  div.textContent = text;
+  out.appendChild(div);
+}
+
+function appendCmd(cmdText) {
+  const out = document.getElementById("termOutput");
+  const row = document.createElement("div");
+  row.className = "term-line";
+  row.innerHTML = `<span class="term-prompt">$ </span><span class="term-cmd">${escHtml(cmdText)}</span>`;
+  out.appendChild(row);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function scrollBottom() {
+  const out = document.getElementById("termOutput");
+  out.scrollTop = out.scrollHeight;
+}
+
+function unknown(cmd) {
+  appendLine("red", "  cipher: comando no reconocido: " + cmd);
+  appendLine("dim",  "  Comandos disponibles: init, index, pack, task, audit, impact, session, status");
+  appendLine("", "");
+}
+
+function typeLines(lines, i, cb) {
+  if (i >= lines.length) { if (cb) cb(); return; }
+  const l = lines[i];
+  appendLine(l.t, l.v === undefined ? "" : l.v);
+  scrollBottom();
+  setTimeout(() => typeLines(lines, i + 1, cb), 28);
+}
+
+function runCmd(raw) {
+  if (!raw.trim()) return;
+  appendCmd(raw.trim());
+
+  const normalized = raw.trim().replace(/\s+/g, " ");
+
+  // Find matching key
+  let key = null;
+  for (const k of Object.keys(outputs)) {
+    if (normalized === k) { key = k; break; }
   }
+
+  if (!key) {
+    // Try prefix match
+    for (const k of Object.keys(outputs)) {
+      if (normalized.startsWith(k.split(" ")[0] + " " + k.split(" ")[1]?.replace(/^--/,"") || "") ) {
+        // crude — just check exact
+      }
+    }
+    // Try fuzzy: normalize quotes
+    const noQuotes = normalized.replace(/['"]/g, '"');
+    for (const k of Object.keys(outputs)) {
+      if (noQuotes === k.replace(/['"]/g, '"')) { key = k; break; }
+    }
+  }
+
+  if (!key) {
+    // Try base command match
+    const base = normalized.split(" ").slice(0,2).join(" ");
+    for (const k of Object.keys(outputs)) {
+      if (k.startsWith(base)) { key = k; break; }
+    }
+  }
+
+  if (key && outputs[key]) {
+    typeLines(outputs[key], 0, () => {
+      appendLine("", "");
+      scrollBottom();
+    });
+  } else {
+    unknown(raw.trim());
+    scrollBottom();
+  }
+}
+
+function runTermCmd() {
+  const input = document.getElementById("termInput");
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = "";
+  runCmd(val);
+}
+
+document.getElementById("termInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") runTermCmd();
+});
+
+// Build quick buttons
+(function() {
+  const container = document.getElementById("demoButtons");
+  demos.forEach(d => {
+    const btn = document.createElement("button");
+    btn.className = "demo-btn";
+    btn.textContent = d.label;
+    btn.onclick = () => {
+      document.getElementById("termInput").value = d.cmd;
+      runTermCmd();
+    };
+    container.appendChild(btn);
+  });
+})();
 </script>
 </body>
 </html>

@@ -8,5 +8,10 @@
     "aider"
   ],
   "clients": {
+    "take-app": {
+      "repos": {
+
+      }
+    }
   }
 }
